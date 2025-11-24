@@ -847,6 +847,10 @@
           <div id="calendar-grid"></div>
           <div id="calendar-selected-date">선택한 날짜: 오늘</div>
           <div id="calendar-task-list"></div>
+
+          <button id="calendar-add-todo-btn" class="secondary" style="margin-top:6px;">
+          </button>
+
           <div class="hint">
             · 계획 추가할 때 날짜를 넣으면, 해당 날짜에 점이 찍히고 아래에 목록이 표시됩니다.<br />
             · 연/월/주/일 어떤 범주에 넣었든, 날짜가 같으면 함께 모아서 보여줘요.
@@ -1442,8 +1446,34 @@
     const calendarMonthLabel = document.getElementById("calendar-month-label");
     const calendarPrevBtn = document.getElementById("calendar-prev-btn");
     const calendarNextBtn = document.getElementById("calendar-next-btn");
+    // 선택한 날짜에 계획 추가 버튼
+    if (calendarAddTodoBtn) {
+        calendarAddTodoBtn.addEventListener("click", () => {
+            // 1) To-do 섹션으로 이동
+            const todosNavBtn = document.querySelector('.nav-btn[data-section="todos"]');
+            if (todosNavBtn) {
+                todosNavBtn.click();
+            }
+            // 2) 스코프를 "하루 계획으로 변경"
+            currentScope = "day";
+            scopeTabs.forEach((tab) => {
+                tab.classList.toggle("active", tab.dataset.scope === "day");
+            });
+            // 3) 날짜 인풋에 캘린더에서 선택한 날짜 채워 넣기
+            if (todoDateInput) {
+                todoDateInput.value = selectedCalendarDateStr;
+                todoDateInput.focus();
+            }
+            // 4) To-do 리스트를 현재 스코프 기준으로 다시 렌더
+            if (typeof updateTodoDateInputs === "function") {
+                updateTodoDateInputs();
+            }
+            renderTodoList();
+        });
+    }
     const calendarSelectedDateEl = document.getElementById("calendar-selected-date");
     const calendarTaskList = document.getElementById("calendar-task-list");
+    const calendarAddTodoBtn = document.getElementById("calendar-add-todo-btn");
 
     const calendarMonthPicker = document.getElementById("calendar-month-picker");
     let calendarCurrent = new Date(today.getFullYear(), today.getMonth(), 1);
@@ -2038,4 +2068,3 @@
   </script>
 </body>
 </html>
-
