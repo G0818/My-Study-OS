@@ -1,0 +1,2025 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>My Study OS</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    :root {
+      --bg: #020617;
+      --bg-soft: #02081b;
+      --bg-card: #020617;
+      --border-subtle: rgba(51,65,85,0.9);
+      --accent: #4f46e5;
+      --accent-soft: rgba(79,70,229,0.16);
+      --accent-strong: #6366f1;
+      --text: #e5e7eb;
+      --text-muted: #9ca3af;
+      --danger: #f97373;
+      --success: #22c55e;
+      --warning: #facc15;
+    }
+
+    .theme-light {
+      --bg: #e5e7eb;
+      --bg-soft: #f3f4f6;
+      --bg-card: #ffffff;
+      --border-subtle: rgba(148,163,184,0.8);
+      --accent: #2563eb;
+      --accent-soft: rgba(37,99,235,0.12);
+      --accent-strong: #1d4ed8;
+      --text: #111827;
+      --text-muted: #6b7280;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+        sans-serif;
+    }
+
+    body {
+      background: radial-gradient(circle at top, #0b1120 0, var(--bg) 55%);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      padding: 16px;
+      transition: background 0.25s ease;
+    }
+
+    body.theme-light {
+      background: linear-gradient(135deg, #e5e7eb, #ffffff);
+    }
+
+    .app {
+      width: 100%;
+      max-width: 980px;
+      background: linear-gradient(135deg, var(--bg-soft), var(--bg-card));
+      border-radius: 22px;
+      padding: 18px 18px 26px;
+      box-shadow: 0 18px 40px rgba(15,23,42,0.5);
+      border: 1px solid rgba(148,163,184,0.35);
+      position: relative;
+      overflow: hidden;
+      transition: background 0.25s ease, box-shadow 0.25s ease, border 0.25s ease;
+    }
+
+    .theme-light .app {
+      box-shadow: 0 14px 30px rgba(148,163,184,0.4);
+      border-color: rgba(148,163,184,0.6);
+    }
+
+    .logo {
+      display: inline-flex;
+      align-items: baseline;
+      gap: 0.35rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+    }
+
+    .logo-main {
+      font-size: 1.05rem;
+    }
+
+    .logo-pill {
+      font-size: 0.7rem;
+      padding: 2px 8px;
+      border-radius: 999px;
+      border: 1px solid var(--accent-strong);
+      text-transform: uppercase;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+      gap: 10px;
+    }
+
+    #app-title {
+      font-size: 1.3rem;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+    }
+
+    #today-label {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    #theme-toggle {
+      border-radius: 999px;
+      padding: 6px 10px;
+      background: var(--bg-soft);
+      border: 1px solid rgba(148,163,184,0.6);
+      color: var(--text-muted);
+      font-size: 0.78rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    #theme-toggle span {
+      font-size: 0.9rem;
+    }
+
+    nav {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+    }
+
+    .nav-btn {
+      border-radius: 999px;
+      padding: 7px 12px;
+      border: 1px solid var(--border-subtle);
+      background: var(--bg-soft);
+      color: var(--text-muted);
+      font-size: 0.78rem;
+      cursor: pointer;
+      transition: 0.16s ease;
+    }
+
+    .nav-btn.active {
+      background: var(--accent-soft);
+      color: var(--accent-strong);
+      border-color: var(--accent-strong);
+    }
+
+    main {
+      margin-top: 4px;
+    }
+
+    .section {
+      display: none;
+    }
+
+    .section.active {
+      display: block;
+    }
+
+    .grid-two {
+      display: grid;
+      grid-template-columns: 1.3fr 1fr;
+      gap: 12px;
+    }
+
+    @media (max-width: 780px) {
+      .grid-two {
+        grid-template-columns: 1fr;
+      }
+      body {
+        padding: 10px;
+      }
+      .app {
+        padding: 14px 12px 20px;
+        border-radius: 18px;
+      }
+    }
+
+    .card {
+      background: var(--bg-card);
+      border-radius: 14px;
+      border: 1px solid var(--border-subtle);
+      padding: 12px 12px 14px;
+      transition: background 0.2s ease, border 0.2s ease;
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+      gap: 8px;
+    }
+
+    .card-title {
+      font-size: 0.96rem;
+      font-weight: 600;
+    }
+
+    .pill {
+      font-size: 0.7rem;
+      padding: 2px 8px;
+      border-radius: 999px;
+      border: 1px solid rgba(148,163,184,0.66);
+      color: var(--text-muted);
+      white-space: nowrap;
+      background: var(--bg-soft);
+    }
+
+    .input-row {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 8px;
+      flex-wrap: wrap;
+    }
+
+    .goal-date-row {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      align-items: flex-end;
+    }
+
+    .goal-date-group {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      min-width: 80px;
+      font-size: 0.75rem;
+    }
+
+    .goal-date-group label {
+      color: var(--text-muted);
+      font-size: 0.72rem;
+    }
+
+    input[type="text"],
+    input[type="number"],
+    input[type="date"],
+    select {
+      width: 100%;
+      padding: 6px 8px;
+      border-radius: 9px;
+      border: 1px solid rgba(75,85,99,0.9);
+      background: var(--bg-soft);
+      color: var(--text);
+      font-size: 0.82rem;
+    }
+
+    input:focus,
+    select:focus {
+      outline: 1px solid var(--accent-strong);
+      border-color: var(--accent-strong);
+    }
+
+    button {
+      border: none;
+      cursor: pointer;
+      border-radius: 10px;
+      padding: 6px 10px;
+      font-size: 0.78rem;
+      font-weight: 500;
+      background: var(--accent);
+      color: white;
+      transition: transform 0.05s ease, box-shadow 0.16s ease,
+        background 0.16s ease;
+      white-space: nowrap;
+    }
+
+    button:hover {
+      background: var(--accent-strong);
+      box-shadow: 0 6px 14px rgba(79,70,229,0.45);
+      transform: translateY(-1px);
+    }
+
+    button:active {
+      transform: translateY(0);
+      box-shadow: none;
+    }
+
+    button.secondary {
+      background: transparent;
+      color: var(--text-muted);
+      border: 1px solid rgba(75,85,99,0.9);
+      box-shadow: none;
+    }
+
+    button.secondary:hover {
+      background: var(--bg-soft);
+    }
+
+    button.danger {
+      background: #b91c1c;
+    }
+
+    button.danger:hover {
+      background: #dc2626;
+      box-shadow: 0 6px 14px rgba(220,38,38,0.45);
+    }
+
+    ul {
+      list-style: none;
+    }
+
+    /* HOME */
+    #dday-value {
+      font-size: 1.3rem;
+      font-weight: 700;
+      margin-top: 4px;
+    }
+
+    #dday-label {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+
+    #dday-target-text {
+      font-size: 0.88rem;
+    }
+
+    #goals-list {
+      max-height: 130px;
+      overflow-y: auto;
+      padding-right: 3px;
+      margin-top: 4px;
+    }
+
+    .goal-item {
+      font-size: 0.83rem;
+      padding: 4px 2px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid rgba(31,41,55,0.2);
+    }
+
+    .goal-text {
+      flex: 1;
+      margin-right: 4px;
+    }
+
+    #home-summary {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-top: 4px;
+      line-height: 1.5;
+    }
+
+    /* TODOS */
+    #todo-scope-tabs {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 10px;
+      flex-wrap: wrap;
+    }
+
+    .scope-tab {
+      font-size: 0.76rem;
+      padding: 4px 9px;
+      border-radius: 999px;
+      border: 1px solid rgba(55,65,81,0.9);
+      background: var(--bg-soft);
+      color: var(--text-muted);
+      cursor: pointer;
+    }
+
+    .scope-tab.active {
+      background: var(--accent-soft);
+      color: var(--accent-strong);
+      border-color: var(--accent-strong);
+    }
+
+    #todo-list {
+      max-height: 260px;
+      overflow-y: auto;
+      padding-right: 4px;
+      border-top: 1px solid rgba(31,41,55,0.2);
+    }
+
+    .todo-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 6px 2px;
+      border-bottom: 1px solid rgba(31,41,55,0.2);
+      gap: 6px;
+    }
+
+    .todo-left {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex: 1;
+    }
+
+    .status-btn {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      border: 1px solid rgba(75,85,99,0.9);
+      background: var(--bg-soft);
+      color: var(--text-muted);
+      font-size: 0.82rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .status-btn.success {
+      border-color: var(--success);
+      color: var(--success);
+    }
+
+    .status-btn.partial {
+      border-color: var(--warning);
+      color: var(--warning);
+    }
+
+    .status-btn.fail {
+      border-color: var(--danger);
+      color: var(--danger);
+    }
+
+    .todo-text {
+      font-size: 0.87rem;
+      word-break: break-word;
+    }
+
+    .todo-meta {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+    }
+
+    .todo-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      align-items: flex-end;
+    }
+
+    .tiny {
+      font-size: 0.72rem;
+      padding: 3px 6px;
+      border-radius: 999px;
+      border: 1px solid rgba(55,65,81,0.9);
+      color: var(--text-muted);
+      background: transparent;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+
+    /* POMODORO */
+    #pomo-display {
+      font-size: 2.1rem;
+      font-weight: 700;
+      text-align: center;
+      margin: 6px 0 4px;
+    }
+
+    #pomo-phase {
+      text-align: center;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+
+    #pomo-controls {
+      display: flex;
+      justify-content: center;
+      gap: 6px;
+      margin-bottom: 6px;
+      flex-wrap: wrap;
+    }
+
+    #pomo-progress-text {
+      text-align: center;
+      font-size: 0.82rem;
+      color: var(--text-muted);
+    }
+
+    #pomo-config-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 6px;
+      margin-top: 6px;
+    }
+
+    .config-item {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      font-size: 0.78rem;
+    }
+
+    .config-item label {
+      color: var(--text-muted);
+    }
+
+    /* STUDY TIMER */
+    #study-time-today {
+      font-size: 1.3rem;
+      font-weight: 700;
+      margin: 4px 0;
+    }
+
+    #study-status {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+
+    #study-controls {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    #study-log {
+      margin-top: 8px;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    /* FOCUS MODE */
+    #focus-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(15,23,42,0.96);
+      z-index: 50;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+
+    #focus-overlay-inner {
+      max-width: 480px;
+      width: 100%;
+      background: #020617;
+      border-radius: 18px;
+      border: 1px solid rgba(148,163,184,0.7);
+      padding: 18px 16px 16px;
+      text-align: center;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.7);
+    }
+
+    #focus-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    #focus-subtitle {
+      font-size: 0.88rem;
+      color: #cbd5f5;
+      margin-bottom: 10px;
+    }
+
+    #focus-hint {
+      font-size: 0.76rem;
+      color: #9ca3af;
+      margin-top: 8px;
+    }
+
+    #focus-timer-label {
+      font-size: 2rem;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    /* CALENDAR */
+    #calendar-grid {
+      display: grid;
+      grid-template-columns: repeat(7, minmax(0, 1fr));
+      gap: 4px;
+      margin-top: 8px;
+      font-size: 0.8rem;
+    }
+
+    .calendar-weekday {
+      text-align: center;
+      padding: 4px 0;
+      color: var(--text-muted);
+      border-bottom: 1px solid rgba(31,41,55,0.2);
+    }
+
+    .calendar-day {
+      min-height: 38px;
+      border-radius: 8px;
+      border: 1px solid rgba(31,41,55,0.3);
+      padding: 3px 4px;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      background: var(--bg-soft);
+    }
+
+    .calendar-day.other-month {
+      opacity: 0.35;
+    }
+
+    .calendar-day-number {
+      font-size: 0.8rem;
+    }
+
+    .calendar-day-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 999px;
+      background: var(--accent-strong);
+      margin-top: 2px;
+      align-self: flex-start;
+    }
+
+    .calendar-day.selected {
+      border-color: var(--accent-strong);
+      box-shadow: 0 0 0 1px var(--accent-soft);
+    }
+
+    #calendar-month-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.88rem;
+      margin-bottom: 4px;
+    }
+
+    #calendar-month-center {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
+
+    #calendar-month-picker {
+      padding: 2px 6px;
+      font-size: 0.8rem;
+      border-radius: 8px;
+      border: 1px solid rgba(75,85,99,0.9);
+      background: var(--bg-soft);
+      color: var(--text);
+    }
+
+    #calendar-selected-date {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      margin-top: 6px;
+    }
+
+    #calendar-task-list {
+      margin-top: 6px;
+      max-height: 150px;
+      overflow-y: auto;
+      padding-right: 3px;
+      font-size: 0.82rem;
+    }
+
+    .calendar-task-item {
+      border-bottom: 1px solid rgba(31,41,55,0.2);
+      padding: 4px 2px;
+    }
+
+    .calendar-task-scope {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+    }
+
+    /* SMALL TEXTS */
+    .hint {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    .tagline {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+    }
+  </style>
+</head>
+<body class="theme-dark">
+  <div id="focus-overlay">
+    <div id="focus-overlay-inner">
+      <div id="focus-title">지금은 집중 모드</div>
+      <div id="focus-subtitle">
+        이 시간만큼은 다른 앱/사이트 생각 말고,<br />눈앞의 공부에만 집중해봐요.
+      </div>
+      <div id="focus-timer-label">--:--</div>
+      <div class="hint">
+        * 웹사이트는 실제로 다른 앱을 막을 수 없어요.<br />
+        대신, 이 화면을 보면서 본인이 스스로 약속을 지키는 용도의 “소프트 차단”입니다.
+      </div>
+      <button id="focus-exit-btn" style="margin-top:12px;">집중 모드 종료</button>
+      <div id="focus-hint">이 창은 언제든지 닫을 수 있지만,<br />가능하면 공부 시간 동안 그대로 유지해 보자!</div>
+    </div>
+  </div>
+
+  <div class="app">
+    <header>
+      <div>
+        <div class="logo">
+          <span class="logo-main">My Study</span>
+          <span class="logo-pill">OS</span>
+        </div>
+        <div id="today-label"></div>
+      </div>
+      <button id="theme-toggle">
+        <span id="theme-icon">🌙</span>
+        <span id="theme-text">다크 모드</span>
+      </button>
+    </header>
+
+    <nav>
+      <button class="nav-btn active" data-section="home">홈</button>
+      <button class="nav-btn" data-section="todos">계획(To-do)</button>
+      <button class="nav-btn" data-section="calendar">달력</button>
+      <button class="nav-btn" data-section="pomodoro">포모도로</button>
+      <button class="nav-btn" data-section="study">공부 타이머</button>
+      <button class="nav-btn" data-section="settings">설정</button>
+    </nav>
+
+    <main>
+      <!-- HOME -->
+      <section id="home" class="section active">
+        <div class="grid-two">
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">D-Day & 목표</div>
+              <span class="pill">Home</span>
+            </div>
+            <div id="dday-label">목표 날짜와 제목을 설정해 주세요.</div>
+            <div id="dday-value">D-0</div>
+            <div id="dday-target-text" style="margin-top:2px;"></div>
+
+            <div class="input-row" style="margin-top:10px;">
+              <input type="text" id="dday-title-input" placeholder="예: 과학고 입시" />
+              <input type="date" id="dday-date-input" />
+            </div>
+            <button id="dday-save-btn">D-Day 저장</button>
+            <button id="dday-clear-btn" class="secondary" style="margin-left:4px;">초기화</button>
+
+            <div class="hint">
+              * D-Day는 이 기기(브라우저)에만 저장돼요. GitHub 서버에는 기록되지 않아요.
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">오늘의 목표</div>
+              <span class="pill">Goals</span>
+            </div>
+            <div class="input-row">
+              <input type="text" id="goal-input" placeholder="오늘 꼭 이루고 싶은 목표를 적어보세요." />
+              <button id="goal-add-btn">추가</button>
+            </div>
+            <ul id="goals-list"></ul>
+            <button id="goals-clear-btn" class="secondary" style="margin-top:6px;">전체 삭제</button>
+
+            <div id="home-summary">
+              · 오늘 공부 시간: <span id="summary-study-time">00:00:00</span><br />
+              · 오늘 완료한 할 일(모든 기간 합산): <span id="summary-done-count">0</span> 개
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TODOS -->
+      <section id="todos" class="section">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">계획 & 체크리스트</div>
+            <span class="pill">연 / 월 / 주 / 일</span>
+          </div>
+
+          <div id="todo-scope-tabs">
+            <button class="scope-tab active" data-scope="year">1년 계획</button>
+            <button class="scope-tab" data-scope="month">한 달 계획</button>
+            <button class="scope-tab" data-scope="week">일주일 계획</button>
+            <button class="scope-tab" data-scope="day">하루 계획</button>
+          </div>
+
+          <div class="input-row">
+            <input type="text" id="todo-input" placeholder="이 기간 동안 해야 할 일을 적고 Enter 또는 추가 버튼을 눌러보세요." />
+          </div>
+          <div class="input-row goal-date-row">
+            <div class="goal-date-group" id="todo-year-wrapper">
+              <label for="todo-year">Year</label>
+              <select id="todo-year"></select>
+            </div>
+            <div class="goal-date-group" id="todo-month-wrapper">
+              <label for="todo-month">Month</label>
+              <select id="todo-month"></select>
+            </div>
+            <div class="goal-date-group" id="todo-week-wrapper">
+              <label for="todo-week">Week</label>
+              <select id="todo-week">
+                <option value="1">1주차</option>
+                <option value="2">2주차</option>
+                <option value="3">3주차</option>
+                <option value="4">4주차</option>
+                <option value="5">5주차</option>
+              </select>
+            </div>
+            <div class="goal-date-group" id="todo-day-wrapper">
+              <label for="todo-date-input">Date</label>
+              <input type="date" id="todo-date-input" />
+            </div>
+            <button id="todo-add-btn">추가</button>
+          </div>
+
+          <ul id="todo-list"></ul>
+
+          <div class="hint">
+            · ○: 성공 / △: 어느 정도 / ✕: 못 함 / □: 아직 평가 전<br />
+            · 날짜를 넣으면 ‘달력’ 탭에서 날짜별로 계획을 확인할 수 있어요.
+          </div>
+        </div>
+      </section>
+
+      <!-- CALENDAR -->
+      <section id="calendar" class="section">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">달력으로 보기</div>
+            <span class="pill">계획 캘린더</span>
+          </div>
+          <div id="calendar-month-row">
+            <button id="calendar-prev-btn" class="secondary">이전</button>
+            <div id="calendar-month-center">
+              <div id="calendar-month-label"></div>
+              <input type="month" id="calendar-month-picker" />
+            </div>
+            <button id="calendar-next-btn" class="secondary">다음</button>
+          </div>
+          <div id="calendar-grid"></div>
+          <div id="calendar-selected-date">선택한 날짜: 오늘</div>
+          <div id="calendar-task-list"></div>
+          <div class="hint">
+            · 계획 추가할 때 날짜를 넣으면, 해당 날짜에 점이 찍히고 아래에 목록이 표시됩니다.<br />
+            · 연/월/주/일 어떤 범주에 넣었든, 날짜가 같으면 함께 모아서 보여줘요.
+          </div>
+        </div>
+      </section>
+
+      <!-- POMODORO -->
+      <section id="pomodoro" class="section">
+        <div class="grid-two">
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">포모도로 타이머</div>
+              <span class="pill">집중/휴식 사이클</span>
+            </div>
+            <div id="pomo-display">25:00</div>
+            <div id="pomo-phase">대기 중</div>
+            <div id="pomo-controls">
+              <button id="pomo-start-btn">시작</button>
+              <button id="pomo-pause-btn" class="secondary">일시 정지</button>
+              <button id="pomo-reset-btn" class="secondary">리셋</button>
+            </div>
+            <div id="pomo-progress-text">0 / 4 사이클</div>
+            <div class="hint">
+              기본 설정: 25분 집중 → 5분 휴식 × 4사이클 → 10분 긴 휴식<br />
+              집중/쉬는 시간, 사이클 수는 오른쪽에서 자유롭게 바꿀 수 있어요.
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">포모도로 설정</div>
+              <span class="pill">사용자 설정</span>
+            </div>
+            <div id="pomo-config-grid">
+              <div class="config-item">
+                <label for="pomo-focus-min">집중 시간(분)</label>
+                <input type="number" id="pomo-focus-min" min="1" max="180" value="25" />
+              </div>
+              <div class="config-item">
+                <label for="pomo-short-min">짧은 휴식(분)</label>
+                <input type="number" id="pomo-short-min" min="1" max="60" value="5" />
+              </div>
+              <div class="config-item">
+                <label for="pomo-long-min">긴 휴식(분)</label>
+                <input type="number" id="pomo-long-min" min="1" max="120" value="10" />
+              </div>
+              <div class="config-item">
+                <label for="pomo-cycles">긴 휴식 전 사이클 수</label>
+                <input type="number" id="pomo-cycles" min="1" max="12" value="4" />
+              </div>
+            </div>
+            <button id="pomo-save-config-btn" style="margin-top:8px;">설정 저장</button>
+            <div class="hint">
+              * 설정은 브라우저에 저장돼서, 다음에 들어와도 그대로 유지됩니다.
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- STUDY TIMER -->
+      <section id="study" class="section">
+        <div class="grid-two">
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">오늘 공부 시간</div>
+              <span class="pill">집중 기록</span>
+            </div>
+            <div id="study-time-today">00:00:00</div>
+            <div id="study-status">대기 중</div>
+            <div id="study-controls">
+              <button id="study-start-btn">시작</button>
+              <button id="study-stop-btn" class="secondary">정지</button>
+              <button id="study-reset-btn" class="secondary">오늘 기록 초기화</button>
+              <button id="study-focus-btn" class="secondary">집중 모드 켜기</button>
+            </div>
+            <div id="study-log">
+              · 현재 세션 시간: <span id="study-session-time">00:00:00</span><br />
+              · 최근 세션 길이: <span id="study-last-session">-</span>
+            </div>
+            <div class="hint">
+              * “시작”을 누르면 공부 시간 기록이 시작되고, “정지”를 누르면 오늘 총 공부 시간에 더해집니다.<br />
+              * 오늘 날짜 기준으로만 합산되며, 내일이 되면 자동으로 새로운 하루가 시작돼요.
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">집중 모드 안내</div>
+              <span class="pill">집중 화면</span>
+            </div>
+            <p class="tagline">
+              진짜 앱 차단까지는 못 하지만,<br />
+              이 웹사이트 안에서만큼은 “공부만 하도록” 돕는 모드예요.
+            </p>
+            <ul style="margin-top:8px;font-size:0.82rem;color:var(--text-muted);line-height:1.5;">
+              <li>· 집중 모드를 켜면 화면 전체에 “집중 화면”이 떠요.</li>
+              <li>· 그 상태에서 그냥 문제만 풀고, 딴생각을 줄이는 용도!</li>
+              <li>· 필요하면 언제든 끌 수 있지만, 스스로와 약속했다고 생각해 보기.</li>
+              <li>· 포모도로와 함께 쓰면 자연스럽게 공부/휴식 리듬을 만들 수 있어요.</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- SETTINGS -->
+      <section id="settings" class="section">
+        <div class="grid-two">
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">테마 & 화면 유지</div>
+              <span class="pill">Theme</span>
+            </div>
+            <p class="tagline">
+              라이트/다크 테마를 전환하고, 가능한 범위 안에서 화면이 꺼지지 않도록 시도합니다.
+            </p>
+            <div class="hint" style="margin-top:6px;">
+              · 상단의 버튼으로 테마를 전환할 수 있어요.<br />
+              · 타이머(포모도로/공부)가 돌아가는 동안에는 일부 브라우저에서 화면 꺼짐을 막도록 요청해요.<br />
+              · iPad Safari에서는 이 기능이 제한적일 수 있어요.
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">데이터 초기화</div>
+              <span class="pill">Reset</span>
+            </div>
+            <p class="tagline">브라우저에 저장된 모든 기록을 지우고 처음 상태로 돌리고 싶을 때 사용하세요.</p>
+            <button id="reset-all-btn" class="danger" style="margin-top:10px;">모든 데이터 초기화</button>
+            <div class="hint">
+              * D-Day, 목표, 모든 To-do, 공부 시간, 포모도로 설정 등이 모두 삭제됩니다.<br />
+              * 되돌릴 수 없으니 신중하게 눌러 주세요.
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    // ===== 공통: 날짜 포맷 =====
+    function formatDate(d) {
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, "0");
+      const day = String(d.getDate()).padStart(2, "0");
+      return `${y}-${m}-${day}`;
+    }
+
+    // ===== 오늘 날짜 표시 =====
+    const todayLabel = document.getElementById("today-label");
+    const today = new Date();
+    const dayNames = ["일", "월", "화", "수", "목", "금", "토"];
+    todayLabel.textContent =
+      `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2,"0")}-${String(today.getDate()).padStart(2,"0")} (${dayNames[today.getDay()]})`;
+
+    // ===== 테마 토글 =====
+    const themeToggleBtn = document.getElementById("theme-toggle");
+    const themeIcon = document.getElementById("theme-icon");
+    const themeText = document.getElementById("theme-text");
+    const THEME_KEY = "study_os_theme";
+
+    function applyTheme(theme) {
+      if (theme === "light") {
+        document.body.classList.add("theme-light");
+        themeIcon.textContent = "☀️";
+        themeText.textContent = "라이트 모드";
+      } else {
+        document.body.classList.remove("theme-light");
+        themeIcon.textContent = "🌙";
+        themeText.textContent = "다크 모드";
+      }
+      localStorage.setItem(THEME_KEY, theme);
+    }
+
+    const savedTheme = localStorage.getItem(THEME_KEY) || "dark";
+    applyTheme(savedTheme);
+
+    themeToggleBtn.addEventListener("click", () => {
+      const current = localStorage.getItem(THEME_KEY) || "dark";
+      applyTheme(current === "dark" ? "light" : "dark");
+    });
+
+    // ===== 네비게이션 =====
+    const navButtons = document.querySelectorAll(".nav-btn");
+    const sections = document.querySelectorAll(".section");
+    navButtons.forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const target = btn.dataset.section;
+        navButtons.forEach((b) => b.classList.remove("active"));
+        btn.classList.add("active");
+        sections.forEach((sec) => {
+          sec.classList.toggle("active", sec.id === target);
+        });
+      });
+    });
+
+    // ===== D-DAY & 목표 =====
+    const DDAY_KEY = "study_os_dday";
+    const GOALS_KEY = "study_os_goals";
+
+    const ddayLabelEl = document.getElementById("dday-label");
+    const ddayValueEl = document.getElementById("dday-value");
+    const ddayTargetTextEl = document.getElementById("dday-target-text");
+    const ddayTitleInput = document.getElementById("dday-title-input");
+    const ddayDateInput = document.getElementById("dday-date-input");
+    const ddaySaveBtn = document.getElementById("dday-save-btn");
+    const ddayClearBtn = document.getElementById("dday-clear-btn");
+
+    function renderDDay() {
+      const saved = localStorage.getItem(DDAY_KEY);
+      if (!saved) {
+        ddayLabelEl.textContent = "목표 날짜와 제목을 설정해 주세요.";
+        ddayValueEl.textContent = "D-0";
+        ddayTargetTextEl.textContent = "";
+        return;
+      }
+      const data = JSON.parse(saved);
+      const targetDate = new Date(data.date);
+      if (isNaN(targetDate.getTime())) {
+        ddayLabelEl.textContent = "목표 날짜 형식이 잘못되었습니다. 다시 설정해 주세요.";
+        ddayValueEl.textContent = "D-0";
+        ddayTargetTextEl.textContent = "";
+        return;
+      }
+      const todayDateOnly = new Date(
+        today.getFullYear(),
+        today.getMonth(),
+        today.getDate()
+      );
+      const targetDateOnly = new Date(
+        targetDate.getFullYear(),
+        targetDate.getMonth(),
+        targetDate.getDate()
+      );
+      const diffMs = targetDateOnly - todayDateOnly;
+      const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24));
+      let label = "";
+      if (diffDays > 0) {
+        label = `D-${diffDays}`;
+      } else if (diffDays === 0) {
+        label = "D-DAY";
+      } else {
+        label = `D+${Math.abs(diffDays)}`;
+      }
+      ddayLabelEl.textContent = data.title || "목표";
+      ddayValueEl.textContent = label;
+      ddayTargetTextEl.textContent = `${data.date} 까지`;
+      ddayTitleInput.value = data.title || "";
+      ddayDateInput.value = data.date || "";
+    }
+
+    ddaySaveBtn.addEventListener("click", () => {
+      const title = ddayTitleInput.value.trim();
+      const dateStr = ddayDateInput.value;
+      if (!title || !dateStr) {
+        alert("제목과 날짜를 모두 입력해 주세요.");
+        return;
+      }
+      localStorage.setItem(DDAY_KEY, JSON.stringify({ title, date: dateStr }));
+      renderDDay();
+    });
+
+    ddayClearBtn.addEventListener("click", () => {
+      if (!confirm("D-Day 설정을 초기화할까요?")) return;
+      localStorage.removeItem(DDAY_KEY);
+      renderDDay();
+    });
+
+    renderDDay();
+
+    // ----- Goals -----
+    const goalInput = document.getElementById("goal-input");
+    const goalAddBtn = document.getElementById("goal-add-btn");
+    const goalsList = document.getElementById("goals-list");
+    const goalsClearBtn = document.getElementById("goals-clear-btn");
+
+    let goals = [];
+    function loadGoals() {
+      try {
+        const saved = localStorage.getItem(GOALS_KEY);
+        goals = saved ? JSON.parse(saved) : [];
+      } catch {
+        goals = [];
+      }
+    }
+    function saveGoals() {
+      localStorage.setItem(GOALS_KEY, JSON.stringify(goals));
+    }
+    function renderGoals() {
+      goalsList.innerHTML = "";
+      goals.forEach((g, idx) => {
+        const li = document.createElement("li");
+        li.className = "goal-item";
+        const span = document.createElement("span");
+        span.className = "goal-text";
+        span.textContent = g;
+        const btn = document.createElement("button");
+        btn.className = "tiny";
+        btn.textContent = "삭제";
+        btn.addEventListener("click", () => {
+          goals.splice(idx, 1);
+          saveGoals();
+          renderGoals();
+        });
+        li.appendChild(span);
+        li.appendChild(btn);
+        goalsList.appendChild(li);
+      });
+    }
+    function addGoal() {
+      const text = goalInput.value.trim();
+      if (!text) return;
+      goals.push(text);
+      goalInput.value = "";
+      saveGoals();
+      renderGoals();
+    }
+
+    goalAddBtn.addEventListener("click", addGoal);
+    goalInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") addGoal();
+    });
+    goalsClearBtn.addEventListener("click", () => {
+      if (!confirm("오늘 목표를 모두 삭제할까요?")) return;
+      goals = [];
+      saveGoals();
+      renderGoals();
+    });
+
+    loadGoals();
+    renderGoals();
+
+    // ===== To-do (연/월/주/일) + 날짜 =====
+    const TODOS_KEY = "study_os_todos_v1";
+    const scopeTabs = document.querySelectorAll(".scope-tab");
+    const todoInput = document.getElementById("todo-input");
+    const todoDateInput = document.getElementById("todo-date-input");
+    const todoAddBtn = document.getElementById("todo-add-btn");
+    const todoListEl = document.getElementById("todo-list");
+    const todoYearWrapper = document.getElementById("todo-year-wrapper");
+    const todoMonthWrapper = document.getElementById("todo-month-wrapper");
+    const todoWeekWrapper = document.getElementById("todo-week-wrapper");
+    const todoDayWrapper = document.getElementById("todo-day-wrapper");
+    const todoYearSelect = document.getElementById("todo-year");
+    const todoMonthSelect = document.getElementById("todo-month");
+    const todoWeekSelect = document.getElementById("todo-week");
+
+    let todoData = {
+      year: [],
+      month: [],
+      week: [],
+      day: [],
+    };
+    let currentScope = "year";
+    // 연/월/주/일 선택 UI 초기화
+    const baseYear = today.getFullYear();
+    for (let y = baseYear - 2; y <= baseYear + 5; y++) {
+      const opt = document.createElement("option");
+      opt.value = y;
+      opt.textContent = y;
+      todoYearSelect.appendChild(opt);
+    }
+
+    for (let m = 1; m <= 12; m++) {
+      const opt = document.createElement("option");
+      opt.value = m;
+      opt.textContent = m;
+      todoMonthSelect.appendChild(opt);
+    }
+
+    todoYearSelect.value = String(baseYear);
+    todoMonthSelect.value = String(today.getMonth() + 1);
+
+    function updateTodoDateInputs() {
+      if (currentScope === "year") {
+        todoYearWrapper.style.display = "flex";
+        todoMonthWrapper.style.display = "none";
+        todoWeekWrapper.style.display = "none";
+        todoDayWrapper.style.display = "none";
+      } else if (currentScope === "month") {
+        todoYearWrapper.style.display = "flex";
+        todoMonthWrapper.style.display = "flex";
+        todoWeekWrapper.style.display = "none";
+        todoDayWrapper.style.display = "none";
+      } else if (currentScope === "week") {
+        todoYearWrapper.style.display = "flex";
+        todoMonthWrapper.style.display = "flex";
+        todoWeekWrapper.style.display = "flex";
+        todoDayWrapper.style.display = "none";
+      } else {
+        // day
+        todoYearWrapper.style.display = "none";
+        todoMonthWrapper.style.display = "none";
+        todoWeekWrapper.style.display = "none";
+        todoDayWrapper.style.display = "flex";
+        if (!todoDateInput.value) {
+          todoDateInput.value = formatDate(today);
+        }
+      }
+    }
+
+    function loadTodos() {
+      try {
+        const saved = localStorage.getItem(TODOS_KEY);
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          todoData = Object.assign(todoData, parsed);
+        }
+      } catch {
+        // ignore
+      }
+    }
+
+    function saveTodos() {
+      localStorage.setItem(TODOS_KEY, JSON.stringify(todoData));
+      updateHomeSummary();
+      renderCalendar(); // 캘린더 갱신
+      renderCalendarSelectedTasks(selectedCalendarDateStr);
+    }
+
+    function cycleStatus(status) {
+      if (status === "") return "success";
+      if (status === "success") return "partial";
+      if (status === "partial") return "fail";
+      return "";
+    }
+
+    function getStatusSymbol(status) {
+      if (status === "success") return "○";
+      if (status === "partial") return "△";
+      if (status === "fail") return "✕";
+      return "□";
+    }
+
+    function scopeLabel(scope) {
+      if (scope === "year") return "1년 계획";
+      if (scope === "month") return "한 달 계획";
+      if (scope === "week") return "일주일 계획";
+      if (scope === "day") return "하루 계획";
+      return scope;
+    }
+
+    function formatTodoDateForScope(scope, dateStr) {
+      if (!dateStr) return "";
+      const parts = dateStr.split("-");
+      if (parts.length < 3) return dateStr;
+      const y = parts[0];
+      const m = parseInt(parts[1], 10);
+      const d = parseInt(parts[2], 10);
+      if (scope === "year") {
+        return `${y}년`;
+      }
+      if (scope === "month") {
+        return `${y}년 ${m}월`;
+      }
+      if (scope === "week") {
+        const weekIndex = Math.floor((d - 1) / 7) + 1;
+        return `${y}년 ${m}월 ${weekIndex}주차`;
+      }
+      return dateStr;
+    }
+
+    function renderTodoList() {
+      const list = todoData[currentScope] || [];
+      todoListEl.innerHTML = "";
+      list.forEach((item, idx) => {
+        const li = document.createElement("li");
+        li.className = "todo-item";
+
+        const left = document.createElement("div");
+        left.className = "todo-left";
+
+        const statusBtn = document.createElement("button");
+        statusBtn.className = "status-btn";
+        statusBtn.textContent = getStatusSymbol(item.status || "");
+        if (item.status === "success") statusBtn.classList.add("success");
+        if (item.status === "partial") statusBtn.classList.add("partial");
+        if (item.status === "fail") statusBtn.classList.add("fail");
+
+        statusBtn.addEventListener("click", () => {
+          const next = cycleStatus(item.status || "");
+          item.status = next;
+          saveTodos();
+          renderTodoList();
+        });
+
+        const textWrap = document.createElement("div");
+        const text = document.createElement("div");
+        text.className = "todo-text";
+        text.textContent = item.text;
+        textWrap.appendChild(text);
+
+        if (item.date) {
+          const meta = document.createElement("div");
+          meta.className = "todo-meta";
+          const displayDate = formatTodoDateForScope(currentScope, item.date);
+          meta.textContent = displayDate || item.date;
+          textWrap.appendChild(meta);
+        }
+
+        left.appendChild(statusBtn);
+        left.appendChild(textWrap);
+
+        const actions = document.createElement("div");
+        actions.className = "todo-actions";
+
+        const delBtn = document.createElement("button");
+        delBtn.className = "tiny";
+        delBtn.textContent = "삭제";
+        delBtn.addEventListener("click", () => {
+          todoData[currentScope].splice(idx, 1);
+          saveTodos();
+          renderTodoList();
+        });
+
+        actions.appendChild(delBtn);
+
+        li.appendChild(left);
+        li.appendChild(actions);
+        todoListEl.appendChild(li);
+      });
+    }
+
+    function addTodo() {
+      const text = todoInput.value.trim();
+      if (!text) return;
+
+      let dateStr = null;
+      if (currentScope === "year") {
+        const y = todoYearSelect.value;
+        dateStr = `${y}-01-01`;
+      } else if (currentScope === "month") {
+        const y = todoYearSelect.value;
+        const m = String(todoMonthSelect.value).padStart(2, "0");
+        dateStr = `${y}-${m}-01`;
+      } else if (currentScope === "week") {
+        const y = parseInt(todoYearSelect.value, 10);
+        const mIndex = parseInt(todoMonthSelect.value, 10) - 1;
+        const w = parseInt(todoWeekSelect.value, 10);
+        const baseDate = new Date(y, mIndex, 1 + (w - 1) * 7);
+        dateStr = formatDate(baseDate);
+      } else if (currentScope === "day") {
+        dateStr = todoDateInput.value || null;
+      }
+
+      todoData[currentScope].push({ text, status: "", date: dateStr });
+      todoInput.value = "";
+      if (currentScope === "day") {
+        todoDateInput.value = "";
+      }
+
+      saveTodos();
+      renderTodoList();
+    }
+
+    scopeTabs.forEach((tab) => {
+      tab.addEventListener("click", () => {
+        scopeTabs.forEach((t) => t.classList.remove("active"));
+        tab.classList.add("active");
+        currentScope = tab.dataset.scope;
+        updateTodoDateInputs();
+        renderTodoList();
+      });
+    });
+
+    todoAddBtn.addEventListener("click", addTodo);
+    todoInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") addTodo();
+    });
+
+    loadTodos();
+    updateTodoDateInputs();
+    renderTodoList();
+
+    // ===== 캘린더 =====
+    const calendarGrid = document.getElementById("calendar-grid");
+    const calendarMonthLabel = document.getElementById("calendar-month-label");
+    const calendarPrevBtn = document.getElementById("calendar-prev-btn");
+    const calendarNextBtn = document.getElementById("calendar-next-btn");
+    const calendarSelectedDateEl = document.getElementById("calendar-selected-date");
+    const calendarTaskList = document.getElementById("calendar-task-list");
+
+    const calendarMonthPicker = document.getElementById("calendar-month-picker");
+    let calendarCurrent = new Date(today.getFullYear(), today.getMonth(), 1);
+    let selectedCalendarDateStr = formatDate(today);
+
+    function getTodosByDate(dateStr) {
+      const result = [];
+      ["year", "month", "week", "day"].forEach((scope) => {
+        (todoData[scope] || []).forEach((item) => {
+          if (item.date === dateStr) {
+            result.push({ ...item, scope });
+          }
+        });
+      });
+      return result;
+    }
+
+    function renderCalendar() {
+      const year = calendarCurrent.getFullYear();
+      const month = calendarCurrent.getMonth(); // 0-11
+      calendarMonthLabel.textContent = `${year}년 ${month + 1}월`;
+
+      if (calendarMonthPicker) {
+        const monthValue = `${year}-${String(month + 1).padStart(2, "0")}`;
+        if (calendarMonthPicker.value !== monthValue) {
+          calendarMonthPicker.value = monthValue;
+        }
+      }
+
+      calendarGrid.innerHTML = "";
+
+      const weekdays = ["일", "월", "화", "수", "목", "금", "토"];
+      weekdays.forEach((wd) => {
+        const div = document.createElement("div");
+        div.className = "calendar-weekday";
+        div.textContent = wd;
+        calendarGrid.appendChild(div);
+      });
+
+      const firstDay = new Date(year, month, 1);
+      const startDayOfWeek = firstDay.getDay(); // 0-6
+
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+      const prevMonthDays = new Date(year, month, 0).getDate();
+
+      const totalCells = 42; // 6주 * 7일
+      const todayStr = formatDate(today);
+
+      for (let i = 0; i < totalCells; i++) {
+        const cellIndex = i - startDayOfWeek + 1;
+        let cellDate, inCurrentMonth = true;
+
+        if (cellIndex <= 0) {
+          cellDate = new Date(year, month - 1, prevMonthDays + cellIndex);
+          inCurrentMonth = false;
+        } else if (cellIndex > daysInMonth) {
+          cellDate = new Date(year, month + 1, cellIndex - daysInMonth);
+          inCurrentMonth = false;
+        } else {
+          cellDate = new Date(year, month, cellIndex);
+        }
+
+        const dateStr = formatDate(cellDate);
+        const dayDiv = document.createElement("div");
+        dayDiv.className = "calendar-day";
+        if (!inCurrentMonth) {
+          dayDiv.classList.add("other-month");
+        }
+        if (dateStr === selectedCalendarDateStr) {
+          dayDiv.classList.add("selected");
+        }
+
+        const numDiv = document.createElement("div");
+        numDiv.className = "calendar-day-number";
+        numDiv.textContent = cellDate.getDate();
+
+        dayDiv.appendChild(numDiv);
+
+        const todosForDay = getTodosByDate(dateStr);
+        if (todosForDay.length > 0) {
+          const dot = document.createElement("div");
+          dot.className = "calendar-day-dot";
+          dayDiv.appendChild(dot);
+        } else {
+          const spacer = document.createElement("div");
+          spacer.style.height = "6px";
+          dayDiv.appendChild(spacer);
+        }
+
+        if (dateStr === todayStr) {
+          dayDiv.style.boxShadow = "0 0 0 1px rgba(148,163,184,0.5)";
+        }
+
+        dayDiv.addEventListener("click", () => {
+          selectedCalendarDateStr = dateStr;
+          renderCalendar();
+          renderCalendarSelectedTasks(selectedCalendarDateStr);
+        });
+
+        calendarGrid.appendChild(dayDiv);
+      }
+    }
+
+    function renderCalendarSelectedTasks(dateStr) {
+      calendarSelectedDateEl.textContent = `선택한 날짜: ${dateStr}`;
+      const todosForDay = getTodosByDate(dateStr);
+      calendarTaskList.innerHTML = "";
+      if (todosForDay.length === 0) {
+        const p = document.createElement("div");
+        p.textContent = "이 날짜에는 등록된 계획이 없습니다.";
+        p.style.color = "var(--text-muted)";
+        p.style.fontSize = "0.8rem";
+        calendarTaskList.appendChild(p);
+        return;
+      }
+      todosForDay.forEach((item) => {
+        const div = document.createElement("div");
+        div.className = "calendar-task-item";
+        const main = document.createElement("div");
+        main.textContent = `${getStatusSymbol(item.status || "")} ${item.text}`;
+        const scopeInfo = document.createElement("div");
+        scopeInfo.className = "calendar-task-scope";
+        scopeInfo.textContent = scopeLabel(item.scope);
+        div.appendChild(main);
+        div.appendChild(scopeInfo);
+        calendarTaskList.appendChild(div);
+      });
+    }
+
+    calendarPrevBtn.addEventListener("click", () => {
+      calendarCurrent = new Date(
+        calendarCurrent.getFullYear(),
+        calendarCurrent.getMonth() - 1,
+        1
+      );
+      renderCalendar();
+      renderCalendarSelectedTasks(selectedCalendarDateStr);
+    });
+
+    calendarNextBtn.addEventListener("click", () => {
+      calendarCurrent = new Date(
+        calendarCurrent.getFullYear(),
+        calendarCurrent.getMonth() + 1,
+        1
+      );
+      renderCalendar();
+      renderCalendarSelectedTasks(selectedCalendarDateStr);
+    });
+
+    if (calendarMonthPicker) {
+      calendarMonthPicker.addEventListener("change", (e) => {
+        if (!e.target.value) return;
+        const [y, m] = e.target.value.split("-");
+        calendarCurrent = new Date(Number(y), Number(m) - 1, 1);
+        renderCalendar();
+        renderCalendarSelectedTasks(selectedCalendarDateStr);
+      });
+    }
+
+    renderCalendar();
+    renderCalendarSelectedTasks(selectedCalendarDateStr);
+
+    // ===== 포모도로 =====
+    const POMO_CONFIG_KEY = "study_os_pomo_config_v1";
+
+    const pomoDisplay = document.getElementById("pomo-display");
+    const pomoPhaseEl = document.getElementById("pomo-phase");
+    const pomoProgressText = document.getElementById("pomo-progress-text");
+    const pomoStartBtn = document.getElementById("pomo-start-btn");
+    const pomoPauseBtn = document.getElementById("pomo-pause-btn");
+    const pomoResetBtn = document.getElementById("pomo-reset-btn");
+
+    const pomoFocusMinInput = document.getElementById("pomo-focus-min");
+    const pomoShortMinInput = document.getElementById("pomo-short-min");
+    const pomoLongMinInput = document.getElementById("pomo-long-min");
+    const pomoCyclesInput = document.getElementById("pomo-cycles");
+    const pomoSaveConfigBtn = document.getElementById("pomo-save-config-btn");
+
+    let pomoConfig = {
+      focus: 25,
+      shortBreak: 5,
+      longBreak: 10,
+      cyclesBeforeLong: 4,
+    };
+
+    function loadPomoConfig() {
+      try {
+        const saved = localStorage.getItem(POMO_CONFIG_KEY);
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          pomoConfig = Object.assign(pomoConfig, parsed);
+        }
+      } catch {
+        // ignore
+      }
+      pomoFocusMinInput.value = pomoConfig.focus;
+      pomoShortMinInput.value = pomoConfig.shortBreak;
+      pomoLongMinInput.value = pomoConfig.longBreak;
+      pomoCyclesInput.value = pomoConfig.cyclesBeforeLong;
+    }
+
+    function savePomoConfig() {
+      pomoConfig.focus = Math.max(
+        1,
+        parseInt(pomoFocusMinInput.value || "25", 10)
+      );
+      pomoConfig.shortBreak = Math.max(
+        1,
+        parseInt(pomoShortMinInput.value || "5", 10)
+      );
+      pomoConfig.longBreak = Math.max(
+        1,
+        parseInt(pomoLongMinInput.value || "10", 10)
+      );
+      pomoConfig.cyclesBeforeLong = Math.max(
+        1,
+        parseInt(pomoCyclesInput.value || "4", 10)
+      );
+      localStorage.setItem(POMO_CONFIG_KEY, JSON.stringify(pomoConfig));
+      if (!pomoRunning) {
+        pomoSecondsLeft = pomoConfig.focus * 60;
+        updatePomoDisplay();
+      }
+    }
+
+    pomoSaveConfigBtn.addEventListener("click", () => {
+      savePomoConfig();
+      alert("포모도로 설정을 저장했습니다.");
+    });
+
+    function formatTime(sec) {
+      const m = Math.floor(sec / 60);
+      const s = sec % 60;
+      return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+    }
+
+    let pomoMode = "idle"; // idle | focus | short | long
+    let pomoCycleCount = 0;
+    let pomoSecondsLeft = pomoConfig.focus * 60;
+    let pomoIntervalId = null;
+    let pomoRunning = false;
+
+    function updatePomoDisplay() {
+      pomoDisplay.textContent = formatTime(pomoSecondsLeft);
+      let phaseText = "";
+      if (pomoMode === "focus") phaseText = "집중 시간";
+      else if (pomoMode === "short") phaseText = "짧은 휴식";
+      else if (pomoMode === "long") phaseText = "긴 휴식";
+      else phaseText = "대기 중";
+      pomoPhaseEl.textContent = phaseText;
+      pomoProgressText.textContent = `${pomoCycleCount} / ${pomoConfig.cyclesBeforeLong} 사이클`;
+    }
+
+    function startPomoTicking() {
+      if (pomoIntervalId !== null) return;
+      pomoRunning = true;
+      requestWakeLock(); // 화면 유지 시도
+      pomoIntervalId = setInterval(() => {
+        pomoSecondsLeft--;
+        if (pomoSecondsLeft <= 0) {
+          handlePomoPhaseEnd();
+        }
+        updatePomoDisplay();
+      }, 1000);
+    }
+
+    function stopPomoTicking() {
+      if (pomoIntervalId !== null) {
+        clearInterval(pomoIntervalId);
+        pomoIntervalId = null;
+      }
+      pomoRunning = false;
+      releaseWakeLockIfNeeded();
+    }
+
+    function handlePomoPhaseEnd() {
+      if (pomoMode === "focus") {
+        if (pomoCycleCount >= pomoConfig.cyclesBeforeLong) {
+          pomoMode = "long";
+          pomoSecondsLeft = pomoConfig.longBreak * 60;
+          alert("집중 세트 완료! 긴 휴식을 가져보세요.");
+        } else {
+          pomoMode = "short";
+          pomoSecondsLeft = pomoConfig.shortBreak * 60;
+          alert("집중 끝! 짧은 휴식을 가져보세요.");
+        }
+      } else if (pomoMode === "short") {
+        pomoCycleCount++;
+        if (pomoCycleCount >= pomoConfig.cyclesBeforeLong) {
+          pomoMode = "long";
+          pomoSecondsLeft = pomoConfig.longBreak * 60;
+          alert("여러 번의 집중을 마쳤어요. 긴 휴식을 가져보세요!");
+        } else {
+          pomoMode = "focus";
+          pomoSecondsLeft = pomoConfig.focus * 60;
+          alert("휴식 끝! 다시 집중 시작!");
+        }
+      } else if (pomoMode === "long") {
+        alert("긴 휴식까지 모두 끝났어요. 수고했어요! 다시 시작할지 결정해 보세요.");
+        pomoMode = "idle";
+        pomoCycleCount = 0;
+        pomoSecondsLeft = pomoConfig.focus * 60;
+        stopPomoTicking();
+      }
+      updatePomoDisplay();
+    }
+
+    pomoStartBtn.addEventListener("click", () => {
+      if (pomoMode === "idle") {
+        pomoMode = "focus";
+        pomoCycleCount = 0;
+        pomoSecondsLeft = pomoConfig.focus * 60;
+        updatePomoDisplay();
+      }
+      startPomoTicking();
+    });
+
+    pomoPauseBtn.addEventListener("click", () => {
+      if (!pomoRunning) return;
+      stopPomoTicking();
+      pomoPhaseEl.textContent += " (일시 정지)";
+    });
+
+    pomoResetBtn.addEventListener("click", () => {
+      if (!confirm("포모도로 타이머를 리셋할까요?")) return;
+      stopPomoTicking();
+      pomoMode = "idle";
+      pomoCycleCount = 0;
+      pomoSecondsLeft = pomoConfig.focus * 60;
+      updatePomoDisplay();
+    });
+
+    loadPomoConfig();
+    pomoSecondsLeft = pomoConfig.focus * 60;
+    updatePomoDisplay();
+
+    // ===== 공부 타이머 (오늘 공부 시간) =====
+    const STUDY_KEY = "study_os_study_log_v1";
+    const STUDY_SESSION_KEY = "study_os_current_session";
+
+    const studyTimeTodayEl = document.getElementById("study-time-today");
+    const studyStatusEl = document.getElementById("study-status");
+    const studyStartBtn = document.getElementById("study-start-btn");
+    const studyStopBtn = document.getElementById("study-stop-btn");
+    const studyResetBtn = document.getElementById("study-reset-btn");
+    const studyFocusBtn = document.getElementById("study-focus-btn");
+    const studySessionTimeEl = document.getElementById("study-session-time");
+    const studyLastSessionEl = document.getElementById("study-last-session");
+
+    let studyLog = {}; // { "YYYY-MM-DD": seconds }
+    let studyRunning = false;
+    let studySessionStart = null;
+    let studySessionTimerId = null;
+    let studyLastSessionSeconds = null;
+
+    function loadStudyLog() {
+      try {
+        const saved = localStorage.getItem(STUDY_KEY);
+        studyLog = saved ? JSON.parse(saved) : {};
+      } catch {
+        studyLog = {};
+      }
+      try {
+        const savedSession = localStorage.getItem(STUDY_SESSION_KEY);
+        if (savedSession) {
+          const obj = JSON.parse(savedSession);
+          if (obj.running && obj.startTime) {
+            studySessionStart = new Date(obj.startTime);
+            studyRunning = true;
+            startStudySessionTicking();
+            studyStatusEl.textContent = "공부 중 (이전에 시작됨)";
+            requestWakeLock();
+          }
+        }
+      } catch {
+        // ignore
+      }
+    }
+
+    function saveStudyLog() {
+      localStorage.setItem(STUDY_KEY, JSON.stringify(studyLog));
+      updateStudyDisplay();
+      updateHomeSummary();
+    }
+
+    function saveStudySessionState() {
+      localStorage.setItem(
+        STUDY_SESSION_KEY,
+        JSON.stringify({
+          running: studyRunning,
+          startTime: studySessionStart ? studySessionStart.toISOString() : null,
+        })
+      );
+    }
+
+    function formatHMS(sec) {
+      const h = Math.floor(sec / 3600);
+      const m = Math.floor((sec % 3600) / 60);
+      const s = sec % 60;
+      return (
+        String(h).padStart(2, "0") +
+        ":" +
+        String(m).padStart(2, "0") +
+        ":" +
+        String(s).padStart(2, "0")
+      );
+    }
+
+    function getTodaySeconds() {
+      const key = formatDate(today);
+      return studyLog[key] || 0;
+    }
+
+    function updateStudyDisplay() {
+      const total = getTodaySeconds();
+      studyTimeTodayEl.textContent = formatHMS(total);
+      if (studyLastSessionSeconds != null) {
+        studyLastSessionEl.textContent = formatHMS(studyLastSessionSeconds);
+      }
+    }
+
+    function updateStudySessionTime() {
+      if (!studySessionStart) {
+        studySessionTimeEl.textContent = "00:00:00";
+        return;
+      }
+      const diffSec = Math.max(
+        0,
+        Math.floor((Date.now() - studySessionStart.getTime()) / 1000)
+      );
+      studySessionTimeEl.textContent = formatHMS(diffSec);
+    }
+
+    function startStudySessionTicking() {
+      if (studySessionTimerId !== null) return;
+      studySessionTimerId = setInterval(updateStudySessionTime, 1000);
+      requestWakeLock();
+    }
+
+    function stopStudySessionTicking() {
+      if (studySessionTimerId !== null) {
+        clearInterval(studySessionTimerId);
+        studySessionTimerId = null;
+      }
+      releaseWakeLockIfNeeded();
+    }
+
+    studyStartBtn.addEventListener("click", () => {
+      if (studyRunning) return;
+      studyRunning = true;
+      studySessionStart = new Date();
+      studyStatusEl.textContent = "공부 중";
+      saveStudySessionState();
+      startStudySessionTicking();
+    });
+
+    studyStopBtn.addEventListener("click", () => {
+      if (!studyRunning || !studySessionStart) return;
+      const now = new Date();
+      const diffSec = Math.max(
+        0,
+        Math.floor((now.getTime() - studySessionStart.getTime()) / 1000)
+      );
+      studyLastSessionSeconds = diffSec;
+      const key = formatDate(today);
+      studyLog[key] = (studyLog[key] || 0) + diffSec;
+      studyRunning = false;
+      studySessionStart = null;
+      studyStatusEl.textContent = "대기 중";
+      stopStudySessionTicking();
+      saveStudySessionState();
+      saveStudyLog();
+      updateStudySessionTime();
+    });
+
+    studyResetBtn.addEventListener("click", () => {
+      if (!confirm("오늘 공부 시간을 0으로 초기화할까요?")) return;
+      const key = formatDate(today);
+      studyLog[key] = 0;
+      studyLastSessionSeconds = null;
+      studyRunning = false;
+      studySessionStart = null;
+      stopStudySessionTicking();
+      saveStudySessionState();
+      saveStudyLog();
+      studyStatusEl.textContent = "대기 중";
+      studySessionTimeEl.textContent = "00:00:00";
+      studyLastSessionEl.textContent = "-";
+    });
+
+    studyFocusBtn.addEventListener("click", () => {
+      openFocusOverlay();
+    });
+
+    loadStudyLog();
+    updateStudyDisplay();
+    updateStudySessionTime();
+
+    // ===== 집중 모드(소프트 블록) =====
+    const focusOverlay = document.getElementById("focus-overlay");
+    const focusExitBtn = document.getElementById("focus-exit-btn");
+    const focusTimerLabel = document.getElementById("focus-timer-label");
+
+    let focusIntervalId = null;
+    let focusStartTime = null;
+
+    function openFocusOverlay() {
+      focusOverlay.style.display = "flex";
+      focusStartTime = new Date();
+      updateFocusTimer();
+      if (focusIntervalId !== null) clearInterval(focusIntervalId);
+      focusIntervalId = setInterval(updateFocusTimer, 1000);
+    }
+
+    function closeFocusOverlay() {
+      focusOverlay.style.display = "none";
+      if (focusIntervalId !== null) {
+        clearInterval(focusIntervalId);
+        focusIntervalId = null;
+      }
+    }
+
+    function updateFocusTimer() {
+      if (!focusStartTime) {
+        focusTimerLabel.textContent = "--:--";
+        return;
+      }
+      const diffSec = Math.floor(
+        (Date.now() - focusStartTime.getTime()) / 1000
+      );
+      const m = Math.floor(diffSec / 60);
+      const s = diffSec % 60;
+      focusTimerLabel.textContent =
+        String(m).padStart(2, "0") + ":" + String(s).padStart(2, "0");
+    }
+
+    focusExitBtn.addEventListener("click", () => {
+      closeFocusOverlay();
+    });
+
+    // ===== Wake Lock (가능한 브라우저에서 화면 유지 시도) =====
+    let wakeLock = null;
+    let wakeLockRequested = false;
+
+    async function requestWakeLock() {
+      if (!("wakeLock" in navigator)) return;
+      if (wakeLockRequested) return;
+      try {
+        wakeLockRequested = true;
+        wakeLock = await navigator.wakeLock.request("screen");
+        wakeLock.addEventListener("release", () => {
+          wakeLockRequested = false;
+        });
+      } catch (e) {
+        wakeLockRequested = false;
+      }
+    }
+
+    function releaseWakeLockIfNeeded() {
+      const anyTimerRunning = pomoRunning || studyRunning;
+      if (!anyTimerRunning && wakeLock) {
+        wakeLock.release();
+        wakeLock = null;
+        wakeLockRequested = false;
+      }
+    }
+
+    // ===== 홈 요약 업데이트 (오늘 공부 시간 + 완료 To-do 개수) =====
+    const summaryStudyTimeEl = document.getElementById("summary-study-time");
+    const summaryDoneCountEl = document.getElementById("summary-done-count");
+
+    function countAllDoneTodos() {
+      let count = 0;
+      ["year", "month", "week", "day"].forEach((scope) => {
+        (todoData[scope] || []).forEach((item) => {
+          if (item.status === "success") count++;
+        });
+      });
+      return count;
+    }
+
+    function updateHomeSummary() {
+      summaryStudyTimeEl.textContent = formatHMS(getTodaySeconds());
+      summaryDoneCountEl.textContent = String(countAllDoneTodos());
+    }
+
+    updateHomeSummary();
+
+    // ===== 전체 초기 로딩 후 캘린더와 요약 반영 =====
+    renderCalendar();
+    renderCalendarSelectedTasks(selectedCalendarDateStr);
+  </script>
+</body>
+</html>
