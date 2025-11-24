@@ -1354,6 +1354,20 @@
         const actions = document.createElement("div");
         actions.className = "todo-actions";
 
+        // 수정 버튼
+        const editBtn = document.createElement("button");
+        editBtn.className = "tiny";
+        editBtn.textContent = "수정";
+        editBtn.addEventListener("click", () => {
+            const newText = prompt("할 일을수정하세요", item.text);
+            if (newText && newText.trim()) {
+                item.text = newText.trim();
+                saveTodos();
+                renderTodoList();
+            }
+        })
+
+        // 삭제 버튼
         const delBtn = document.createElement("button");
         delBtn.className = "tiny";
         delBtn.textContent = "삭제";
@@ -1363,6 +1377,7 @@
           renderTodoList();
         });
 
+        actions.appendChild(editBtn);
         actions.appendChild(delBtn);
 
         li.appendChild(left);
