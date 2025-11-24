@@ -72,6 +72,26 @@
       border-color: rgba(148,163,184,0.6);
     }
 
+    .logo {
+      display: inline-flex;
+      align-items: baseline;
+      gap: 0.35rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+    }
+
+    .logo-main {
+      font-size: 1.05rem;
+    }
+
+    .logo-pill {
+      font-size: 0.7rem;
+      padding: 2px 8px;
+      border-radius: 999px;
+      border: 1px solid var(--accent-strong);
+      text-transform: uppercase;
+    }
+
     header {
       display: flex;
       justify-content: space-between;
@@ -200,6 +220,26 @@
       gap: 6px;
       margin-bottom: 8px;
       flex-wrap: wrap;
+    }
+
+    .goal-date-row {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      align-items: flex-end;
+    }
+
+    .goal-date-group {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      min-width: 80px;
+      font-size: 0.75rem;
+    }
+
+    .goal-date-group label {
+      color: var(--text-muted);
+      font-size: 0.72rem;
     }
 
     input[type="text"],
@@ -597,6 +637,22 @@
       margin-bottom: 4px;
     }
 
+    #calendar-month-center {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
+
+    #calendar-month-picker {
+      padding: 2px 6px;
+      font-size: 0.8rem;
+      border-radius: 8px;
+      border: 1px solid rgba(75,85,99,0.9);
+      background: var(--bg-soft);
+      color: var(--text);
+    }
+
     #calendar-selected-date {
       font-size: 0.82rem;
       color: var(--text-muted);
@@ -654,7 +710,10 @@
   <div class="app">
     <header>
       <div>
-        <div id="app-title">My Study OS</div>
+        <div class="logo">
+          <span class="logo-main">My Study</span>
+          <span class="logo-pill">OS</span>
+        </div>
         <div id="today-label"></div>
       </div>
       <button id="theme-toggle">
@@ -734,7 +793,30 @@
 
           <div class="input-row">
             <input type="text" id="todo-input" placeholder="이 기간 동안 해야 할 일을 적고 Enter 또는 추가 버튼을 눌러보세요." />
-            <input type="date" id="todo-date-input" style="max-width:140px;flex:0 0 auto;" />
+          </div>
+          <div class="input-row goal-date-row">
+            <div class="goal-date-group" id="todo-year-wrapper">
+              <label for="todo-year">Year</label>
+              <select id="todo-year"></select>
+            </div>
+            <div class="goal-date-group" id="todo-month-wrapper">
+              <label for="todo-month">Month</label>
+              <select id="todo-month"></select>
+            </div>
+            <div class="goal-date-group" id="todo-week-wrapper">
+              <label for="todo-week">Week</label>
+              <select id="todo-week">
+                <option value="1">1주차</option>
+                <option value="2">2주차</option>
+                <option value="3">3주차</option>
+                <option value="4">4주차</option>
+                <option value="5">5주차</option>
+              </select>
+            </div>
+            <div class="goal-date-group" id="todo-day-wrapper">
+              <label for="todo-date-input">Date</label>
+              <input type="date" id="todo-date-input" />
+            </div>
             <button id="todo-add-btn">추가</button>
           </div>
 
@@ -756,7 +838,10 @@
           </div>
           <div id="calendar-month-row">
             <button id="calendar-prev-btn" class="secondary">이전</button>
-            <div id="calendar-month-label"></div>
+            <div id="calendar-month-center">
+              <div id="calendar-month-label"></div>
+              <input type="month" id="calendar-month-picker" />
+            </div>
             <button id="calendar-next-btn" class="secondary">다음</button>
           </div>
           <div id="calendar-grid"></div>
@@ -1102,6 +1187,13 @@
     const todoDateInput = document.getElementById("todo-date-input");
     const todoAddBtn = document.getElementById("todo-add-btn");
     const todoListEl = document.getElementById("todo-list");
+    const todoYearWrapper = document.getElementById("todo-year-wrapper");
+    const todoMonthWrapper = document.getElementById("todo-month-wrapper");
+    const todoWeekWrapper = document.getElementById("todo-week-wrapper");
+    const todoDayWrapper = document.getElementById("todo-day-wrapper");
+    const todoYearSelect = document.getElementById("todo-year");
+    const todoMonthSelect = document.getElementById("todo-month");
+    const todoWeekSelect = document.getElementById("todo-week");
 
     let todoData = {
       year: [],
@@ -1110,6 +1202,52 @@
       day: [],
     };
     let currentScope = "year";
+    // 연/월/주/일 선택 UI 초기화
+    const baseYear = today.getFullYear();
+    for (let y = baseYear - 2; y <= baseYear + 5; y++) {
+      const opt = document.createElement("option");
+      opt.value = y;
+      opt.textContent = y;
+      todoYearSelect.appendChild(opt);
+    }
+
+    for (let m = 1; m <= 12; m++) {
+      const opt = document.createElement("option");
+      opt.value = m;
+      opt.textContent = m;
+      todoMonthSelect.appendChild(opt);
+    }
+
+    todoYearSelect.value = String(baseYear);
+    todoMonthSelect.value = String(today.getMonth() + 1);
+
+    function updateTodoDateInputs() {
+      if (currentScope === "year") {
+        todoYearWrapper.style.display = "flex";
+        todoMonthWrapper.style.display = "none";
+        todoWeekWrapper.style.display = "none";
+        todoDayWrapper.style.display = "none";
+      } else if (currentScope === "month") {
+        todoYearWrapper.style.display = "flex";
+        todoMonthWrapper.style.display = "flex";
+        todoWeekWrapper.style.display = "none";
+        todoDayWrapper.style.display = "none";
+      } else if (currentScope === "week") {
+        todoYearWrapper.style.display = "flex";
+        todoMonthWrapper.style.display = "flex";
+        todoWeekWrapper.style.display = "flex";
+        todoDayWrapper.style.display = "none";
+      } else {
+        // day
+        todoYearWrapper.style.display = "none";
+        todoMonthWrapper.style.display = "none";
+        todoWeekWrapper.style.display = "none";
+        todoDayWrapper.style.display = "flex";
+        if (!todoDateInput.value) {
+          todoDateInput.value = formatDate(today);
+        }
+      }
+    }
 
     function loadTodos() {
       try {
@@ -1152,6 +1290,26 @@
       return scope;
     }
 
+    function formatTodoDateForScope(scope, dateStr) {
+      if (!dateStr) return "";
+      const parts = dateStr.split("-");
+      if (parts.length < 3) return dateStr;
+      const y = parts[0];
+      const m = parseInt(parts[1], 10);
+      const d = parseInt(parts[2], 10);
+      if (scope === "year") {
+        return `${y}년`;
+      }
+      if (scope === "month") {
+        return `${y}년 ${m}월`;
+      }
+      if (scope === "week") {
+        const weekIndex = Math.floor((d - 1) / 7) + 1;
+        return `${y}년 ${m}월 ${weekIndex}주차`;
+      }
+      return dateStr;
+    }
+
     function renderTodoList() {
       const list = todoData[currentScope] || [];
       todoListEl.innerHTML = "";
@@ -1185,7 +1343,8 @@
         if (item.date) {
           const meta = document.createElement("div");
           meta.className = "todo-meta";
-          meta.textContent = item.date;
+          const displayDate = formatTodoDateForScope(currentScope, item.date);
+          meta.textContent = displayDate || item.date;
           textWrap.appendChild(meta);
         }
 
@@ -1214,11 +1373,32 @@
 
     function addTodo() {
       const text = todoInput.value.trim();
-      const dateStr = todoDateInput.value || null;
       if (!text) return;
+
+      let dateStr = null;
+      if (currentScope === "year") {
+        const y = todoYearSelect.value;
+        dateStr = `${y}-01-01`;
+      } else if (currentScope === "month") {
+        const y = todoYearSelect.value;
+        const m = String(todoMonthSelect.value).padStart(2, "0");
+        dateStr = `${y}-${m}-01`;
+      } else if (currentScope === "week") {
+        const y = parseInt(todoYearSelect.value, 10);
+        const mIndex = parseInt(todoMonthSelect.value, 10) - 1;
+        const w = parseInt(todoWeekSelect.value, 10);
+        const baseDate = new Date(y, mIndex, 1 + (w - 1) * 7);
+        dateStr = formatDate(baseDate);
+      } else if (currentScope === "day") {
+        dateStr = todoDateInput.value || null;
+      }
+
       todoData[currentScope].push({ text, status: "", date: dateStr });
       todoInput.value = "";
-      todoDateInput.value = "";
+      if (currentScope === "day") {
+        todoDateInput.value = "";
+      }
+
       saveTodos();
       renderTodoList();
     }
@@ -1228,6 +1408,7 @@
         scopeTabs.forEach((t) => t.classList.remove("active"));
         tab.classList.add("active");
         currentScope = tab.dataset.scope;
+        updateTodoDateInputs();
         renderTodoList();
       });
     });
@@ -1238,6 +1419,7 @@
     });
 
     loadTodos();
+    updateTodoDateInputs();
     renderTodoList();
 
     // ===== 캘린더 =====
@@ -1248,6 +1430,7 @@
     const calendarSelectedDateEl = document.getElementById("calendar-selected-date");
     const calendarTaskList = document.getElementById("calendar-task-list");
 
+    const calendarMonthPicker = document.getElementById("calendar-month-picker");
     let calendarCurrent = new Date(today.getFullYear(), today.getMonth(), 1);
     let selectedCalendarDateStr = formatDate(today);
 
@@ -1267,6 +1450,13 @@
       const year = calendarCurrent.getFullYear();
       const month = calendarCurrent.getMonth(); // 0-11
       calendarMonthLabel.textContent = `${year}년 ${month + 1}월`;
+
+      if (calendarMonthPicker) {
+        const monthValue = `${year}-${String(month + 1).padStart(2, "0")}`;
+        if (calendarMonthPicker.value !== monthValue) {
+          calendarMonthPicker.value = monthValue;
+        }
+      }
 
       calendarGrid.innerHTML = "";
 
@@ -1387,6 +1577,16 @@
       renderCalendar();
       renderCalendarSelectedTasks(selectedCalendarDateStr);
     });
+
+    if (calendarMonthPicker) {
+      calendarMonthPicker.addEventListener("change", (e) => {
+        if (!e.target.value) return;
+        const [y, m] = e.target.value.split("-");
+        calendarCurrent = new Date(Number(y), Number(m) - 1, 1);
+        renderCalendar();
+        renderCalendarSelectedTasks(selectedCalendarDateStr);
+      });
+    }
 
     renderCalendar();
     renderCalendarSelectedTasks(selectedCalendarDateStr);
