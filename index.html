@@ -1445,7 +1445,6 @@
     // ===== 캘린더 =====
     const calendarGrid = document.getElementById("calendar-grid");
     const calendarMonthLabel = document.getElementById("calendar-month-label");
-    const calendarAddTodoBtn = document.getElementById("calendar-add-todo-btn");
     const calendarPrevBtn = document.getElementById("calendar-prev-btn");
     const calendarNextBtn = document.getElementById("calendar-next-btn");
     // 선택한 날짜에 계획 추가 버튼
@@ -1473,6 +1472,7 @@
             renderTodoList();
         });
     }
+    const calendarAddTodoBtn = document.getElementById("calendar-add-todo-btn");
     const calendarSelectedDateEl = document.getElementById("calendar-selected-date");
     const calendarTaskList = document.getElementById("calendar-task-list");
 
