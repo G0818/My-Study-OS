@@ -3,6 +3,10 @@
 <head>
   <meta charset="UTF-8" />
   <title>My Study OS</title>
+
+  <meta name=""theme-color" content="#ffffff">
+  <link rel="manifest" href="manifest.json">
+  
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
     :root {
@@ -2081,6 +2085,15 @@
     // ===== 전체 초기 로딩 후 캘린더와 요약 반영 =====
     renderCalendar();
     renderCalendarSelectedTasks(selectedCalendarDateStr);
+
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker
+          .register("/service-work.js")
+          .catch((err) => console.error("SW 등록 실패:", err))
+      });
+    }
+
   </script>
 </body>
 </html>
