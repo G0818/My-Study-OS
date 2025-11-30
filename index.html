@@ -1031,6 +1031,25 @@
 
           <div class="card">
             <div class="card-header">
+              <div class="card-title">강제 새버전 갱신</div>
+              <span class="pill">Developer</span>
+            </div>
+            <p class="tagline">
+              캐시와 서비스워커를 제거하고 최신 버전을 다시 불러옵니다.
+            </p>
+
+            <button id="hard-reload-btn" class="secondary" style="margin-top:10px;">
+              강제 새버전 로드
+            </button>
+
+            <div class="hint" style="margin-top:8px;">
+              ※ 캐시/서비스워커가 즉시 삭제되어 새로운 코드가 자동 적용됩니다.  
+              (개발 시 매우 유용)
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
               <div class="card-title">데이터 초기화</div>
               <span class="pill">Reset</span>
             </div>
@@ -2260,6 +2279,42 @@
   backupBtn.disabled = true;
   restoreBtn.disabled = true;
 </script>
+
+<script>
+  document.getElementById("hard-reload-btn")?.addEventListener("click", async () => {
+    const confirmReload = confirm(
+      "캐시와 서비스워커를 삭제하고 최신 버전을 다시 불러올까요?\n(데이터는 삭제되지 않습니다)"
+    );
+    if (!confirmReload) return;
+
+    try {
+      // 1) Service Worker 언레지스터
+      if ('serviceWorker' in navigator) {
+        const registrations = await navigator.serviceWorker.getRegistrations();
+        for (const reg of registrations) {
+          await reg.unregister();
+        }
+      }
+
+      // 2) Cache Storage 비우기
+      if ('caches' in window) {
+        const keys = await caches.keys();
+        for (const key of keys) {
+          await caches.delete(key);
+        }
+      }
+
+      // 3) 강력 새로고침
+      alert("새 버전을 불러옵니다!");
+      window.location.reload(true);
+
+    } catch (e) {
+      console.error(e);
+      alert("강제 새버전 로드 중 오류가 발생했습니다.");
+    }
+  });
+</script>
+
 
 </body>
 </html>
