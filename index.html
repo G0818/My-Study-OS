@@ -587,6 +587,13 @@
       margin-bottom: 6px;
     }
 
+    #focus-extra-info {
+      font-size: 0.85rem;
+      color: #e5e7eb;
+      margin-bottom: 6px;
+      min-height: 1.2em;
+    }
+
     /* CALENDAR */
     #calendar-grid {
       display: grid;
@@ -698,13 +705,48 @@
     }
 
     #todo-add-btn {
-        margin-left: auto;
-        margin-top: 20px;
-        padding: 0 14px;
-        height: 34px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
+      margin-left: auto;
+      margin-top: 20px;
+      padding: 0 14px;
+      height: 34px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* 주간 시간표 */
+    .timetable-grid {
+      display: grid;
+      grid-template-columns: 60px repeat(7, 1fr);
+      gap: 4px;
+      font-size: 0.78rem;
+    }
+
+    .timetable-header {
+      border-radius: 8px;
+      border: 1px solid rgba(31,41,55,0.3);
+      padding: 4px;
+      background: var(--bg-soft);
+      text-align: center;
+      font-weight: 600;
+    }
+
+    .timetable-cell {
+      border-radius: 8px;
+      border: 1px solid rgba(31,41,55,0.3);
+      padding: 4px;
+      background: var(--bg-soft);
+      min-height: 32px;
+      word-break: break-word;
+    }
+
+    .timetable-cell[contenteditable="true"] {
+      outline: none;
+    }
+
+    /* 집중 모드 버튼은 자동 실행으로 바뀌어서 숨김 */
+    #study-focus-btn {
+      display: none;
     }
 
   </style>
@@ -717,6 +759,7 @@
         이 시간만큼은 다른 앱/사이트 생각 말고,<br />눈앞의 공부에만 집중해봐요.
       </div>
       <div id="focus-timer-label">--:--</div>
+      <div id="focus-extra-info"></div>
       <div class="hint">
         * 웹사이트는 실제로 다른 앱을 막을 수 없어요.<br />
         대신, 이 화면을 보면서 본인이 스스로 약속을 지키는 용도의 “소프트 차단”입니다.
@@ -744,6 +787,7 @@
     <nav>
       <button class="nav-btn active" data-section="home">홈</button>
       <button class="nav-btn" data-section="todos">계획(To-do)</button>
+      <button class="nav-btn" data-section="timetable">시간표</button>
       <button class="nav-btn" data-section="calendar">달력</button>
       <button class="nav-btn" data-section="pomodoro">포모도로</button>
       <button class="nav-btn" data-section="study">공부 타이머</button>
@@ -844,6 +888,21 @@
           <div class="hint">
             · ○: 성공 / △: 어느 정도 / ✕: 못 함 / □: 아직 평가 전<br />
             · 날짜를 넣으면 ‘달력’ 탭에서 날짜별로 계획을 확인할 수 있어요.
+          </div>
+        </div>
+      </section>
+
+      <!-- WEEKLY TIMETABLE -->
+      <section id="timetable" class="section">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">일주일 시간표</div>
+            <span class="pill">월 ~ 일</span>
+          </div>
+          <div id="timetable-grid" class="timetable-grid"></div>
+          <div class="hint">
+            · 셀을 눌러 과목/활동을 입력하면 자동으로 저장돼요.<br />
+            · 교시 이름은 고정이고, 각 칸의 텍스트만 자유롭게 바꿀 수 있어요.
           </div>
         </div>
       </section>
@@ -967,10 +1026,10 @@
               이 웹사이트 안에서만큼은 “공부만 하도록” 돕는 모드예요.
             </p>
             <ul style="margin-top:8px;font-size:0.82rem;color:var(--text-muted);line-height:1.5;">
-              <li>· 집중 모드를 켜면 화면 전체에 “집중 화면”이 떠요.</li>
-              <li>· 그 상태에서 그냥 문제만 풀고, 딴생각을 줄이는 용도!</li>
+              <li>· 공부 타이머/포모도로를 시작하면 자동으로 집중 화면이 떠요.</li>
+              <li>· 공부 타이머에서는 현재 세션 시간과 오늘 총 공부 시간이 함께 보여요.</li>
+              <li>· 포모도로에서는 이번이 몇 번째 포모도로인지와 남은 시간이 표시돼요.</li>
               <li>· 필요하면 언제든 끌 수 있지만, 스스로와 약속했다고 생각해 보기.</li>
-              <li>· 포모도로와 함께 쓰면 자연스럽게 공부/휴식 리듬을 만들 수 있어요.</li>
             </ul>
           </div>
         </div>
@@ -1060,6 +1119,27 @@
               * 되돌릴 수 없으니 신중하게 눌러 주세요.
             </div>
           </div>
+
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">할 일 체크 스타일</div>
+              <span class="pill">To-do 표시</span>
+            </div>
+            <p class="tagline">
+              동그라미/세모/엑스 기호를 계속 쓸지, 색만 사용해서 깔끔하게 볼지 선택할 수 있어요.
+            </p>
+            <div class="input-row" style="margin-top:8px;font-size:0.8rem;">
+              <label style="display:flex;align-items:center;gap:4px;">
+                <input type="radio" name="todo-style" value="symbol-color" checked />
+                기호 + 색
+              </label>
+              <label style="display:flex;align-items:center;gap:4px;">
+                <input type="radio" name="todo-style" value="color-only" />
+                색만 사용
+              </label>
+            </div>
+          </div>
+
         </div>
       </section>
     </main>
@@ -1121,6 +1201,10 @@
         });
       });
     });
+
+    // ===== To-do 체크스타일 설정 키 =====
+    const TODO_STYLE_KEY = "study_os_todo_style";
+    let todoStyle = localStorage.getItem(TODO_STYLE_KEY) || "symbol-color";
 
     // ===== D-DAY & 목표 =====
     const DDAY_KEY = "study_os_dday";
@@ -1354,6 +1438,9 @@
     }
 
     function getStatusSymbol(status) {
+      if (todoStyle === "color-only") {
+        return ""; // 색만 사용하는 모드
+      }
       if (status === "success") return "○";
       if (status === "partial") return "△";
       if (status === "fail") return "✕";
@@ -1401,6 +1488,7 @@
         const statusBtn = document.createElement("button");
         statusBtn.className = "status-btn";
         statusBtn.textContent = getStatusSymbol(item.status || "");
+        statusBtn.classList.remove("success", "partial", "fail");
         if (item.status === "success") statusBtn.classList.add("success");
         if (item.status === "partial") statusBtn.classList.add("partial");
         if (item.status === "fail") statusBtn.classList.add("fail");
@@ -1514,6 +1602,83 @@
     loadTodos();
     updateTodoDateInputs();
     renderTodoList();
+
+    // ===== 주간 시간표 =====
+    const TIMETABLE_KEY = "study_os_timetable_v1";
+    const timetableGridEl = document.getElementById("timetable-grid");
+    const timetableDays = ["월", "화", "수", "목", "금", "토", "일"];
+    const timetableSlots = [
+      "1교시", "2교시", "3교시", "4교시",
+      "5교시", "6교시", "7교시", "8교시"
+    ];
+    let timetableData = {};
+
+    function loadTimetable() {
+      try {
+        const saved = localStorage.getItem(TIMETABLE_KEY);
+        timetableData = saved ? JSON.parse(saved) : {};
+      } catch {
+        timetableData = {};
+      }
+    }
+
+    function saveTimetable() {
+      localStorage.setItem(TIMETABLE_KEY, JSON.stringify(timetableData));
+    }
+
+    function renderTimetable() {
+      if (!timetableGridEl) return;
+      timetableGridEl.innerHTML = "";
+
+      // 헤더 행 (빈 칸 + 요일)
+      const emptyHeader = document.createElement("div");
+      emptyHeader.className = "timetable-header";
+      emptyHeader.textContent = "";
+      timetableGridEl.appendChild(emptyHeader);
+
+      timetableDays.forEach((day) => {
+        const h = document.createElement("div");
+        h.className = "timetable-header";
+        h.textContent = day;
+        timetableGridEl.appendChild(h);
+      });
+
+      // 교시별 행
+      timetableSlots.forEach((slotLabel, slotIndex) => {
+        const rowLabel = document.createElement("div");
+        rowLabel.className = "timetable-header";
+        rowLabel.textContent = slotLabel;
+        timetableGridEl.appendChild(rowLabel);
+
+        timetableDays.forEach((_, dayIndex) => {
+          const cell = document.createElement("div");
+          cell.className = "timetable-cell";
+          cell.contentEditable = "true";
+          const key = `${slotIndex}_${dayIndex}`;
+          cell.dataset.slot = String(slotIndex);
+          cell.dataset.day = String(dayIndex);
+
+          if (timetableData[key]) {
+            cell.textContent = timetableData[key];
+          }
+
+          cell.addEventListener("input", () => {
+            const text = cell.textContent.trim();
+            if (text) {
+              timetableData[key] = text;
+            } else {
+              delete timetableData[key];
+            }
+            saveTimetable();
+          });
+
+          timetableGridEl.appendChild(cell);
+        });
+      });
+    }
+
+    loadTimetable();
+    renderTimetable();
 
     // ===== 캘린더 =====
     const calendarGrid = document.getElementById("calendar-grid");
@@ -1863,6 +2028,7 @@
         updatePomoDisplay();
       }
       startPomoTicking();
+      openFocusOverlay("pomo");
     });
 
     pomoPauseBtn.addEventListener("click", () => {
@@ -1878,6 +2044,9 @@
       pomoCycleCount = 0;
       pomoSecondsLeft = pomoConfig.focus * 60;
       updatePomoDisplay();
+      if (focusMode === "pomo") {
+        closeFocusOverlay();
+      }
     });
 
     loadPomoConfig();
@@ -2002,6 +2171,7 @@
       studyStatusEl.textContent = "공부 중";
       saveStudySessionState();
       startStudySessionTicking();
+      openFocusOverlay("study");
     });
 
     studyStopBtn.addEventListener("click", () => {
@@ -2021,6 +2191,9 @@
       saveStudySessionState();
       saveStudyLog();
       updateStudySessionTime();
+      if (focusMode === "study") {
+        closeFocusOverlay();
+      }
     });
 
     studyResetBtn.addEventListener("click", () => {
@@ -2038,9 +2211,11 @@
       studyLastSessionEl.textContent = "-";
     });
 
-    studyFocusBtn.addEventListener("click", () => {
-      openFocusOverlay();
-    });
+    if (studyFocusBtn) {
+      studyFocusBtn.addEventListener("click", () => {
+        openFocusOverlay("study");
+      });
+    }
 
     loadStudyLog();
     updateStudyDisplay();
@@ -2050,13 +2225,30 @@
     const focusOverlay = document.getElementById("focus-overlay");
     const focusExitBtn = document.getElementById("focus-exit-btn");
     const focusTimerLabel = document.getElementById("focus-timer-label");
+    const focusTitleEl = document.getElementById("focus-title");
+    const focusSubtitleEl = document.getElementById("focus-subtitle");
+    const focusExtraInfoEl = document.getElementById("focus-extra-info");
 
     let focusIntervalId = null;
     let focusStartTime = null;
+    let focusMode = "generic"; // 'study' | 'pomo' | 'generic'
 
-    function openFocusOverlay() {
+    function openFocusOverlay(mode = "generic") {
+      focusMode = mode;
       focusOverlay.style.display = "flex";
       focusStartTime = new Date();
+
+      if (mode === "study") {
+        focusTitleEl.textContent = "공부 집중 모드";
+        focusSubtitleEl.innerHTML = "현재 공부 세션 시간과<br/>오늘 총 공부 시간을 보면서 집중해봐요.";
+      } else if (mode === "pomo") {
+        focusTitleEl.textContent = "포모도로 집중 모드";
+        focusSubtitleEl.innerHTML = "이번 포모도로가 몇 번째인지와<br/>남은 시간을 확인하면서 집중해봐요.";
+      } else {
+        focusTitleEl.textContent = "지금은 집중 모드";
+        focusSubtitleEl.innerHTML = "이 시간만큼은 다른 앱/사이트 생각 말고,<br />눈앞의 공부에만 집중해봐요.";
+      }
+
       updateFocusTimer();
       if (focusIntervalId !== null) clearInterval(focusIntervalId);
       focusIntervalId = setInterval(updateFocusTimer, 1000);
@@ -2068,20 +2260,46 @@
         clearInterval(focusIntervalId);
         focusIntervalId = null;
       }
+      focusMode = "generic";
+      focusExtraInfoEl.textContent = "";
     }
 
     function updateFocusTimer() {
-      if (!focusStartTime) {
-        focusTimerLabel.textContent = "--:--";
-        return;
+      if (focusMode === "study") {
+        if (!studySessionStart) {
+          focusTimerLabel.textContent = "00:00:00";
+          focusExtraInfoEl.textContent = "공부 타이머가 대기 중입니다.";
+          return;
+        }
+        const diffSec = Math.max(
+          0,
+          Math.floor((Date.now() - studySessionStart.getTime()) / 1000)
+        );
+        const current = formatHMS(diffSec);
+        const total = getTodaySeconds() + diffSec;
+        focusTimerLabel.textContent = current;
+        focusExtraInfoEl.textContent = `오늘 총 공부 시간: ${formatHMS(total)}`;
+      } else if (focusMode === "pomo") {
+        focusTimerLabel.textContent = formatTime(pomoSecondsLeft);
+        let currentCycle = pomoMode === "focus" ? pomoCycleCount + 1 : pomoCycleCount;
+        if (currentCycle < 1) currentCycle = 1;
+        const phaseText = pomoPhaseEl.textContent || "";
+        focusExtraInfoEl.textContent = `오늘의 포모도로 ${currentCycle}번째 · ${phaseText}`;
+      } else {
+        if (!focusStartTime) {
+          focusTimerLabel.textContent = "--:--";
+          focusExtraInfoEl.textContent = "";
+          return;
+        }
+        const diffSec = Math.floor(
+          (Date.now() - focusStartTime.getTime()) / 1000
+        );
+        const m = Math.floor(diffSec / 60);
+        const s = diffSec % 60;
+        focusTimerLabel.textContent =
+          String(m).padStart(2, "0") + ":" + String(s).padStart(2, "0");
+        focusExtraInfoEl.textContent = "";
       }
-      const diffSec = Math.floor(
-        (Date.now() - focusStartTime.getTime()) / 1000
-      );
-      const m = Math.floor(diffSec / 60);
-      const s = diffSec % 60;
-      focusTimerLabel.textContent =
-        String(m).padStart(2, "0") + ":" + String(s).padStart(2, "0");
     }
 
     focusExitBtn.addEventListener("click", () => {
@@ -2135,6 +2353,21 @@
     }
 
     updateHomeSummary();
+
+    // ===== To-do 체크스타일 설정(라디오) =====
+    const todoStyleRadios = document.querySelectorAll('input[name="todo-style"]');
+    if (todoStyleRadios.length) {
+      todoStyleRadios.forEach((radio) => {
+        radio.checked = radio.value === todoStyle;
+        radio.addEventListener("change", () => {
+          if (!radio.checked) return;
+          todoStyle = radio.value;
+          localStorage.setItem(TODO_STYLE_KEY, todoStyle);
+          renderTodoList();
+          renderCalendarSelectedTasks(selectedCalendarDateStr);
+        });
+      });
+    }
 
     // ===== 전체 초기 로딩 후 캘린더와 요약 반영 =====
     renderCalendar();
@@ -2197,7 +2430,9 @@
     "study_os_pomo_config_v1",
     "study_os_study_log_v1",
     "study_os_current_session",
-    "study_os_theme"
+    "study_os_theme",
+    "study_os_timetable_v1",
+    "study_os_todo_style"
   ];
 
   function getLocalData() {
