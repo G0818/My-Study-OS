@@ -104,12 +104,6 @@
       gap: 10px;
     }
 
-    #app-title {
-      font-size: 1.3rem;
-      font-weight: 700;
-      letter-spacing: 0.02em;
-    }
-
     #today-label {
       font-size: 0.8rem;
       color: var(--text-muted);
@@ -127,10 +121,6 @@
       display: flex;
       align-items: center;
       gap: 4px;
-    }
-
-    #theme-toggle span {
-      font-size: 0.9rem;
     }
 
     nav {
@@ -161,13 +151,8 @@
       margin-top: 4px;
     }
 
-    .section {
-      display: none;
-    }
-
-    .section.active {
-      display: block;
-    }
+    .section { display: none; }
+    .section.active { display: block; }
 
     .grid-two {
       display: grid;
@@ -176,12 +161,8 @@
     }
 
     @media (max-width: 780px) {
-      .grid-two {
-        grid-template-columns: 1fr;
-      }
-      body {
-        padding: 10px;
-      }
+      .grid-two { grid-template-columns: 1fr; }
+      body { padding: 10px; }
       .app {
         padding: 14px 12px 20px;
         border-radius: 18px;
@@ -277,7 +258,6 @@
       transition: transform 0.05s ease, box-shadow 0.16s ease,
         background 0.16s ease;
       white-space: nowrap;
-
       -webkit-appearance: none;
       appearance: none;
       line-height: 1;
@@ -301,40 +281,61 @@
       box-shadow: none;
     }
 
-    button.secondary:hover {
-      background: var(--bg-soft);
-    }
+    button.secondary:hover { background: var(--bg-soft); }
 
-    button.danger {
-      background: #b91c1c;
-    }
-
+    button.danger { background: #b91c1c; }
     button.danger:hover {
       background: #dc2626;
       box-shadow: 0 6px 14px rgba(220,38,38,0.45);
     }
 
-    ul {
-      list-style: none;
+    ul { list-style: none; }
+
+    /* HOME - DDAY */
+    #dday-main-label {
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      margin-bottom: 2px;
     }
 
-    /* HOME */
-    #dday-value {
+    #dday-main-value {
       font-size: 1.3rem;
       font-weight: 700;
       margin-top: 4px;
     }
 
-    #dday-label {
-      font-size: 0.78rem;
-      color: var(--text-muted);
-      margin-bottom: 4px;
-    }
-
-    #dday-target-text {
+    #dday-main-target {
       font-size: 0.88rem;
+      margin-top: 2px;
     }
 
+    #dday-list {
+      margin-top: 8px;
+      max-height: 120px;
+      overflow-y: auto;
+      font-size: 0.8rem;
+      padding-right: 3px;
+    }
+
+    .dday-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 3px 0;
+      border-bottom: 1px solid rgba(31,41,55,0.2);
+      gap: 6px;
+    }
+
+    .dday-text-main {
+      font-weight: 500;
+    }
+
+    .dday-text-sub {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    /* GOALS */
     #goals-list {
       max-height: 130px;
       overflow-y: auto;
@@ -413,7 +414,7 @@
     .status-btn {
       width: 22px;
       height: 22px;
-      border-radius: 50%;
+      border-radius: 6px;
       border: 1px solid rgba(75,85,99,0.9);
       background: var(--bg-soft);
       color: var(--text-muted);
@@ -423,18 +424,17 @@
       justify-content: center;
       cursor: pointer;
       flex-shrink: 0;
+      box-sizing: border-box;
     }
 
     .status-btn.success {
       border-color: var(--success);
       color: var(--success);
     }
-
     .status-btn.partial {
       border-color: var(--warning);
       color: var(--warning);
     }
-
     .status-btn.fail {
       border-color: var(--danger);
       color: var(--danger);
@@ -511,9 +511,7 @@
       font-size: 0.78rem;
     }
 
-    .config-item label {
-      color: var(--text-muted);
-    }
+    .config-item label { color: var(--text-muted); }
 
     /* STUDY TIMER */
     #study-time-today {
@@ -544,7 +542,7 @@
     #focus-overlay {
       position: fixed;
       inset: 0;
-      background: rgba(15,23,42,0.96);
+      background: rgba(15,23,42,0.94);
       z-index: 50;
       display: none;
       align-items: center;
@@ -557,34 +555,32 @@
       width: 100%;
       background: #020617;
       border-radius: 18px;
-      border: 1px solid rgba(148,163,184,0.7);
+      border: 1px solid rgba(148,163,184,0.9);
       padding: 18px 16px 16px;
       text-align: center;
-      box-shadow: 0 20px 40px rgba(0,0,0,0.7);
+      box-shadow: 0 20px 40px rgba(0,0,0,0.8);
+      color: #f9fafb;
     }
 
     #focus-title {
       font-size: 1.1rem;
       font-weight: 700;
       margin-bottom: 6px;
+      color: #f9fafb;
     }
 
     #focus-subtitle {
-      font-size: 0.88rem;
-      color: #cbd5f5;
+      font-size: 0.9rem;
+      color: #e5e7eb;
       margin-bottom: 10px;
-    }
-
-    #focus-hint {
-      font-size: 0.76rem;
-      color: #9ca3af;
-      margin-top: 8px;
+      line-height: 1.5;
     }
 
     #focus-timer-label {
       font-size: 2rem;
       font-weight: 700;
       margin-bottom: 6px;
+      color: #f9fafb;
     }
 
     #focus-extra-info {
@@ -592,6 +588,12 @@
       color: #e5e7eb;
       margin-bottom: 6px;
       min-height: 1.2em;
+    }
+
+    #focus-hint {
+      font-size: 0.76rem;
+      color: #9ca3af;
+      margin-top: 8px;
     }
 
     /* CALENDAR */
@@ -622,13 +624,9 @@
       background: var(--bg-soft);
     }
 
-    .calendar-day.other-month {
-      opacity: 0.35;
-    }
+    .calendar-day.other-month { opacity: 0.35; }
 
-    .calendar-day-number {
-      font-size: 0.8rem;
-    }
+    .calendar-day-number { font-size: 0.8rem; }
 
     .calendar-day-dot {
       width: 6px;
@@ -676,7 +674,7 @@
 
     #calendar-task-list {
       margin-top: 6px;
-      max-height: 150px;
+      max-height: 180px;
       overflow-y: auto;
       padding-right: 3px;
       font-size: 0.82rem;
@@ -714,10 +712,10 @@
       justify-content: center;
     }
 
-    /* 주간 시간표 */
+    /* WEEKLY TIMETABLE - 시간 단위 */
     .timetable-grid {
       display: grid;
-      grid-template-columns: 60px repeat(7, 1fr);
+      grid-template-columns: 70px repeat(7, 1fr);
       gap: 4px;
       font-size: 0.78rem;
     }
@@ -740,18 +738,15 @@
       word-break: break-word;
     }
 
-    .timetable-cell[contenteditable="true"] {
-      outline: none;
-    }
+    .timetable-cell[contenteditable="true"] { outline: none; }
 
-    /* 집중 모드 버튼은 자동 실행으로 바뀌어서 숨김 */
-    #study-focus-btn {
-      display: none;
-    }
+    /* 집중 모드 버튼은 자동 실행으로 숨김 */
+    #study-focus-btn { display: none; }
 
   </style>
 </head>
 <body class="theme-dark">
+  <!-- 집중 모드 오버레이 -->
   <div id="focus-overlay">
     <div id="focus-overlay-inner">
       <div id="focus-title">지금은 집중 모드</div>
@@ -765,7 +760,9 @@
         대신, 이 화면을 보면서 본인이 스스로 약속을 지키는 용도의 “소프트 차단”입니다.
       </div>
       <button id="focus-exit-btn" style="margin-top:12px;">집중 모드 종료</button>
-      <div id="focus-hint">이 창은 언제든지 닫을 수 있지만,<br />가능하면 공부 시간 동안 그대로 유지해 보자!</div>
+      <div id="focus-hint">
+        이 창은 언제든지 닫을 수 있지만,<br />가능하면 공부 시간 동안 그대로 유지해 보자!
+      </div>
     </div>
   </div>
 
@@ -803,19 +800,23 @@
               <div class="card-title">D-Day & 목표</div>
               <span class="pill">Home</span>
             </div>
-            <div id="dday-label">목표 날짜와 제목을 설정해 주세요.</div>
-            <div id="dday-value">D-0</div>
-            <div id="dday-target-text" style="margin-top:2px;"></div>
+
+            <div id="dday-main-label">목표 날짜와 제목을 설정해 주세요.</div>
+            <div id="dday-main-value">D-0</div>
+            <div id="dday-main-target"></div>
 
             <div class="input-row" style="margin-top:10px;">
               <input type="text" id="dday-title-input" placeholder="예: 과학고 입시" />
               <input type="date" id="dday-date-input" />
+              <button id="dday-add-btn">추가</button>
             </div>
-            <button id="dday-save-btn">D-Day 저장</button>
-            <button id="dday-clear-btn" class="secondary" style="margin-left:4px;">초기화</button>
+            <button id="dday-clear-btn" class="secondary">모든 D-Day 초기화</button>
+
+            <ul id="dday-list"></ul>
 
             <div class="hint">
-              * D-Day는 이 기기(브라우저)에만 저장돼요. GitHub 서버에는 기록되지 않아요.
+              · 여러 개의 D-Day를 등록할 수 있고, 가장 가까운 날짜가 위쪽에 표시돼요.<br />
+              · D-Day 날짜는 달력에도 표시됩니다.
             </div>
           </div>
 
@@ -897,12 +898,12 @@
         <div class="card">
           <div class="card-header">
             <div class="card-title">일주일 시간표</div>
-            <span class="pill">월 ~ 일</span>
+            <span class="pill">시간 단위</span>
           </div>
           <div id="timetable-grid" class="timetable-grid"></div>
           <div class="hint">
-            · 셀을 눌러 과목/활동을 입력하면 자동으로 저장돼요.<br />
-            · 교시 이름은 고정이고, 각 칸의 텍스트만 자유롭게 바꿀 수 있어요.
+            · 왼쪽은 시간(06:00 ~ 23:00), 위쪽은 월~일입니다.<br />
+            · 칸을 눌러 과목/활동을 입력하면 자동으로 저장돼요.
           </div>
         </div>
       </section>
@@ -912,7 +913,7 @@
         <div class="card">
           <div class="card-header">
             <div class="card-title">달력으로 보기</div>
-            <span class="pill">계획 캘린더</span>
+            <span class="pill">계획 + D-Day</span>
           </div>
           <div id="calendar-month-row">
             <button id="calendar-prev-btn" class="secondary">이전</button>
@@ -931,8 +932,8 @@
           </button>
 
           <div class="hint">
-            · 계획 추가할 때 날짜를 넣으면, 해당 날짜에 점이 찍히고 아래에 목록이 표시됩니다.<br />
-            · 연/월/주/일 어떤 범주에 넣었든, 날짜가 같으면 함께 모아서 보여줘요.
+            · 계획/할 일뿐 아니라 D-Day도 이 달력에 표시돼요.<br />
+            · 점이 찍힌 날짜를 누르면 아래에 상세 목록이 뜹니다.
           </div>
         </div>
       </section>
@@ -1012,7 +1013,7 @@
             </div>
             <div class="hint">
               * “시작”을 누르면 공부 시간 기록이 시작되고, “정지”를 누르면 오늘 총 공부 시간에 더해집니다.<br />
-              * 오늘 날짜 기준으로만 합산되며, 내일이 되면 자동으로 새로운 하루가 시작돼요.
+              * 집중 모드에서 나가면, 정지를 누르지 않아도 현재 세션은 자동으로 종료돼요.
             </div>
           </div>
 
@@ -1027,9 +1028,9 @@
             </p>
             <ul style="margin-top:8px;font-size:0.82rem;color:var(--text-muted);line-height:1.5;">
               <li>· 공부 타이머/포모도로를 시작하면 자동으로 집중 화면이 떠요.</li>
-              <li>· 공부 타이머에서는 현재 세션 시간과 오늘 총 공부 시간이 함께 보여요.</li>
-              <li>· 포모도로에서는 이번이 몇 번째 포모도로인지와 남은 시간이 표시돼요.</li>
-              <li>· 필요하면 언제든 끌 수 있지만, 스스로와 약속했다고 생각해 보기.</li>
+              <li>· 공부 타이머: 현재 세션 시간 + 오늘 총 공부 시간 표시.</li>
+              <li>· 포모도로: 오늘 몇 번째 포모도로인지와 남은 시간/상태 표시.</li>
+              <li>· 집중 모드 종료를 누르면, 공부 세션은 자동으로 멈추고(포모도로는 일시정지) 기록됩니다.</li>
             </ul>
           </div>
         </div>
@@ -1126,17 +1127,21 @@
               <span class="pill">To-do 표시</span>
             </div>
             <p class="tagline">
-              동그라미/세모/엑스 기호를 계속 쓸지, 색만 사용해서 깔끔하게 볼지 선택할 수 있어요.
+              체크박스에 기호를 사용할지, 색만 꽉 채워서 사용할지 선택할 수 있어요.
             </p>
             <div class="input-row" style="margin-top:8px;font-size:0.8rem;">
               <label style="display:flex;align-items:center;gap:4px;">
-                <input type="radio" name="todo-style" value="symbol-color" checked />
-                기호 + 색
+                <input type="radio" name="todo-style" value="symbol" checked />
+                기호
               </label>
               <label style="display:flex;align-items:center;gap:4px;">
                 <input type="radio" name="todo-style" value="color-only" />
                 색만 사용
               </label>
+            </div>
+            <div class="hint">
+              · 색만 사용: 네모칸 전체가 색으로 채워집니다(기호 없음).<br />
+              · 기호: ○/△/✕/□ 기호와 색으로 상태를 구분합니다.
             </div>
           </div>
 
@@ -1202,85 +1207,169 @@
       });
     });
 
-    // ===== To-do 체크스타일 설정 키 =====
+    // ===== To-do 체크스타일 설정 =====
     const TODO_STYLE_KEY = "study_os_todo_style";
-    let todoStyle = localStorage.getItem(TODO_STYLE_KEY) || "symbol-color";
+    let todoStyle = localStorage.getItem(TODO_STYLE_KEY) || "symbol";
 
-    // ===== D-DAY & 목표 =====
-    const DDAY_KEY = "study_os_dday";
-    const GOALS_KEY = "study_os_goals";
+    // ===== D-DAY (여러 개) =====
+    const DDAY_LIST_KEY = "study_os_ddays_v1";
+    const LEGACY_DDAY_KEY = "study_os_dday"; // 예전 단일 D-Day 키
 
-    const ddayLabelEl = document.getElementById("dday-label");
-    const ddayValueEl = document.getElementById("dday-value");
-    const ddayTargetTextEl = document.getElementById("dday-target-text");
+    const ddayMainLabelEl = document.getElementById("dday-main-label");
+    const ddayMainValueEl = document.getElementById("dday-main-value");
+    const ddayMainTargetEl = document.getElementById("dday-main-target");
     const ddayTitleInput = document.getElementById("dday-title-input");
     const ddayDateInput = document.getElementById("dday-date-input");
-    const ddaySaveBtn = document.getElementById("dday-save-btn");
+    const ddayAddBtn = document.getElementById("dday-add-btn");
     const ddayClearBtn = document.getElementById("dday-clear-btn");
+    const ddayListEl = document.getElementById("dday-list");
 
-    function renderDDay() {
-      const saved = localStorage.getItem(DDAY_KEY);
-      if (!saved) {
-        ddayLabelEl.textContent = "목표 날짜와 제목을 설정해 주세요.";
-        ddayValueEl.textContent = "D-0";
-        ddayTargetTextEl.textContent = "";
-        return;
+    let ddayItems = [];
+
+    function loadDDays() {
+      try {
+        const savedList = localStorage.getItem(DDAY_LIST_KEY);
+        if (savedList) {
+          ddayItems = JSON.parse(savedList);
+        } else {
+          // 예전 버전 단일 D-Day를 리스트로 변환
+          const legacy = localStorage.getItem(LEGACY_DDAY_KEY);
+          if (legacy) {
+            const obj = JSON.parse(legacy);
+            if (obj && obj.date) {
+              ddayItems = [{
+                id: Date.now(),
+                title: obj.title || "목표",
+                date: obj.date
+              }];
+              saveDDays();
+            }
+          }
+        }
+      } catch {
+        ddayItems = [];
       }
-      const data = JSON.parse(saved);
-      const targetDate = new Date(data.date);
-      if (isNaN(targetDate.getTime())) {
-        ddayLabelEl.textContent = "목표 날짜 형식이 잘못되었습니다. 다시 설정해 주세요.";
-        ddayValueEl.textContent = "D-0";
-        ddayTargetTextEl.textContent = "";
-        return;
-      }
-      const todayDateOnly = new Date(
-        today.getFullYear(),
-        today.getMonth(),
-        today.getDate()
-      );
-      const targetDateOnly = new Date(
-        targetDate.getFullYear(),
-        targetDate.getMonth(),
-        targetDate.getDate()
-      );
-      const diffMs = targetDateOnly - todayDateOnly;
-      const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24));
-      let label = "";
-      if (diffDays > 0) {
-        label = `D-${diffDays}`;
-      } else if (diffDays === 0) {
-        label = "D-DAY";
-      } else {
-        label = `D+${Math.abs(diffDays)}`;
-      }
-      ddayLabelEl.textContent = data.title || "목표";
-      ddayValueEl.textContent = label;
-      ddayTargetTextEl.textContent = `${data.date} 까지`;
-      ddayTitleInput.value = data.title || "";
-      ddayDateInput.value = data.date || "";
     }
 
-    ddaySaveBtn.addEventListener("click", () => {
+    function saveDDays() {
+      localStorage.setItem(DDAY_LIST_KEY, JSON.stringify(ddayItems));
+    }
+
+    function addDDay() {
       const title = ddayTitleInput.value.trim();
       const dateStr = ddayDateInput.value;
       if (!title || !dateStr) {
         alert("제목과 날짜를 모두 입력해 주세요.");
         return;
       }
-      localStorage.setItem(DDAY_KEY, JSON.stringify({ title, date: dateStr }));
-      renderDDay();
-    });
+      ddayItems.push({
+        id: Date.now() + Math.random(),
+        title,
+        date: dateStr
+      });
+      ddayTitleInput.value = "";
+      ddayDateInput.value = "";
+      saveDDays();
+      renderDDays();
+      renderCalendar(); // 달력 점 갱신
+      renderCalendarSelectedTasks(selectedCalendarDateStr);
+    }
 
+    function renderDDays() {
+      if (!ddayItems.length) {
+        ddayMainLabelEl.textContent = "목표 날짜와 제목을 설정해 주세요.";
+        ddayMainValueEl.textContent = "D-0";
+        ddayMainTargetEl.textContent = "";
+        ddayListEl.innerHTML = "";
+        return;
+      }
+
+      // 날짜 기준 정렬
+      const sorted = [...ddayItems].sort((a, b) => {
+        return new Date(a.date) - new Date(b.date);
+      });
+
+      // 오늘 기준으로 가장 가까운 날짜(미래 or 오늘) 선택
+      const todayOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+      let main = sorted[0];
+      for (const item of sorted) {
+        const d = new Date(item.date);
+        const dOnly = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+        if (dOnly >= todayOnly) {
+          main = item;
+          break;
+        }
+      }
+
+      const targetDate = new Date(main.date);
+      const targetDayOnly = new Date(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate());
+      const diffMs = targetDayOnly - todayOnly;
+      const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24));
+
+      let label = "";
+      if (diffDays > 0) label = `D-${diffDays}`;
+      else if (diffDays === 0) label = "D-DAY";
+      else label = `D+${Math.abs(diffDays)}`;
+
+      ddayMainLabelEl.textContent = main.title || "목표";
+      ddayMainValueEl.textContent = label;
+      ddayMainTargetEl.textContent = `${main.date} 까지`;
+
+      // 리스트 렌더
+      ddayListEl.innerHTML = "";
+      sorted.forEach((item) => {
+        const li = document.createElement("li");
+        li.className = "dday-item";
+
+        const info = document.createElement("div");
+        const mainSpan = document.createElement("div");
+        const diff = Math.round(
+          (new Date(item.date).setHours(0,0,0,0) - todayOnly.getTime()) /
+          (1000*60*60*24)
+        );
+        let tag = "";
+        if (diff > 0) tag = `D-${diff}`;
+        else if (diff === 0) tag = "D-DAY";
+        else tag = `D+${Math.abs(diff)}`;
+
+        mainSpan.className = "dday-text-main";
+        mainSpan.textContent = `${tag} · ${item.title}`;
+        const subSpan = document.createElement("div");
+        subSpan.className = "dday-text-sub";
+        subSpan.textContent = item.date;
+
+        info.appendChild(mainSpan);
+        info.appendChild(subSpan);
+
+        const delBtn = document.createElement("button");
+        delBtn.className = "tiny";
+        delBtn.textContent = "삭제";
+        delBtn.addEventListener("click", () => {
+          ddayItems = ddayItems.filter((d) => d.id !== item.id);
+          saveDDays();
+          renderDDays();
+          renderCalendar();
+          renderCalendarSelectedTasks(selectedCalendarDateStr);
+        });
+
+        li.appendChild(info);
+        li.appendChild(delBtn);
+        ddayListEl.appendChild(li);
+      });
+    }
+
+    ddayAddBtn.addEventListener("click", addDDay);
     ddayClearBtn.addEventListener("click", () => {
-      if (!confirm("D-Day 설정을 초기화할까요?")) return;
-      localStorage.removeItem(DDAY_KEY);
-      renderDDay();
+      if (!confirm("모든 D-Day를 초기화할까요?")) return;
+      ddayItems = [];
+      saveDDays();
+      renderDDays();
+      renderCalendar();
+      renderCalendarSelectedTasks(selectedCalendarDateStr);
     });
 
-    renderDDay();
-
-    // ----- Goals -----
+    // ===== Goals =====
+    const GOALS_KEY = "study_os_goals";
     const goalInput = document.getElementById("goal-input");
     const goalAddBtn = document.getElementById("goal-add-btn");
     const goalsList = document.getElementById("goals-list");
@@ -1340,9 +1429,11 @@
     });
 
     loadGoals();
+    loadDDays();
+    renderDDays();
     renderGoals();
 
-    // ===== To-do (연/월/주/일) + 날짜 =====
+    // ===== To-do =====
     const TODOS_KEY = "study_os_todos_v1";
     const scopeTabs = document.querySelectorAll(".scope-tab");
     const todoInput = document.getElementById("todo-input");
@@ -1364,7 +1455,7 @@
       day: [],
     };
     let currentScope = "year";
-    // 연/월/주/일 선택 UI 초기화
+
     const baseYear = today.getFullYear();
     for (let y = baseYear - 2; y <= baseYear + 5; y++) {
       const opt = document.createElement("option");
@@ -1400,7 +1491,6 @@
         todoWeekWrapper.style.display = "flex";
         todoDayWrapper.style.display = "none";
       } else {
-        // day
         todoYearWrapper.style.display = "none";
         todoMonthWrapper.style.display = "none";
         todoWeekWrapper.style.display = "none";
@@ -1426,7 +1516,7 @@
     function saveTodos() {
       localStorage.setItem(TODOS_KEY, JSON.stringify(todoData));
       updateHomeSummary();
-      renderCalendar(); // 캘린더 갱신
+      renderCalendar();
       renderCalendarSelectedTasks(selectedCalendarDateStr);
     }
 
@@ -1439,7 +1529,7 @@
 
     function getStatusSymbol(status) {
       if (todoStyle === "color-only") {
-        return ""; // 색만 사용하는 모드
+        return ""; // 색만 사용 모드에서는 기호 X
       }
       if (status === "success") return "○";
       if (status === "partial") return "△";
@@ -1489,9 +1579,30 @@
         statusBtn.className = "status-btn";
         statusBtn.textContent = getStatusSymbol(item.status || "");
         statusBtn.classList.remove("success", "partial", "fail");
+        statusBtn.style.backgroundColor = "";
+        statusBtn.style.borderColor = "rgba(75,85,99,0.9)";
+        statusBtn.style.color = "var(--text-muted)";
+
         if (item.status === "success") statusBtn.classList.add("success");
         if (item.status === "partial") statusBtn.classList.add("partial");
         if (item.status === "fail") statusBtn.classList.add("fail");
+
+        // 색만 사용 모드: 네모칸 전체를 색으로 채우기
+        if (todoStyle === "color-only") {
+          if (item.status === "success") {
+            statusBtn.style.backgroundColor = "var(--success)";
+            statusBtn.style.borderColor = "var(--success)";
+          } else if (item.status === "partial") {
+            statusBtn.style.backgroundColor = "var(--warning)";
+            statusBtn.style.borderColor = "var(--warning)";
+          } else if (item.status === "fail") {
+            statusBtn.style.backgroundColor = "var(--danger)";
+            statusBtn.style.borderColor = "var(--danger)";
+          } else {
+            statusBtn.style.backgroundColor = "rgba(148,163,184,0.6)";
+            statusBtn.style.borderColor = "rgba(148,163,184,0.8)";
+          }
+        }
 
         statusBtn.addEventListener("click", () => {
           const next = cycleStatus(item.status || "");
@@ -1520,20 +1631,18 @@
         const actions = document.createElement("div");
         actions.className = "todo-actions";
 
-        // 수정 버튼
         const editBtn = document.createElement("button");
         editBtn.className = "tiny";
         editBtn.textContent = "수정";
         editBtn.addEventListener("click", () => {
-            const newText = prompt("할 일을수정하세요", item.text);
-            if (newText && newText.trim()) {
-                item.text = newText.trim();
-                saveTodos();
-                renderTodoList();
-            }
+          const newText = prompt("할 일을 수정하세요", item.text);
+          if (newText && newText.trim()) {
+            item.text = newText.trim();
+            saveTodos();
+            renderTodoList();
+          }
         });
 
-        // 삭제 버튼
         const delBtn = document.createElement("button");
         delBtn.className = "tiny";
         delBtn.textContent = "삭제";
@@ -1603,14 +1712,14 @@
     updateTodoDateInputs();
     renderTodoList();
 
-    // ===== 주간 시간표 =====
+    // ===== 주간 시간표 (시간 단위) =====
     const TIMETABLE_KEY = "study_os_timetable_v1";
     const timetableGridEl = document.getElementById("timetable-grid");
     const timetableDays = ["월", "화", "수", "목", "금", "토", "일"];
-    const timetableSlots = [
-      "1교시", "2교시", "3교시", "4교시",
-      "5교시", "6교시", "7교시", "8교시"
-    ];
+    const timetableTimes = [];
+    for (let h = 6; h <= 23; h++) {
+      timetableTimes.push(`${String(h).padStart(2,"0")}:00`);
+    }
     let timetableData = {};
 
     function loadTimetable() {
@@ -1630,10 +1739,9 @@
       if (!timetableGridEl) return;
       timetableGridEl.innerHTML = "";
 
-      // 헤더 행 (빈 칸 + 요일)
       const emptyHeader = document.createElement("div");
       emptyHeader.className = "timetable-header";
-      emptyHeader.textContent = "";
+      emptyHeader.textContent = "시간";
       timetableGridEl.appendChild(emptyHeader);
 
       timetableDays.forEach((day) => {
@@ -1643,20 +1751,17 @@
         timetableGridEl.appendChild(h);
       });
 
-      // 교시별 행
-      timetableSlots.forEach((slotLabel, slotIndex) => {
+      timetableTimes.forEach((timeLabel, timeIndex) => {
         const rowLabel = document.createElement("div");
         rowLabel.className = "timetable-header";
-        rowLabel.textContent = slotLabel;
+        rowLabel.textContent = timeLabel;
         timetableGridEl.appendChild(rowLabel);
 
         timetableDays.forEach((_, dayIndex) => {
           const cell = document.createElement("div");
           cell.className = "timetable-cell";
           cell.contentEditable = "true";
-          const key = `${slotIndex}_${dayIndex}`;
-          cell.dataset.slot = String(slotIndex);
-          cell.dataset.day = String(dayIndex);
+          const key = `${timeIndex}_${dayIndex}`;
 
           if (timetableData[key]) {
             cell.textContent = timetableData[key];
@@ -1688,35 +1793,26 @@
     const calendarSelectedDateEl = document.getElementById("calendar-selected-date");
     const calendarTaskList = document.getElementById("calendar-task-list");
     const calendarAddTodoBtn = document.getElementById("calendar-add-todo-btn");
-    // 선택한 날짜에 계획 추가 버튼
-    if (calendarAddTodoBtn) {
-        calendarAddTodoBtn.addEventListener("click", () => {
-            // 1) To-do 섹션으로 이동
-            const todosNavBtn = document.querySelector('.nav-btn[data-section="todos"]');
-            if (todosNavBtn) {
-                todosNavBtn.click();
-            }
-            // 2) 스코프를 "하루 계획으로 변경"
-            currentScope = "day";
-            scopeTabs.forEach((tab) => {
-                tab.classList.toggle("active", tab.dataset.scope === "day");
-            });
-            // 3) 날짜 인풋에 캘린더에서 선택한 날짜 채워 넣기
-            if (todoDateInput) {
-                todoDateInput.value = selectedCalendarDateStr;
-                todoDateInput.focus();
-            }
-            // 4) To-do 리스트를 현재 스코프 기준으로 다시 렌더
-            if (typeof updateTodoDateInputs === "function") {
-                updateTodoDateInputs();
-            }
-            renderTodoList();
-        });
-    }
-
     const calendarMonthPicker = document.getElementById("calendar-month-picker");
     let calendarCurrent = new Date(today.getFullYear(), today.getMonth(), 1);
     let selectedCalendarDateStr = formatDate(today);
+
+    if (calendarAddTodoBtn) {
+      calendarAddTodoBtn.addEventListener("click", () => {
+        const todosNavBtn = document.querySelector('.nav-btn[data-section="todos"]');
+        if (todosNavBtn) todosNavBtn.click();
+        currentScope = "day";
+        scopeTabs.forEach((tab) => {
+          tab.classList.toggle("active", tab.dataset.scope === "day");
+        });
+        if (todoDateInput) {
+          todoDateInput.value = selectedCalendarDateStr;
+          todoDateInput.focus();
+        }
+        updateTodoDateInputs();
+        renderTodoList();
+      });
+    }
 
     function getTodosByDate(dateStr) {
       const result = [];
@@ -1730,9 +1826,13 @@
       return result;
     }
 
+    function getDDaysByDate(dateStr) {
+      return ddayItems.filter((d) => d.date === dateStr);
+    }
+
     function renderCalendar() {
       const year = calendarCurrent.getFullYear();
-      const month = calendarCurrent.getMonth(); // 0-11
+      const month = calendarCurrent.getMonth();
       calendarMonthLabel.textContent = `${year}년 ${month + 1}월`;
 
       if (calendarMonthPicker) {
@@ -1753,12 +1853,12 @@
       });
 
       const firstDay = new Date(year, month, 1);
-      const startDayOfWeek = firstDay.getDay(); // 0-6
+      const startDayOfWeek = firstDay.getDay();
 
       const daysInMonth = new Date(year, month + 1, 0).getDate();
       const prevMonthDays = new Date(year, month, 0).getDate();
 
-      const totalCells = 42; // 6주 * 7일
+      const totalCells = 42;
       const todayStr = formatDate(today);
 
       for (let i = 0; i < totalCells; i++) {
@@ -1792,7 +1892,8 @@
         dayDiv.appendChild(numDiv);
 
         const todosForDay = getTodosByDate(dateStr);
-        if (todosForDay.length > 0) {
+        const ddaysForDay = getDDaysByDate(dateStr);
+        if (todosForDay.length > 0 || ddaysForDay.length > 0) {
           const dot = document.createElement("div");
           dot.className = "calendar-day-dot";
           dayDiv.appendChild(dot);
@@ -1819,27 +1920,70 @@
     function renderCalendarSelectedTasks(dateStr) {
       calendarSelectedDateEl.textContent = `선택한 날짜: ${dateStr}`;
       const todosForDay = getTodosByDate(dateStr);
+      const ddaysForDay = getDDaysByDate(dateStr);
       calendarTaskList.innerHTML = "";
-      if (todosForDay.length === 0) {
+
+      if (ddaysForDay.length === 0 && todosForDay.length === 0) {
         const p = document.createElement("div");
-        p.textContent = "이 날짜에는 등록된 계획이 없습니다.";
+        p.textContent = "이 날짜에는 등록된 D-Day나 계획이 없습니다.";
         p.style.color = "var(--text-muted)";
         p.style.fontSize = "0.8rem";
         calendarTaskList.appendChild(p);
         return;
       }
-      todosForDay.forEach((item) => {
-        const div = document.createElement("div");
-        div.className = "calendar-task-item";
-        const main = document.createElement("div");
-        main.textContent = `${getStatusSymbol(item.status || "")} ${item.text}`;
-        const scopeInfo = document.createElement("div");
-        scopeInfo.className = "calendar-task-scope";
-        scopeInfo.textContent = scopeLabel(item.scope);
-        div.appendChild(main);
-        div.appendChild(scopeInfo);
-        calendarTaskList.appendChild(div);
-      });
+
+      if (ddaysForDay.length > 0) {
+        const title = document.createElement("div");
+        title.textContent = "D-Day";
+        title.style.fontSize = "0.78rem";
+        title.style.fontWeight = "600";
+        title.style.margin = "4px 0 2px";
+        calendarTaskList.appendChild(title);
+
+        ddaysForDay.forEach((d) => {
+          const div = document.createElement("div");
+          div.className = "calendar-task-item";
+          const main = document.createElement("div");
+          const todayOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+          const diff = Math.round(
+            (new Date(d.date).setHours(0,0,0,0) - todayOnly.getTime()) /
+            (1000*60*60*24)
+          );
+          let tag = "";
+          if (diff > 0) tag = `D-${diff}`;
+          else if (diff === 0) tag = "D-DAY";
+          else tag = `D+${Math.abs(diff)}`;
+          main.textContent = `${tag} · ${d.title}`;
+          const sub = document.createElement("div");
+          sub.className = "calendar-task-scope";
+          sub.textContent = d.date;
+          div.appendChild(main);
+          div.appendChild(sub);
+          calendarTaskList.appendChild(div);
+        });
+      }
+
+      if (todosForDay.length > 0) {
+        const title = document.createElement("div");
+        title.textContent = "계획 / 할 일";
+        title.style.fontSize = "0.78rem";
+        title.style.fontWeight = "600";
+        title.style.margin = "6px 0 2px";
+        calendarTaskList.appendChild(title);
+
+        todosForDay.forEach((item) => {
+          const div = document.createElement("div");
+          div.className = "calendar-task-item";
+          const main = document.createElement("div");
+          main.textContent = `${getStatusSymbol(item.status || "")} ${item.text}`;
+          const scopeInfo = document.createElement("div");
+          scopeInfo.className = "calendar-task-scope";
+          scopeInfo.textContent = scopeLabel(item.scope);
+          div.appendChild(main);
+          div.appendChild(scopeInfo);
+          calendarTaskList.appendChild(div);
+        });
+      }
     }
 
     calendarPrevBtn.addEventListener("click", () => {
@@ -1969,7 +2113,7 @@
     function startPomoTicking() {
       if (pomoIntervalId !== null) return;
       pomoRunning = true;
-      requestWakeLock(); // 화면 유지 시도
+      requestWakeLock();
       pomoIntervalId = setInterval(() => {
         pomoSecondsLeft--;
         if (pomoSecondsLeft <= 0) {
@@ -2053,7 +2197,7 @@
     pomoSecondsLeft = pomoConfig.focus * 60;
     updatePomoDisplay();
 
-    // ===== 공부 타이머 (오늘 공부 시간) =====
+    // ===== 공부 타이머 =====
     const STUDY_KEY = "study_os_study_log_v1";
     const STUDY_SESSION_KEY = "study_os_current_session";
 
@@ -2066,7 +2210,7 @@
     const studySessionTimeEl = document.getElementById("study-session-time");
     const studyLastSessionEl = document.getElementById("study-last-session");
 
-    let studyLog = {}; // { "YYYY-MM-DD": seconds }
+    let studyLog = {};
     let studyRunning = false;
     let studySessionStart = null;
     let studySessionTimerId = null;
@@ -2164,17 +2308,7 @@
       releaseWakeLockIfNeeded();
     }
 
-    studyStartBtn.addEventListener("click", () => {
-      if (studyRunning) return;
-      studyRunning = true;
-      studySessionStart = new Date();
-      studyStatusEl.textContent = "공부 중";
-      saveStudySessionState();
-      startStudySessionTicking();
-      openFocusOverlay("study");
-    });
-
-    studyStopBtn.addEventListener("click", () => {
+    function finishStudySession() {
       if (!studyRunning || !studySessionStart) return;
       const now = new Date();
       const diffSec = Math.max(
@@ -2191,6 +2325,20 @@
       saveStudySessionState();
       saveStudyLog();
       updateStudySessionTime();
+    }
+
+    studyStartBtn.addEventListener("click", () => {
+      if (studyRunning) return;
+      studyRunning = true;
+      studySessionStart = new Date();
+      studyStatusEl.textContent = "공부 중";
+      saveStudySessionState();
+      startStudySessionTicking();
+      openFocusOverlay("study");
+    });
+
+    studyStopBtn.addEventListener("click", () => {
+      finishStudySession();
       if (focusMode === "study") {
         closeFocusOverlay();
       }
@@ -2221,7 +2369,7 @@
     updateStudyDisplay();
     updateStudySessionTime();
 
-    // ===== 집중 모드(소프트 블록) =====
+    // ===== 집중 모드 =====
     const focusOverlay = document.getElementById("focus-overlay");
     const focusExitBtn = document.getElementById("focus-exit-btn");
     const focusTimerLabel = document.getElementById("focus-timer-label");
@@ -2303,10 +2451,19 @@
     }
 
     focusExitBtn.addEventListener("click", () => {
+      // 공부 타이머: 세션 종료 + 기록
+      if (focusMode === "study" && studyRunning) {
+        finishStudySession();
+      }
+      // 포모도로: 타이머만 일시정지 (리셋 X)
+      if (focusMode === "pomo" && pomoRunning) {
+        stopPomoTicking();
+        pomoPhaseEl.textContent += " (일시 정지)";
+      }
       closeFocusOverlay();
     });
 
-    // ===== Wake Lock (가능한 브라우저에서 화면 유지 시도) =====
+    // ===== Wake Lock =====
     let wakeLock = null;
     let wakeLockRequested = false;
 
@@ -2333,7 +2490,7 @@
       }
     }
 
-    // ===== 홈 요약 업데이트 (오늘 공부 시간 + 완료 To-do 개수) =====
+    // ===== 홈 요약 =====
     const summaryStudyTimeEl = document.getElementById("summary-study-time");
     const summaryDoneCountEl = document.getElementById("summary-done-count");
 
@@ -2354,7 +2511,7 @@
 
     updateHomeSummary();
 
-    // ===== To-do 체크스타일 설정(라디오) =====
+    // ===== To-do 스타일 라디오 적용 =====
     const todoStyleRadios = document.querySelectorAll('input[name="todo-style"]');
     if (todoStyleRadios.length) {
       todoStyleRadios.forEach((radio) => {
@@ -2369,187 +2526,184 @@
       });
     }
 
-    // ===== 전체 초기 로딩 후 캘린더와 요약 반영 =====
-    renderCalendar();
-    renderCalendarSelectedTasks(selectedCalendarDateStr);
-
+    // 서비스워커 등록
     if ("serviceWorker" in navigator) {
       window.addEventListener("load", () => {
         navigator.serviceWorker
           .register("/My-Study-OS/service-worker.js")
-          .catch((err) => console.error("SW 등록 실패:", err))
+          .catch((err) => console.error("SW 등록 실패:", err));
       });
     }
 
   </script>
+
+  <!-- Firebase & 백업 스크립트 -->
   <script type="module">
-  /* Firebase SDK import */
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-app.js";
-  import {
-    getAuth,
-    GoogleAuthProvider,
-    signInWithPopup,
-    onAuthStateChanged,
-    signOut
-  } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-auth.js";
-  import {
-    getFirestore,
-    doc,
-    setDoc,
-    getDoc
-  } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-app.js";
+    import {
+      getAuth,
+      GoogleAuthProvider,
+      signInWithPopup,
+      onAuthStateChanged,
+      signOut
+    } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-auth.js";
+    import {
+      getFirestore,
+      doc,
+      setDoc,
+      getDoc
+    } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore.js";
 
-  // For Firebase JS SDK v7.20.0 and later, measurementId is optional
-  const firebaseConfig = {
-    apiKey: "AIzaSyC-OtOZzkLk1f70wWegmv2zDcCJqlFZlLA",
-    authDomain: "my-study-os-3758c.firebaseapp.com",
-    projectId: "my-study-os-3758c",
-    storageBucket: "my-study-os-3758c.firebasestorage.app",
-    messagingSenderId: "632448831360",
-    appId: "1:632448831360:web:bd8f776773cdfc72f93b65",
-    measurementId: "G-VD3P1XY2E7"
-  };
+    const firebaseConfig = {
+      apiKey: "AIzaSyC-OtOZzkLk1f70wWegmv2zDcCJqlFZlLA",
+      authDomain: "my-study-os-3758c.firebaseapp.com",
+      projectId: "my-study-os-3758c",
+      storageBucket: "my-study-os-3758c.firebasestorage.app",
+      messagingSenderId: "632448831360",
+      appId: "1:632448831360:web:bd8f776773cdfc72f93b65",
+      measurementId: "G-VD3P1XY2E7"
+    };
 
-  const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
-  const db = getFirestore(app);
-  const provider = new GoogleAuthProvider();
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+    const provider = new GoogleAuthProvider();
 
-  /* DOM 요소 가져오기 */
-  const loginBtn   = document.getElementById("google-login-btn");
-  const logoutBtn  = document.getElementById("google-logout-btn");
-  const statusEl   = document.getElementById("google-status");
-  const backupBtn  = document.getElementById("cloud-backup-btn");
-  const restoreBtn = document.getElementById("cloud-restore-btn");
+    const loginBtn   = document.getElementById("google-login-btn");
+    const logoutBtn  = document.getElementById("google-logout-btn");
+    const statusEl   = document.getElementById("google-status");
+    const backupBtn  = document.getElementById("cloud-backup-btn");
+    const restoreBtn = document.getElementById("cloud-restore-btn");
 
-  /* localStorage 백업할 key 목록 */
-  const LOCAL_KEYS = [
-    "study_os_dday",
-    "study_os_goals",
-    "study_os_todos_v1",
-    "study_os_pomo_config_v1",
-    "study_os_study_log_v1",
-    "study_os_current_session",
-    "study_os_theme",
-    "study_os_timetable_v1",
-    "study_os_todo_style"
-  ];
+    const LOCAL_KEYS = [
+      "study_os_ddays_v1",
+      "study_os_dday",          // 구버전 단일 D-Day
+      "study_os_goals",
+      "study_os_todos_v1",
+      "study_os_pomo_config_v1",
+      "study_os_study_log_v1",
+      "study_os_current_session",
+      "study_os_theme",
+      "study_os_timetable_v1",
+      "study_os_todo_style"
+    ];
 
-  function getLocalData() {
-    const data = {};
-    LOCAL_KEYS.forEach(key => {
-      const val = localStorage.getItem(key);
-      if (val !== null) data[key] = val;
+    function getLocalData() {
+      const data = {};
+      LOCAL_KEYS.forEach(key => {
+        const val = localStorage.getItem(key);
+        if (val !== null) data[key] = val;
+      });
+      return data;
+    }
+
+    async function saveCloud(user) {
+      const data = getLocalData();
+      const ref = doc(db, "users", user.uid);
+      await setDoc(ref, data, { merge: true });
+      alert("클라우드 백업 완료!");
+    }
+
+    async function loadCloud(user) {
+      const ref = doc(db, "users", user.uid);
+      const snap = await getDoc(ref);
+
+      if (!snap.exists()) {
+        alert("클라우드에 저장된 데이터가 없습니다.");
+        return;
+      }
+
+      const data = snap.data();
+      Object.keys(data).forEach(key => localStorage.setItem(key, data[key]));
+      alert("불러오기 완료! 페이지를 새로고침합니다.");
+      location.reload();
+    }
+
+    loginBtn.addEventListener("click", async () => {
+      try {
+        await signInWithPopup(auth, provider);
+      } catch (e) {
+        console.error(e);
+        alert("로그인 오류 발생");
+      }
     });
-    return data;
-  }
 
-  async function saveCloud(user) {
-    const data = getLocalData();
-    const ref = doc(db, "users", user.uid);
-    await setDoc(ref, data, { merge: true });
-    alert("클라우드 백업 완료!");
-  }
+    logoutBtn.addEventListener("click", async () => {
+      await signOut(auth);
+    });
 
-  async function loadCloud(user) {
-    const ref = doc(db, "users", user.uid);
-    const snap = await getDoc(ref);
+    backupBtn.addEventListener("click", () => {
+      const user = auth.currentUser;
+      if (!user) return alert("로그인이 필요합니다!");
+      saveCloud(user);
+    });
 
-    if (!snap.exists()) {
-      alert("클라우드에 저장된 데이터가 없습니다.");
-      return;
-    }
+    restoreBtn.addEventListener("click", () => {
+      const user = auth.currentUser;
+      if (!user) return alert("로그인이 필요합니다!");
+      if (!confirm("클라우드 데이터를 현재 기기 데이터에 덮어씁니다. 계속할까요?")) return;
+      loadCloud(user);
+    });
 
-    const data = snap.data();
-    Object.keys(data).forEach(key => localStorage.setItem(key, data[key]));
-    alert("불러오기 완료! 페이지를 새로고침합니다.");
-    location.reload();
-  }
-
-  loginBtn.addEventListener("click", async () => {
-    try {
-      await signInWithPopup(auth, provider);
-    } catch (e) {
-      console.error(e);
-      alert("로그인 오류 발생");
-    }
-  });
-
-  logoutBtn.addEventListener("click", async () => {
-    await signOut(auth);
-  });
-
-  backupBtn.addEventListener("click", () => {
-    const user = auth.currentUser;
-    if (!user) return alert("로그인이 필요합니다!");
-    saveCloud(user);
-  });
-
-  restoreBtn.addEventListener("click", () => {
-    const user = auth.currentUser;
-    if (!user) return alert("로그인이 필요합니다!");
-    if (!confirm("클라우드 데이터를 현재 기기 데이터에 덮어씁니다. 계속할까요?")) return;
-    loadCloud(user);
-  });
-
-  /* 로그인 상태 변화 감지 */
-  onAuthStateChanged(auth, user => {
-    if (user) {
-      statusEl.textContent = `로그인됨: ${user.displayName || user.email}`;
-      loginBtn.style.display = "none";
-      logoutBtn.style.display = "inline-flex";
-      backupBtn.disabled = false;
-      restoreBtn.disabled = false;
-    } else {
-      statusEl.textContent = "로그인되어 있지 않습니다.";
-      loginBtn.style.display = "inline-flex";
-      logoutBtn.style.display = "none";
-      backupBtn.disabled = true;
-      restoreBtn.disabled = true;
-    }
-  });
-
-  /* 초기 상태 */
-  logoutBtn.style.display = "none";
-  backupBtn.disabled = true;
-  restoreBtn.disabled = true;
-</script>
-
-<script>
-  document.getElementById("hard-reload-btn")?.addEventListener("click", async () => {
-    const confirmReload = confirm(
-      "캐시와 서비스워커를 삭제하고 최신 버전을 다시 불러올까요?\n(데이터는 삭제되지 않습니다)"
-    );
-    if (!confirmReload) return;
-
-    try {
-      // 1) Service Worker 언레지스터
-      if ('serviceWorker' in navigator) {
-        const registrations = await navigator.serviceWorker.getRegistrations();
-        for (const reg of registrations) {
-          await reg.unregister();
-        }
+    onAuthStateChanged(auth, user => {
+      if (user) {
+        statusEl.textContent = `로그인됨: ${user.displayName || user.email}`;
+        loginBtn.style.display = "none";
+        logoutBtn.style.display = "inline-flex";
+        backupBtn.disabled = false;
+        restoreBtn.disabled = false;
+      } else {
+        statusEl.textContent = "로그인되어 있지 않습니다.";
+        loginBtn.style.display = "inline-flex";
+        logoutBtn.style.display = "none";
+        backupBtn.disabled = true;
+        restoreBtn.disabled = true;
       }
+    });
 
-      // 2) Cache Storage 비우기
-      if ('caches' in window) {
-        const keys = await caches.keys();
-        for (const key of keys) {
-          await caches.delete(key);
+    logoutBtn.style.display = "none";
+    backupBtn.disabled = true;
+    restoreBtn.disabled = true;
+  </script>
+
+  <!-- 강제 새버전 로드 -->
+  <script>
+    document.getElementById("hard-reload-btn")?.addEventListener("click", async () => {
+      const confirmReload = confirm(
+        "캐시와 서비스워커를 삭제하고 최신 버전을 다시 불러올까요?\n(데이터는 삭제되지 않습니다)"
+      );
+      if (!confirmReload) return;
+
+      try {
+        if ('serviceWorker' in navigator) {
+          const registrations = await navigator.serviceWorker.getRegistrations();
+          for (const reg of registrations) {
+            await reg.unregister();
+          }
         }
+
+        if ('caches' in window) {
+          const keys = await caches.keys();
+          for (const key of keys) {
+            await caches.delete(key);
+          }
+        }
+
+        alert("새 버전을 불러옵니다!");
+        window.location.reload(true);
+
+      } catch (e) {
+        console.error(e);
+        alert("강제 새버전 로드 중 오류가 발생했습니다.");
       }
+    });
 
-      // 3) 강력 새로고침
-      alert("새 버전을 불러옵니다!");
-      window.location.reload(true);
-
-    } catch (e) {
-      console.error(e);
-      alert("강제 새버전 로드 중 오류가 발생했습니다.");
-    }
-  });
-</script>
-
-
+    document.getElementById("reset-all-btn")?.addEventListener("click", () => {
+      if (!confirm("정말 모든 데이터를 초기화할까요? 이 작업은 되돌릴 수 없습니다.")) return;
+      localStorage.clear();
+      alert("초기화가 완료되었습니다. 페이지를 새로고침합니다.");
+      window.location.reload();
+    });
+  </script>
 </body>
 </html>
