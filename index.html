@@ -1202,7 +1202,7 @@
     const today = new Date();
     const dayNames = ["일", "월", "화", "수", "목", "금", "토"];
     todayLabel.textContent =
-      `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2,"0")}-${String(today.getDate()).padStart(2,"0")} (${dayNames[today.getDay()]})`;
+      `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")} (${dayNames[today.getDay()]})`;
 
     // ===== 테마 토글 =====
     const themeToggleBtn = document.getElementById("theme-toggle");
@@ -1281,6 +1281,13 @@
     // ===== To-do 체크스타일 설정 =====
     const TODO_STYLE_KEY = "study_os_todo_style";
     let todoStyle = localStorage.getItem(TODO_STYLE_KEY) || "symbol";
+
+    // ===== 알림 마지막 실행 날짜 저장 =====
+    const LAST_DDAY_NOTIFY_KEY = "study_os_last_dday_notify";
+    const LAST_STUDY_NOTIFY_KEY = "study_os_last_study_notify";
+
+    let lastDdayNotifyDateStr = localStorage.getItem(LAST_DDAY_NOTIFY_KEY) || "";
+    let lastStudyNotifyDateStr = localStorage.getItem(LAST_STUDY_NOTIFY_KEY) || "";
 
     // ===== 알림 설정 (시간 저장 & 버튼 연결) =====
     const DDAY_REMINDER_TIME_KEY = "study_os_dday_reminder_time";
@@ -2643,42 +2650,63 @@
 
     updateHomeSummary();
 
-        // ===== 자동 알림 시각 체크 (D-Day / 공부 시작) =====
+            // ===== 자동 알림 시각 체크 (D-Day / 공부 시작) =====
     function checkDdayNotifications(now) {
       if (!ddayItems || !ddayItems.length) return;
       if (!ddayReminderTime) return;
 
-      const todayOnly = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      // 오늘 날짜 문자열 (YYYY-MM-DD)
+      const todayStr = formatDate(now);
+
+      // 오늘 이미 D-Day 알림을 보냈다면 다시 보내지 않음
+      if (lastDdayNotifyDateStr === todayStr) return;
+
+      const todayOnly = new Date(
+        now.getFullYear(),
+        now.getMonth(),
+        now.getDate()
+      );
       const todayMs = todayOnly.getTime();
 
       const [hh, mm] = ddayReminderTime.split(":");
       const targetH = Number(hh);
       const targetM = Number(mm);
 
+      const hour = now.getHours();
+      const minute = now.getMinutes();
+
+      // 시·분이 아직 아니면 아예 검사 안 함
+      if (hour !== targetH || minute !== targetM) return;
+
+      // 여기까지 왔다 = 지금이 사용자가 지정한 시각
+      // 내일이 D-Day인 일정이 있는지 확인
+      let hasTomorrowDday = false;
+
       ddayItems.forEach((item) => {
         const d = new Date(item.date);
         const dOnly = new Date(d.getFullYear(), d.getMonth(), d.getDate());
         const diffDays = Math.round((dOnly.getTime() - todayMs) / 86400000);
 
-        // 내일이 D-Day인 일정만
         if (diffDays === 1) {
-          const hour = now.getHours();
-          const minute = now.getMinutes();
-          const second = now.getSeconds();
-
-          // 설정한 시각에, 첫 몇 초 동안만 울리게
-          if (hour === targetH && minute === targetM && second < 5) {
-            showLocalNotification(
-              "My Study OS - D-Day",
-              `내일은 "${item.title}" D-Day 입니다!`
-            );
-          }
+          hasTomorrowDday = true;
+          showLocalNotification(
+            "My Study OS - D-Day",
+            `내일은 "${item.title}" D-Day 입니다!`
+          );
         }
       });
+
+      if (hasTomorrowDday) {
+        lastDdayNotifyDateStr = todayStr;
+        localStorage.setItem(LAST_DDAY_NOTIFY_KEY, todayStr);
+      }
     }
 
     function checkStudyStartReminder(now) {
       if (!studyReminderTime) return;
+
+      const todayStr = formatDate(now);
+      if (lastStudyNotifyDateStr === todayStr) return;
 
       const [hh, mm] = studyReminderTime.split(":");
       const targetH = Number(hh);
@@ -2686,13 +2714,14 @@
 
       const hour = now.getHours();
       const minute = now.getMinutes();
-      const second = now.getSeconds();
 
-      if (hour === targetH && minute === targetM && second < 5) {
+      if (hour === targetH && minute === targetM) {
         showLocalNotification(
           "My Study OS - 공부 시작",
           "정해둔 공부 시작 시간이예요. 오늘도 한 번 달려볼까요?"
         );
+        lastStudyNotifyDateStr = todayStr;
+        localStorage.setItem(LAST_STUDY_NOTIFY_KEY, todayStr);
       }
     }
 
@@ -2702,8 +2731,9 @@
       checkStudyStartReminder(now);
     }
 
-    // 30초마다 알림 조건 체크
-    setInterval(checkScheduledNotifications, 30 * 1000);
+    // 1초마다 알림 조건 체크 (부하 거의 없음)
+    setInterval(checkScheduledNotifications, 1000);
+
 
     // ===== To-do 스타일 라디오 적용 =====
     const todoStyleRadios = document.querySelectorAll('input[name="todo-style"]');
