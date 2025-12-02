@@ -2702,11 +2702,9 @@
       }
     }
 
-    function checkStudyStartReminder(now) {
+        function checkStudyStartReminder(now) {
+      // 공부 시작 시간이 아예 설정되지 않았다면 아무 것도 안 함
       if (!studyReminderTime) return;
-
-      const todayStr = formatDate(now);
-      if (lastStudyNotifyDateStr === todayStr) return;
 
       const [hh, mm] = studyReminderTime.split(":");
       const targetH = Number(hh);
@@ -2714,14 +2712,18 @@
 
       const hour = now.getHours();
       const minute = now.getMinutes();
+      const second = now.getSeconds();
 
-      if (hour === targetH && minute === targetM) {
+      // 매일, 설정한 시각의 "정각 초(0초)"에 한 번 울리도록
+      if (hour === targetH && minute === targetM && second === 0) {
         showLocalNotification(
           "My Study OS - 공부 시작",
           "정해둔 공부 시작 시간이예요. 오늘도 한 번 달려볼까요?"
         );
-        lastStudyNotifyDateStr = todayStr;
-        localStorage.setItem(LAST_STUDY_NOTIFY_KEY, todayStr);
+
+        // 원하면 하루에 한 번만 울리게 막고 싶다면 아래 두 줄을 다시 살리면 돼
+        // const todayStr = formatDate(now);
+        // localStorage.setItem(LAST_STUDY_NOTIFY_KEY, todayStr);
       }
     }
 
