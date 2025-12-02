@@ -1089,6 +1089,44 @@
             </div>
           </div>
 
+                    <div class="card">
+            <div class="card-header">
+              <div class="card-title">알림 설정</div>
+              <span class="pill">Notification</span>
+            </div>
+            <p class="tagline">
+              포모도로 종료, 내일 D-Day, 공부 시작 시간에 알림을 받을 수 있어요.
+            </p>
+
+            <div class="input-row" style="margin-top:8px;">
+              <button id="notify-permission-btn">알림 권한 요청</button>
+            </div>
+
+            <div class="hint" style="margin-top:4px;">
+              · 먼저 “알림 권한 요청”을 눌러 이 브라우저에서 알림을 허용해 주세요.<br />
+              · iOS/Safari 등 일부 환경에서는 알림이 제한될 수 있어요.
+            </div>
+
+            <hr style="margin:10px 0; border-color:rgba(148,163,184,0.4);" />
+
+            <p class="tagline">내일이 D-Day일 때, 알림이 울릴 시간을 정해요.</p>
+            <div class="input-row" style="margin-top:6px;">
+              <input type="time" id="dday-reminder-time" />
+              <button id="dday-reminder-save-btn" class="secondary">D-Day 시간 저장</button>
+            </div>
+
+            <p class="tagline" style="margin-top:10px;">매일 공부를 시작하라고 알려줄 시간을 정해요.</p>
+            <div class="input-row" style="margin-top:6px;">
+              <input type="time" id="study-reminder-time" />
+              <button id="study-reminder-save-btn" class="secondary">공부 시간 저장</button>
+            </div>
+
+            <div class="hint" style="margin-top:6px;">
+              · 내일이 D-Day인 일정이 있을 때만, 설정한 시각에 D-Day 알림이 울립니다.<br />
+              · 공부 시작 시간은 매일 같은 시각에 한 번 알림이 울립니다(앱이 켜져 있을 때).
+            </div>
+          </div>
+
           <div class="card">
             <div class="card-header">
               <div class="card-title">강제 새버전 갱신</div>
@@ -1123,23 +1161,6 @@
 
           <div class="card">
             <div class="card-header">
-                <div class="card-title">D-Day 알림 시간</div>
-                <span class="pill">D-Day 알림</span>
-            </div>
-            <p class="tagline">
-                내일이 D-Day인 일정이 있을 때, 알림이 울릴 시간을 정할 수 있어요.
-            </p>
-            <div class="input-row" style="margin-top:10px;">
-                <input type="time" id="dday-reminder-time" />
-                <button id="dday-reminder-save-btn" class="secondary">저장</button>
-            </div>
-            <div class="hint" style="margin-top:6px;">
-                예: 09:00 으로 설정하면, 내일 D-Day가 있는 날에는 매일 오전 9시에 알림이 울려요.
-            </div>
-          </div>
-
-          <div class="card">
-            <div class="card-header">
               <div class="card-title">할 일 체크 스타일</div>
               <span class="pill">To-do 표시</span>
             </div>
@@ -1161,8 +1182,6 @@
               · 기호: ○/△/✕/□ 기호와 색으로 상태를 구분합니다.
             </div>
           </div>
-
-          <button onclick="requestNotificationPermission()">알림 권한 요청</button>
 
         </div>
       </section>
@@ -1212,6 +1231,39 @@
       applyTheme(current === "dark" ? "light" : "dark");
     });
 
+        // ===== 알림 권한 & 로컬 알림 =====
+    async function requestNotificationPermission() {
+      if (!("Notification" in window)) {
+        alert("이 브라우저에서는 알림을 지원하지 않아요.");
+        return;
+      }
+
+      try {
+        const permission = await Notification.requestPermission();
+        if (permission === "granted") {
+          alert("알림이 허용되었습니다!");
+        } else if (permission === "denied") {
+          alert("알림이 차단되어 있어요. 브라우저 설정에서 변경할 수 있어요.");
+        }
+      } catch (e) {
+        console.error("알림 권한 요청 중 오류", e);
+      }
+    }
+
+    function showLocalNotification(title, body) {
+      if (!("Notification" in window)) return;
+      if (Notification.permission !== "granted") return;
+
+      try {
+        new Notification(title, {
+          body,
+          icon: "/My-Study-OS/icon-192.png", // manifest에서 쓰는 아이콘 경로에 맞게 수정 가능
+        });
+      } catch (e) {
+        console.error("알림 표시 중 오류", e);
+      }
+    }
+
     // ===== 네비게이션 =====
     const navButtons = document.querySelectorAll(".nav-btn");
     const sections = document.querySelectorAll(".section");
@@ -1229,6 +1281,47 @@
     // ===== To-do 체크스타일 설정 =====
     const TODO_STYLE_KEY = "study_os_todo_style";
     let todoStyle = localStorage.getItem(TODO_STYLE_KEY) || "symbol";
+
+    // ===== 알림 설정 (시간 저장 & 버튼 연결) =====
+    const DDAY_REMINDER_TIME_KEY = "study_os_dday_reminder_time";
+    const STUDY_REMINDER_TIME_KEY = "study_os_study_reminder_time";
+
+    let ddayReminderTime = localStorage.getItem(DDAY_REMINDER_TIME_KEY) || "";
+    let studyReminderTime = localStorage.getItem(STUDY_REMINDER_TIME_KEY) || "";
+
+    const notifyPermissionBtn = document.getElementById("notify-permission-btn");
+    const ddayReminderInput = document.getElementById("dday-reminder-time");
+    const ddayReminderSaveBtn = document.getElementById("dday-reminder-save-btn");
+    const studyReminderInput = document.getElementById("study-reminder-time");
+    const studyReminderSaveBtn = document.getElementById("study-reminder-save-btn");
+
+    if (notifyPermissionBtn) {
+      notifyPermissionBtn.addEventListener("click", () => {
+        requestNotificationPermission();
+      });
+    }
+
+    if (ddayReminderInput && ddayReminderSaveBtn) {
+      if (ddayReminderTime) {
+        ddayReminderInput.value = ddayReminderTime;
+      }
+      ddayReminderSaveBtn.addEventListener("click", () => {
+        ddayReminderTime = ddayReminderInput.value;
+        localStorage.setItem(DDAY_REMINDER_TIME_KEY, ddayReminderTime || "");
+        alert("D-Day 알림 시간이 저장되었습니다.");
+      });
+    }
+
+    if (studyReminderInput && studyReminderSaveBtn) {
+      if (studyReminderTime) {
+        studyReminderInput.value = studyReminderTime;
+      }
+      studyReminderSaveBtn.addEventListener("click", () => {
+        studyReminderTime = studyReminderInput.value;
+        localStorage.setItem(STUDY_REMINDER_TIME_KEY, studyReminderTime || "");
+        alert("공부 시작 알림 시간이 저장되었습니다.");
+      });
+    }
 
     // ===== D-DAY (여러 개) =====
     const DDAY_LIST_KEY = "study_os_ddays_v1";
@@ -2151,18 +2244,24 @@
       releaseWakeLockIfNeeded();
     }
 
-    function handlePomoPhaseEnd() {
+        function handlePomoPhaseEnd() {
       if (pomoMode === "focus") {
         if (pomoCycleCount >= pomoConfig.cyclesBeforeLong) {
           pomoMode = "long";
           pomoSecondsLeft = pomoConfig.longBreak * 60;
           alert("집중 세트 완료! 긴 휴식을 가져보세요.");
-          showLocalNotification("My Study OS - 포모도로", "집중 세트 완료! 긴 휴식을 가져보세요.");
+          showLocalNotification(
+            "My Study OS - 포모도로",
+            "집중 세트 완료! 긴 휴식을 가져보세요."
+          );
         } else {
           pomoMode = "short";
           pomoSecondsLeft = pomoConfig.shortBreak * 60;
           alert("집중 끝! 짧은 휴식을 가져보세요.");
-          showLocalNotification("My Study OS - 포모도로", "집중 끝! 짧은 휴식을 가져보세요.");
+          showLocalNotification(
+            "My Study OS - 포모도로",
+            "집중 끝! 짧은 휴식을 가져보세요."
+          );
         }
       } else if (pomoMode === "short") {
         pomoCycleCount++;
@@ -2170,16 +2269,25 @@
           pomoMode = "long";
           pomoSecondsLeft = pomoConfig.longBreak * 60;
           alert("여러 번의 집중을 마쳤어요. 긴 휴식을 가져보세요!");
-          showLocalNotification("My Study OS - 포모도로", "여러 번의 집중을 마쳤어요. 긴 휴식을 가져보세요!");
+          showLocalNotification(
+            "My Study OS - 포모도로",
+            "여러 번의 집중을 마쳤어요. 긴 휴식을 가져보세요!"
+          );
         } else {
           pomoMode = "focus";
           pomoSecondsLeft = pomoConfig.focus * 60;
           alert("휴식 끝! 다시 집중 시작!");
-          showLocalNotification("My Study OS - 포모도로", "휴식 끝! 다시 집중 시작!");
+          showLocalNotification(
+            "My Study OS - 포모도로",
+            "휴식 끝! 다시 집중 시작!"
+          );
         }
       } else if (pomoMode === "long") {
         alert("긴 휴식까지 모두 끝났어요. 수고했어요! 다시 시작할지 결정해 보세요.");
-        showLocalNotification("My Study OS - 포모도로", "긴 휴식까지 모두 끝났어요. 수고했어요!");
+        showLocalNotification(
+          "My Study OS - 포모도로",
+          "긴 휴식까지 모두 끝났어요. 수고했어요!"
+        );
         pomoMode = "idle";
         pomoCycleCount = 0;
         pomoSecondsLeft = pomoConfig.focus * 60;
@@ -2393,25 +2501,6 @@
     updateStudyDisplay();
     updateStudySessionTime();
 
-    const DDAY_REMINDER_TIME_KEY = "study_os_dday_reminder_time";
-    let ddayReminderTime = localStorage.getItem(DDAY_REMINDER_TIME_KEY) || null;
-
-    const ddayReminderInput = document.getElementById("dday-reminder-time");
-    const ddayReminderSaveBtn = document.getElementById("dday-reminder-save-btn");
-
-    if (ddayReminderInput && ddayReminderSaveBtn) {
-        // 저장된 값 있으면 input에 채워주기
-        if (ddayReminderTime) {
-            ddayReminderInput.value = ddayReminderTime;
-        }
-
-        ddayReminderSaveBtn.addEventListener("click", () => {
-            ddayReminderTime = ddayReminderInput.value;
-            localStorage.setItem(DDAY_REMINDER_TIME_KEY, ddayReminderTime || "");
-            alert("D-Day 알림 시간이 저장되었습니다.");
-        });
-    }
-
     // ===== 집중 모드 =====
     const focusOverlay = document.getElementById("focus-overlay");
     const focusExitBtn = document.getElementById("focus-exit-btn");
@@ -2554,6 +2643,68 @@
 
     updateHomeSummary();
 
+        // ===== 자동 알림 시각 체크 (D-Day / 공부 시작) =====
+    function checkDdayNotifications(now) {
+      if (!ddayItems || !ddayItems.length) return;
+      if (!ddayReminderTime) return;
+
+      const todayOnly = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const todayMs = todayOnly.getTime();
+
+      const [hh, mm] = ddayReminderTime.split(":");
+      const targetH = Number(hh);
+      const targetM = Number(mm);
+
+      ddayItems.forEach((item) => {
+        const d = new Date(item.date);
+        const dOnly = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+        const diffDays = Math.round((dOnly.getTime() - todayMs) / 86400000);
+
+        // 내일이 D-Day인 일정만
+        if (diffDays === 1) {
+          const hour = now.getHours();
+          const minute = now.getMinutes();
+          const second = now.getSeconds();
+
+          // 설정한 시각에, 첫 몇 초 동안만 울리게
+          if (hour === targetH && minute === targetM && second < 5) {
+            showLocalNotification(
+              "My Study OS - D-Day",
+              `내일은 "${item.title}" D-Day 입니다!`
+            );
+          }
+        }
+      });
+    }
+
+    function checkStudyStartReminder(now) {
+      if (!studyReminderTime) return;
+
+      const [hh, mm] = studyReminderTime.split(":");
+      const targetH = Number(hh);
+      const targetM = Number(mm);
+
+      const hour = now.getHours();
+      const minute = now.getMinutes();
+      const second = now.getSeconds();
+
+      if (hour === targetH && minute === targetM && second < 5) {
+        showLocalNotification(
+          "My Study OS - 공부 시작",
+          "정해둔 공부 시작 시간이예요. 오늘도 한 번 달려볼까요?"
+        );
+      }
+    }
+
+    function checkScheduledNotifications() {
+      const now = new Date();
+      checkDdayNotifications(now);
+      checkStudyStartReminder(now);
+    }
+
+    // 30초마다 알림 조건 체크
+    setInterval(checkScheduledNotifications, 30 * 1000);
+
     // ===== To-do 스타일 라디오 적용 =====
     const todoStyleRadios = document.querySelectorAll('input[name="todo-style"]');
     if (todoStyleRadios.length) {
@@ -2567,40 +2718,6 @@
           renderCalendarSelectedTasks(selectedCalendarDateStr);
         });
       });
-    }
-
-    function checkDdayNotifications(now) {
-        if (!ddayItems || !ddayItems.length) return;
-        if (!ddayReminderTime) return; // 알림 시간을 아직 설정 안 했으면 패스
-
-        const todayOnly = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-        const todayMs = todayOnly.getTime();
-
-        // 사용자가 저장한 시각 파싱
-        const [hh, mm] = ddayReminderTime.split(":");
-        const targetH = Number(hh);
-        const targetM = Number(mm);
-
-        ddayItems.forEach((item) => {
-            const target = new Date(item.date);
-            const targetOnly = new Date(target.getFullYear(), target.getMonth(), target.getDate());
-            const diffDays = Math.round((targetOnly.getTime() - todayMs) / (1000 * 60 * 60 * 24));
-
-                // 내일이 D-Day인 일정만
-                if (diffDays === 1) {
-                    const hour = now.getHours();
-                const minute = now.getMinutes();
-                const second = now.getSeconds();
-
-                // “딱 지정한 시각”에만 울리게 (몇 초 안쪽에서만)
-                if (hour === targetH && minute === targetM && second < 5) {
-                    showLocalNotification(
-                    "My Study OS - D-Day 알림",
-                    `내일은 "${item.title}" D-Day 입니다!`
-                    );
-                }
-            }
-        });
     }
 
     // 서비스워커 등록
@@ -2741,52 +2858,6 @@
     logoutBtn.style.display = "none";
     backupBtn.disabled = true;
     restoreBtn.disabled = true;
-
-    // ===== 브라우저 알림 권한 & 로컬 알림 =====
-    async function requestNotificationPermission() {
-        if (!("Notification" in window)) {
-            alert("이 브라우저에서는 알림을 지원하지 않아요.");
-            return;
-        }
-
-        const permission = await Notification.requestPermission();
-        if (permission === "granted") {
-            alert("알림이 허용되었습니다!");
-        } else if (permission === "denied") {
-            alert("알림이 차단되어 있어요. 브라우저 설정에서 바꿀 수 있어요.");
-        }
-    }
-
-    function showLocalNotification(title, body) {
-        if (!("Notification" in window)) return;
-
-        if (Notification.permission === "granted") {
-            new Notification(title, {
-            body,
-            icon: "/My-Study-OS/icon-192.png", // 이미 manifest에 있는 아이콘 경로 맞춰 쓰면 돼
-            });
-        }
-    }
-
-    // ===== 간단 스케줄 알림 (앱이 열려 있는 동안) =====
-    let lastCheckDateStr = formatDate(new Date());
-
-    function checkScheduledNotifications() {
-        const now = new Date();
-        const nowStr = formatDate(now);
-
-        // 1) D-Day 하루 전 체크
-        checkDdayNotifications(now);
-
-        // 2) 공부 시작 시간 알림 체크
-        checkStudyStartReminder(now);
-
-        lastCheckDateStr = nowStr;
-    }
-
-    // 30초마다 한 번씩 확인
-    setInterval(checkScheduledNotifications, 30 * 1000);
-
   </script>
 
   <!-- 강제 새버전 로드 -->
