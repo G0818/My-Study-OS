@@ -2759,9 +2759,15 @@
       window.addEventListener("load", () => {
         navigator.serviceWorker
           .register("/My-Study-OS/service-worker.js")
+          .then((reg) => {
+            console.log("[SW] 등록 성공", reg);
+            // FCM에서 재사용할 수 있도록 전역에 저장
+            window.myStudyOsSwReg = reg;
+          })
           .catch((err) => console.error("SW 등록 실패:", err));
       });
     }
+
 
   </script>
 
@@ -2806,12 +2812,13 @@
     // FCM 토큰 생성 + Firestore 저장
     async function initFcmForUser(user) {
       try {
-        if (!("Notification" in window)) {
-          console.log("[FCM] 이 브라우저는 Notification API 미지원");
+        // 1) 브라우저 지원 체크
+        if (!("Notification" in window) || !("serviceWorker" in navigator)) {
+          console.log("[FCM] 이 브라우저는 Notification 또는 ServiceWorker 미지원");
           return;
         }
 
-        // 알림 권한 요청
+        // 2) 알림 권한 요청
         let permission = Notification.permission;
         if (permission !== "granted") {
           permission = await Notification.requestPermission();
@@ -2821,9 +2828,14 @@
           return;
         }
 
-        // VAPID 공개키 꼭 네 걸로 교체!!
+        // 3) 서비스워커 등록 (이미 등록되어 있으면 재사용됨)
+        const swReg = await navigator.serviceWorker.register("/My-Study-OS/service-worker.js");
+        console.log("[FCM] 서비스워커 등록/획득:", swReg);
+
+        // 4) VAPID 공개키 + 서비스워커를 사용해서 토큰 발급
         const token = await getToken(messaging, {
-          vapidKey: "여기에_네_VAPID_PUBLIC_KEY_문자열_붙여넣기"
+          vapidKey: "BLmF8N-0M3BqeTgnxvfjKNzaHfpgE01xPkDaML82X0b8TEYejDV-2C8bPfSThnL3dppbqq04Xm0e1GNZSVkyE4U",
+          serviceWorkerRegistration: swReg
         });
 
         if (!token) {
@@ -2833,14 +2845,14 @@
 
         console.log("[FCM] 브라우저 토큰:", token);
 
-        // 선택: 로컬에도 저장해 두기
+        // 5) 로컬에도 저장 (선택)
         try {
           localStorage.setItem("study_os_fcm_token", token);
         } catch (e) {
           console.warn("[FCM] 로컬 저장 실패", e);
         }
 
-        // Firestore: users/{uid}/devices/{token}
+        // 6) Firestore: users/{uid}/devices/{token}
         const deviceRef = doc(db, "users", user.uid, "devices", token);
         await setDoc(
           deviceRef,
