@@ -941,42 +941,6 @@
             <button id="todo-add-btn" type="button">추가</button>
           </div>
 
-          <div class="card">
-            <div class="card-header">
-            <div class="card-title">분량 계산기</div>
-            <span class="pill">문제 / 페이지</span>
-          </div>
-
-          <div class="input-row">
-            <label style="font-size:0.8rem; margin-bottom:4px;">단위 선택</label>
-            <select id="plan-unit" style="width:100%; padding:6px 8px; border-radius:9px; border:1px solid var(--border-subtle); background:var(--bg-soft); color:var(--text); font-size:0.8rem;">
-              <option value="problem">문제 수 기준으로 나누기</option>
-              <option value="page">페이지 수 기준으로 나누기</option>
-            </select>
-          </div>
-
-          <div class="input-row">
-            <label for="plan-total" style="font-size:0.8rem; margin-bottom:4px;">총 문제 수 / 페이지 수</label>
-            <input type="number" id="plan-total" min="1" placeholder="예: 120" />
-          </div>
-
-          <div class="input-row goal-date-row">
-            <div class="goal-date-group">
-              <label for="plan-deadline">언제까지?</label>
-              <input type="date" id="plan-deadline" />
-            </div>
-            <div class="goal-date-group">
-              <label for="plan-weekly-count">일주일에 몇 번?</label>
-              <input type="number" id="plan-weekly-count" min="1" max="14" placeholder="예: 3" />
-            </div>
-            <button id="plan-calc-btn" type="button">계산하기</button>
-          </div>
-
-          <div id="plan-result" class="hint" style="margin-top:6px;">
-            · 총 분량과 마감일, 주당 횟수를 입력하면 1회에 몇 문제/페이지씩 해야 할지 계산해 줄게요.
-          </div>
-        </div>
-
           <ul id="todo-list"></ul>
 
           <div class="hint">
@@ -1126,6 +1090,43 @@
               <li>· 집중 모드 종료를 누르면, 공부 세션은 자동으로 멈추고(포모도로는 일시정지) 기록됩니다.</li>
             </ul>
           </div>
+
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">분량 계산기</div>
+              <span class="pill">문제 / 페이지</span>
+            </div>
+
+            <div class="input-row">
+              <label style="font-size:0.8rem; margin-bottom:4px;">단위 선택</label>
+              <select id="plan-unit" style="width:100%; padding:6px 8px; border-radius:9px; border:1px solid var(--border-subtle); background:var(--bg-soft); color:var(--text); font-size:0.8rem;">
+                <option value="problem">문제 수 기준으로 나누기</option>
+                <option value="page">페이지 수 기준으로 나누기</option>
+              </select>
+            </div>
+
+            <div class="input-row">
+              <label for="plan-total" style="font-size:0.8rem; margin-bottom:4px;">총 문제 수 / 페이지 수</label>
+              <input type="number" id="plan-total" min="1" placeholder="예: 120" />
+            </div>
+
+            <div class="input-row goal-date-row">
+              <div class="goal-date-group">
+                <label for="plan-deadline">언제까지?</label>
+                <input type="date" id="plan-deadline" />
+              </div>
+              <div class="goal-date-group">
+                <label for="plan-weekly-count">일주일에 몇 번?</label>
+                <input type="number" id="plan-weekly-count" min="1" max="14" placeholder="예: 3" />
+              </div>
+              <button id="plan-calc-btn" type="button">계산하기</button>
+            </div>
+
+            <div id="plan-result" class="hint" style="margin-top:6px;">
+              · 총 분량과 마감일, 주당 횟수를 입력하면 1회에 몇 문제/페이지씩 해야 할지 계산해 줄게요.
+            </div>
+          </div>
+
         </div>
       </section>
 
@@ -2035,80 +2036,6 @@
     renderTodoList();
     setupSearch("todo-search", "todo-list");
 
-    // ===== 분량 계산기 (문제/페이지) =====
-    const planUnitSelect = document.getElementById("plan-unit");
-    const planTotalInput = document.getElementById("plan-total");
-    const planDeadlineInput = document.getElementById("plan-deadline");
-    const planWeeklyCountInput = document.getElementById("plan-weekly-count");
-    const planCalcBtn = document.getElementById("plan-calc-btn");
-    const planResultEl = document.getElementById("plan-result");
-
-    function calculatePlanPerSession() {
-      if (!planResultEl) return;
-
-      const mode = planUnitSelect.value; // "problem" or "page"
-      const unitLabel = mode === "problem" ? "문제" : "페이지";
-
-      const total = Number(planTotalInput.value);
-      const weekly = Number(planWeeklyCountInput.value);
-      const deadlineStr = planDeadlineInput.value;
-
-      if (!total || total <= 0 || !weekly || weekly <= 0 || !deadlineStr) {
-        planResultEl.textContent = "총 분량, 마감일, 주당 횟수를 모두 올바르게 입력해 주세요.";
-        return;
-      }
-
-      // 오늘 날짜 기준으로 남은 기간 계산
-      const today = new Date();
-      const todayStr = formatDate(today); // "YYYY-MM-DD"
-      const start = new Date(todayStr);
-      const end = new Date(deadlineStr);
-
-      // 시/분/초는 버리고 날짜만 비교
-      const startOnly = new Date(start.getFullYear(), start.getMonth(), start.getDate());
-      const endOnly = new Date(end.getFullYear(), end.getMonth(), end.getDate());
-
-      const diffMs = endOnly - startOnly;
-      const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24)); // 마감일까지 남은 일수(오늘 기준)
-
-      if (diffDays < 0) {
-        planResultEl.textContent = "마감일이 이미 지났어요. 마감일을 다시 확인해 주세요.";
-        return;
-      }
-
-      const daysInclusive = diffDays + 1; // 오늘 포함
-      const weeks = daysInclusive / 7;
-      const approxWeeks = weeks.toFixed(1);
-
-      // 전체 공부 세션 횟수 = (주 수) × (주당 횟수)
-      const rawSessions = weeks * weekly;
-      const totalSessions = Math.max(1, Math.ceil(rawSessions));
-
-      // 1회당 해야 할 분량
-      const perSession = Math.ceil(total / totalSessions);
-
-      planResultEl.innerHTML =
-        `📌 총 ${total}${unitLabel}를 ${deadlineStr}까지 마치려면<br>` +
-        `· 남은 기간: 약 ${daysInclusive}일 (≈ ${approxWeeks}주)<br>` +
-        `· 전체 횟수: 주 ${weekly}회 기준, 총 약 ${totalSessions}회<br>` +
-        `✅ 1회에 <strong>${perSession}${unitLabel}</strong>씩 하면 돼요.`;
-    }
-
-    if (planCalcBtn) {
-      planCalcBtn.addEventListener("click", calculatePlanPerSession);
-
-      // Enter로도 계산할 수 있게
-      planTotalInput.addEventListener("keydown", (e) => {
-        if (e.key === "Enter") calculatePlanPerSession();
-      });
-      planWeeklyCountInput.addEventListener("keydown", (e) => {
-        if (e.key === "Enter") calculatePlanPerSession();
-      });
-      planDeadlineInput.addEventListener("keydown", (e) => {
-        if (e.key === "Enter") calculatePlanPerSession();
-      });
-    }
-
     // ===== 주간 시간표 (시간 단위) =====
     const TIMETABLE_KEY = "study_os_timetable_v1";
     const timetableGridEl = document.getElementById("timetable-grid");
@@ -2831,6 +2758,80 @@
     updateStudySessionTime();
     renderCalendarSelectedTasks(selectedCalendarDateStr);
 
+    // ===== 분량 계산기 (문제/페이지) =====
+    const planUnitSelect = document.getElementById("plan-unit");
+    const planTotalInput = document.getElementById("plan-total");
+    const planDeadlineInput = document.getElementById("plan-deadline");
+    const planWeeklyCountInput = document.getElementById("plan-weekly-count");
+    const planCalcBtn = document.getElementById("plan-calc-btn");
+    const planResultEl = document.getElementById("plan-result");
+
+    function calculatePlanPerSession() {
+      if (!planResultEl) return;
+
+      const mode = planUnitSelect.value; // "problem" or "page"
+      const unitLabel = mode === "problem" ? "문제" : "페이지";
+
+      const total = Number(planTotalInput.value);
+      const weekly = Number(planWeeklyCountInput.value);
+      const deadlineStr = planDeadlineInput.value;
+
+      if (!total || total <= 0 || !weekly || weekly <= 0 || !deadlineStr) {
+        planResultEl.textContent = "총 분량, 마감일, 주당 횟수를 모두 올바르게 입력해 주세요.";
+        return;
+      }
+
+      // 오늘 날짜 기준으로 남은 기간 계산
+      const today = new Date();
+      const todayStr = formatDate(today); // "YYYY-MM-DD"
+      const start = new Date(todayStr);
+      const end = new Date(deadlineStr);
+
+      // 시/분/초 제거해서 날짜만 비교
+      const startOnly = new Date(start.getFullYear(), start.getMonth(), start.getDate());
+      const endOnly = new Date(end.getFullYear(), end.getMonth(), end.getDate());
+
+      const diffMs = endOnly - startOnly;
+      const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24)); // 남은 ‘일’ 수
+
+      if (diffDays < 0) {
+        planResultEl.textContent = "마감일이 이미 지났어요. 마감일을 다시 확인해 주세요.";
+        return;
+      }
+
+      const daysInclusive = diffDays + 1; // 오늘 포함
+      const weeks = daysInclusive / 7;
+      const approxWeeks = weeks.toFixed(1);
+
+      // 전체 공부 세션 횟수 = (주 수) × (주당 횟수)
+      const rawSessions = weeks * weekly;
+      const totalSessions = Math.max(1, Math.ceil(rawSessions));
+
+      // 1회당 해야 할 분량
+      const perSession = Math.ceil(total / totalSessions);
+
+      planResultEl.innerHTML =
+        `📌 총 ${total}${unitLabel}를 ${deadlineStr}까지 마치려면<br>` +
+        `· 남은 기간: 약 ${daysInclusive}일 (≈ ${approxWeeks}주)<br>` +
+        `· 전체 횟수: 주 ${weekly}회 기준, 총 약 ${totalSessions}회<br>` +
+        `✅ 1회에 <strong>${perSession}${unitLabel}</strong>씩 하면 돼요.`;
+    }
+
+    if (planCalcBtn) {
+      planCalcBtn.addEventListener("click", calculatePlanPerSession);
+
+      // Enter로도 계산할 수 있게
+      planTotalInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") calculatePlanPerSession();
+      });
+      planWeeklyCountInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") calculatePlanPerSession();
+      });
+      planDeadlineInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") calculatePlanPerSession();
+      });
+    }
+    
     // ===== 집중 모드 =====
     const focusOverlay = document.getElementById("focus-overlay");
     const focusExitBtn = document.getElementById("focus-exit-btn");
