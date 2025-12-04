@@ -2809,6 +2809,9 @@
     const messaging = getMessaging(app);
     const provider = new GoogleAuthProvider();
 
+    // ★ 현재 브라우저의 FCM 토큰을 저장해 둘 변수
+    let currentFcmToken = null;
+
     // FCM 토큰 생성 + Firestore 저장
     async function initFcmForUser(user) {
       try {
@@ -2844,6 +2847,7 @@
         }
 
         console.log("[FCM] 브라우저 토큰:", token);
+        currentFcmToken = token;   // ★ 추가: 전역 변수에 토큰 저장
 
         // 5) 로컬에도 저장 (선택)
         try {
@@ -2867,6 +2871,34 @@
         console.error("[FCM] initFcmForUser 오류", err);
       }
     }
+
+    // === Cloudflare Worker를 통해 푸시 보내는 함수 ===
+    async function sendPushViaWorker(title, body) {
+      if (!currentFcmToken) {
+        console.warn("[Push] FCM 토큰이 아직 없습니다.");
+        return;
+      }
+
+      try {
+        const res = await fetch("https://my-study-os-push.ganghealthy.workers.dev/send", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            token: currentFcmToken,
+            title: title || "My Study OS",
+            body: body || "푸시 알림 테스트",
+          }),
+        });
+
+        const data = await res.json();
+        console.log("[Push] Worker 응답:", data);
+      } catch (err) {
+        console.error("[Push] Worker 호출 오류:", err);
+      }
+    }
+
+    // 콘솔에서 테스트할 수 있게 전역으로 꺼내두기
+    window.sendPushViaWorker = sendPushViaWorker;
 
     // 앱이 켜져 있을 때 오는 푸시(포그라운드) 처리
     onMessage(messaging, (payload) => {
