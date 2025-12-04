@@ -240,6 +240,21 @@
       font-size: 0.82rem;
     }
 
+    /* 검색 입력창 공통 스타일 */
+    .search-input {
+      width: 100%;
+      padding: 6px 8px;
+      margin: 4px 0 8px;
+      border-radius: 9px;
+      border: 1px solid var(--border-subtle);
+      background: var(--bg-soft);
+      color: var(--text);
+      font-size: 0.8rem;
+    }
+    .search-input::placeholder {
+      color: var(--text-muted);
+    }
+
     input:focus,
     select:focus {
       outline: 1px solid var(--accent-strong);
@@ -740,6 +755,18 @@
 
     .timetable-cell[contenteditable="true"] { outline: none; }
 
+    /* 다크 모드에서 경계선 더 선명하게 */
+    body:not(.theme-light) .timetable-header,
+    body:not(.theme-light) .timetable-cell {
+      border-color: rgba(148,163,184,0.55);
+    }
+
+    /* 달력 경계선도 진하게 */
+    body:not(.theme-light) .calendar-day,
+    body:not(.theme-light) .calendar-weekday {
+      border-color: rgba(148,163,184,0.55);
+    }
+
     /* 집중 모드 버튼은 자동 실행으로 숨김 */
     #study-focus-btn { display: none; }
 
@@ -812,6 +839,8 @@
             </div>
             <button id="dday-clear-btn" class="secondary">모든 D-Day 초기화</button>
 
+            <input id="dday-search" class="search-input" placeholder="D-Day 검색…" />
+
             <ul id="dday-list"></ul>
 
             <div class="hint">
@@ -854,6 +883,8 @@
             <button class="scope-tab" data-scope="week">일주일 계획</button>
             <button class="scope-tab" data-scope="day">하루 계획</button>
           </div>
+
+          <input id="todo-search" class="search-input" placeholder="To-do 검색…" />
 
           <div class="input-row">
             <input type="text" id="todo-input" placeholder="이 기간 동안 해야 할 일을 적고 Enter 또는 추가 버튼을 눌러보세요." />
@@ -902,7 +933,7 @@
           </div>
           <div id="timetable-grid" class="timetable-grid"></div>
           <div class="hint">
-            · 왼쪽은 시간(06:00 ~ 23:00), 위쪽은 월~일입니다.<br />
+            · 왼쪽은 시간(00:00 ~ 23:00), 위쪽은 월~일입니다.<br />
             · 칸을 눌러 과목/활동을 입력하면 자동으로 저장돼요.
           </div>
         </div>
@@ -1238,6 +1269,7 @@
     // ===== 오늘 날짜 표시 =====
     const todayLabel = document.getElementById("today-label");
     const today = new Date();
+    let studyLog = {};
     const dayNames = ["일", "월", "화", "수", "목", "금", "토"];
     todayLabel.textContent =
       `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")} (${dayNames[today.getDay()]})`;
@@ -1316,6 +1348,23 @@
       });
     });
 
+    // ===== 리스트 검색 공통 함수 =====
+    function setupSearch(inputId, listId) {
+      const input = document.getElementById(inputId);
+      const list = document.getElementById(listId);
+      if (!input || !list) return;
+
+      input.addEventListener("input", () => {
+        const keyword = input.value.trim().toLowerCase();
+        const items = list.querySelectorAll("li");
+
+        items.forEach((li) => {
+          const text = li.textContent.toLowerCase();
+          li.style.display = text.includes(keyword) ? "" : "none";
+        });
+      });
+    }
+
     // ===== To-do 체크스타일 설정 =====
     const TODO_STYLE_KEY = "study_os_todo_style";
     let todoStyle = localStorage.getItem(TODO_STYLE_KEY) || "symbol";
@@ -1373,6 +1422,22 @@
 
     // ===== D-DAY (여러 개) =====
     const DDAY_LIST_KEY = "study_os_ddays_v1";
+
+    const PINNED_DDAY_KEY = "study_os_pinned_dday_id";
+
+    function getPinnedDdayId() {
+      const v = localStorage.getItem(PINNED_DDAY_KEY);
+      return v ? Number(v) : null;
+    }
+
+    function setPinnedDdayId(id) {
+      if (id == null) {
+        localStorage.removeItem(PINNED_DDAY_KEY);
+      } else {
+        localStorage.setItem(PINNED_DDAY_KEY, String(id));
+      }
+    }
+
     const LEGACY_DDAY_KEY = "study_os_dday"; // 예전 단일 D-Day 키
 
     const ddayMainLabelEl = document.getElementById("dday-main-label");
@@ -1444,22 +1509,31 @@
         return;
       }
 
-      // 날짜 기준 정렬
+      const pinnedId = getPinnedDdayId();
+
+      // 날짜 + 핀 기준 정렬
       const sorted = [...ddayItems].sort((a, b) => {
+        if (a.id === pinnedId) return -1;
+        if (b.id === pinnedId) return 1;
         return new Date(a.date) - new Date(b.date);
       });
 
-      // 오늘 기준으로 가장 가까운 날짜(미래 or 오늘) 선택
       const todayOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-      let main = sorted[0];
+      let defaultMain = sorted[0];
+
+      // 가장 가까운 미래/오늘 D-Day 찾기
       for (const item of sorted) {
         const d = new Date(item.date);
         const dOnly = new Date(d.getFullYear(), d.getMonth(), d.getDate());
         if (dOnly >= todayOnly) {
-          main = item;
+          defaultMain = item;
           break;
         }
       }
+
+      // 핀 되어 있으면 그걸 메인으로, 없으면 기존 로직
+      const pinnedMain = sorted.find((item) => item.id === pinnedId);
+      const main = pinnedMain || defaultMain;
 
       const targetDate = new Date(main.date);
       const targetDayOnly = new Date(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate());
@@ -1512,8 +1586,26 @@
           renderCalendarSelectedTasks(selectedCalendarDateStr);
         });
 
+        // ★ 고정 버튼
+        const pinBtn = document.createElement("button");
+        pinBtn.className = "tiny";
+        pinBtn.textContent = item.id === pinnedId ? "★ 고정됨" : "☆ 고정";
+        pinBtn.addEventListener("click", () => {
+          setPinnedDdayId(item.id);
+          renderDDays();
+          renderCalendarSelectedTasks(selectedCalendarDateStr);
+        });
+
+        // 오른쪽 버튼 영역
+        const btnWrap = document.createElement("div");
+        btnWrap.style.display = "flex";
+        btnWrap.style.flexDirection = "column";
+        btnWrap.style.gap = "4px";
+        btnWrap.appendChild(pinBtn);
+        btnWrap.appendChild(delBtn);
+
         li.appendChild(info);
-        li.appendChild(delBtn);
+        li.appendChild(btnWrap);
         ddayListEl.appendChild(li);
       });
     }
@@ -1592,6 +1684,7 @@
     loadDDays();
     renderDDays();
     renderGoals();
+    setupSearch("dday-search", "dday-list");
 
     // ===== To-do =====
     const TODOS_KEY = "study_os_todos_v1";
@@ -1739,28 +1832,33 @@
         statusBtn.className = "status-btn";
         statusBtn.textContent = getStatusSymbol(item.status || "");
         statusBtn.classList.remove("success", "partial", "fail");
+        // 기본 스타일은 CSS에 맡기고, 여기서는 초기화만
         statusBtn.style.backgroundColor = "";
-        statusBtn.style.borderColor = "rgba(75,85,99,0.9)";
-        statusBtn.style.color = "var(--text-muted)";
+        statusBtn.style.borderColor = "";
+        statusBtn.style.color = "";
 
         if (item.status === "success") statusBtn.classList.add("success");
         if (item.status === "partial") statusBtn.classList.add("partial");
         if (item.status === "fail") statusBtn.classList.add("fail");
 
-        // 색만 사용 모드: 네모칸 전체를 색으로 채우기
         if (todoStyle === "color-only") {
+          // 색만 사용 모드에서는 네모칸을 색으로 채우기
           if (item.status === "success") {
             statusBtn.style.backgroundColor = "var(--success)";
             statusBtn.style.borderColor = "var(--success)";
+            statusBtn.style.color = "#0b1120";
           } else if (item.status === "partial") {
             statusBtn.style.backgroundColor = "var(--warning)";
             statusBtn.style.borderColor = "var(--warning)";
+            statusBtn.style.color = "#0b1120";
           } else if (item.status === "fail") {
             statusBtn.style.backgroundColor = "var(--danger)";
             statusBtn.style.borderColor = "var(--danger)";
+            statusBtn.style.color = "#0b1120";
           } else {
             statusBtn.style.backgroundColor = "rgba(148,163,184,0.6)";
             statusBtn.style.borderColor = "rgba(148,163,184,0.8)";
+            statusBtn.style.color = "#0b1120";
           }
         }
 
@@ -1871,15 +1969,24 @@
     loadTodos();
     updateTodoDateInputs();
     renderTodoList();
+    setupSearch("todo-search", "todo-list");
 
     // ===== 주간 시간표 (시간 단위) =====
     const TIMETABLE_KEY = "study_os_timetable_v1";
     const timetableGridEl = document.getElementById("timetable-grid");
     const timetableDays = ["월", "화", "수", "목", "금", "토", "일"];
+
+    // 0시~23시를 숫자로 저장
     const timetableTimes = [];
-    for (let h = 6; h <= 23; h++) {
-      timetableTimes.push(`${String(h).padStart(2,"0")}:00`);
+    for (let h = 0; h <= 23; h++) {
+      timetableTimes.push(h);
     }
+
+    // 시간표 라벨 포맷 함수
+    function formatHourLabel(h) {
+      return `${String(h).padStart(2, "0")}:00`;
+    }
+
     let timetableData = {};
 
     function loadTimetable() {
@@ -1911,10 +2018,10 @@
         timetableGridEl.appendChild(h);
       });
 
-      timetableTimes.forEach((timeLabel, timeIndex) => {
+      timetableTimes.forEach((hour, timeIndex) => {
         const rowLabel = document.createElement("div");
         rowLabel.className = "timetable-header";
-        rowLabel.textContent = timeLabel;
+        rowLabel.textContent = formatHourLabel(hour);
         timetableGridEl.appendChild(rowLabel);
 
         timetableDays.forEach((_, dayIndex) => {
@@ -2078,10 +2185,27 @@
     }
 
     function renderCalendarSelectedTasks(dateStr) {
-      calendarSelectedDateEl.textContent = `선택한 날짜: ${dateStr}`;
-      const todosForDay = getTodosByDate(dateStr);
-      const ddaysForDay = getDDaysByDate(dateStr);
-      calendarTaskList.innerHTML = "";
+    calendarSelectedDateEl.textContent = `선택한 날짜: ${dateStr}`;
+    calendarTaskList.innerHTML = "";
+
+    // ★ 먼저 공부 시간 요약 보여주기
+    const studySec = getStudySecondsForDate(dateStr);
+    const studyBox = document.createElement("div");
+    studyBox.style.margin = "4px 0 6px";
+    studyBox.style.padding = "6px 8px";
+    studyBox.style.borderRadius = "10px";
+    studyBox.style.border = "1px solid rgba(148,163,184,0.45)";
+    studyBox.style.fontSize = "0.8rem";
+
+    if (studySec > 0) {
+      studyBox.textContent = `이 날의 총 공부 시간: ${formatHMS(studySec)}`;
+    } else {
+      studyBox.textContent = "이 날에는 기록된 공부 시간이 없습니다.";
+    }
+    calendarTaskList.appendChild(studyBox);
+
+    const todosForDay = getTodosByDate(dateStr);
+    const ddaysForDay = getDDaysByDate(dateStr);
 
       if (ddaysForDay.length === 0 && todosForDay.length === 0) {
         const p = document.createElement("div");
@@ -2177,7 +2301,6 @@
     }
 
     renderCalendar();
-    renderCalendarSelectedTasks(selectedCalendarDateStr);
 
     // ===== 포모도로 =====
     const POMO_CONFIG_KEY = "study_os_pomo_config_v1";
@@ -2406,7 +2529,6 @@
     const studySessionTimeEl = document.getElementById("study-session-time");
     const studyLastSessionEl = document.getElementById("study-last-session");
 
-    let studyLog = {};
     let studyRunning = false;
     let studySessionStart = null;
     let studySessionTimerId = null;
@@ -2468,6 +2590,11 @@
     function getTodaySeconds() {
       const key = formatDate(today);
       return studyLog[key] || 0;
+    }
+
+    function getStudySecondsForDate(dateStr) {
+      if (!studyLog) return 0;
+      return studyLog[dateStr] || 0;
     }
 
     function updateStudyDisplay() {
@@ -2564,6 +2691,7 @@
     loadStudyLog();
     updateStudyDisplay();
     updateStudySessionTime();
+    renderCalendarSelectedTasks(selectedCalendarDateStr);
 
     // ===== 집중 모드 =====
     const focusOverlay = document.getElementById("focus-overlay");
