@@ -240,6 +240,20 @@
       font-size: 0.82rem;
     }
 
+    /* 분량 계산기 입력 칸 자동 너비 조절 */
+    #plan-deadline,
+    #plan-weekly-count {
+      min-width: 140px;  /* 너무 작아지는 것 방지 */
+    }
+
+    .goal-date-row {
+      align-items: flex-end;  /* 레이블 정렬 */
+    }
+
+    .goal-date-group {
+      flex: 1;  /* 두 입력 칸이 일정하게 공간을 나눠 가지도록 */
+    }
+
     #plan-calc-btn {
       flex-basis: 100%;
       margin-top: 4px;
