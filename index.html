@@ -254,8 +254,8 @@
       flex: 1;  /* 두 입력 칸이 일정하게 공간을 나눠 가지도록 */
     }
 
-    #plan-calc-btn {
-      flex-basis: 100%;
+    #plan-calc-row {
+      justify-content: flex-end;   /* 버튼을 오른쪽으로 붙이기 */
       margin-top: 4px;
     }
 
@@ -1138,6 +1138,9 @@
                 <label for="plan-weekly-count">일주일에 몇 번?</label>
                 <input type="number" id="plan-weekly-count" min="1" max="14" placeholder="예: 3" />
               </div>
+            </div>
+
+            <div class = "input-row" id="plan-calc-row">
               <button id="plan-calc-btn" type="button">계산하기</button>
             </div>
 
