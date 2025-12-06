@@ -3014,15 +3014,26 @@
     }
 
     focusExitBtn.addEventListener("click", () => {
-      // 공부 타이머: 세션 종료 + 기록
+      // 1) 공부 타이머 모드에서 나갈 때: 세션 종료 + 기록
       if (focusMode === "study" && studyRunning) {
         finishStudySession();
       }
-      // 포모도로: 타이머만 일시정지 (리셋 X)
-      if (focusMode === "pomo" && pomoRunning) {
-        stopPomoTicking();
-        pomoPhaseEl.textContent += " (일시 정지)";
+
+      // 2) 포모도로 모드에서 나갈 때
+      if (focusMode === "pomo") {
+        // (1) 포모도로 타이머 일시 정지
+        if (pomoRunning) {
+          stopPomoTicking();
+          pomoPhaseEl.textContent += " (일시 정지)";
+        }
+
+        // (2) 지금까지의 집중 시간 → 공부 시간에 반영 + 공부 타이머 멈추기
+        if (typeof window.handlePomoFocusEnd === "function") {
+          window.handlePomoFocusEnd("focus-exit");
+        }
       }
+
+      // 3) 오버레이 닫기
       closeFocusOverlay();
     });
 
