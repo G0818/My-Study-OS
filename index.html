@@ -752,11 +752,18 @@
     }
 
     /* WEEKLY TIMETABLE - 시간 단위 */
+    .timetable-wrapper {
+      width: 100%;
+      overflow-x: auto;      /* ✅ 가로 스크롤 */
+      padding-bottom: 4px;   /* 스크롤바가 카드 테두리에 딱 붙지 않게 약간 여유 */
+    }
+
     .timetable-grid {
       display: grid;
       grid-template-columns: 70px repeat(7, 1fr);
       gap: 4px;
       font-size: 0.78rem;
+      min-width: 900px;      /* ✅ 이 너비 기준으로 칸 크기 유지 */
     }
 
     .timetable-header {
@@ -962,7 +969,9 @@
             <div class="card-title">일주일 시간표</div>
             <span class="pill">시간 단위</span>
           </div>
-          <div id="timetable-grid" class="timetable-grid"></div>
+          <div class="timetable-wrapper">
+            <div id="timetable-grid" class="timetable-grid"></div>
+          </div>
           <div class="hint">
             · 왼쪽은 시간(00:00 ~ 23:00), 위쪽은 월~일입니다.<br />
             · 칸을 눌러 과목/활동을 입력하면 자동으로 저장돼요.
