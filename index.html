@@ -2512,6 +2512,12 @@
 
     function handlePomoPhaseEnd() {
       if (pomoMode === "focus") {
+        // 집중 구간이 타이머 0으로 끝날 때 → 지금까지 집중한 시간 공부 시간에 반영
+        if (typeof window.handlePomoFocusEnd === "function") {
+          window.handlePomoFocusEnd("auto");
+        }
+
+        // 이후는 기존 로직 그대로
         if (pomoCycleCount >= pomoConfig.cyclesBeforeLong) {
           pomoMode = "long";
           pomoSecondsLeft = pomoConfig.longBreak * 60;
@@ -2586,17 +2592,35 @@
         updatePomoDisplay();
       }
       startPomoTicking();
+
+      // 포모도로 집중 시작 시 → 공부 세션도 같이 시작 (중복 집계는 훅 함수에서 처리)
+      if (pomoMode === "focus" && typeof window.handlePomoFocusStart === "function") {
+        window.handlePomoFocusStart();
+      }
+
       openFocusOverlay("pomo");
     });
 
     pomoPauseBtn.addEventListener("click", () => {
       if (!pomoRunning) return;
       stopPomoTicking();
+
+      // 집중 도중 일시 정지 → 그 시점까지 집중한 시간 공부 시간에 반영
+      if (pomoMode === "focus" && typeof window.handlePomoFocusEnd === "function") {
+        window.handlePomoFocusEnd("pause");
+      }
+
       pomoPhaseEl.textContent += " (일시 정지)";
     });
 
     pomoResetBtn.addEventListener("click", () => {
       if (!confirm("포모도로 타이머를 리셋할까요?")) return;
+
+      // 집중 중에 리셋하면, 리셋 누르기 전까지의 집중 시간은 공부 시간에 반영
+      if (pomoMode === "focus" && typeof window.handlePomoFocusEnd === "function") {
+        window.handlePomoFocusEnd("reset");
+      }
+
       stopPomoTicking();
       pomoMode = "idle";
       pomoCycleCount = 0;
@@ -2692,6 +2716,20 @@
       return studyLog[dateStr] || 0;
     }
 
+    // 오늘 날짜 공부 시간에 초를 더해주는 헬퍼
+    function addStudySecondsForToday(sec) {
+      if (!sec || sec <= 0) return;
+
+      const key = formatDate(today);
+      studyLog[key] = (studyLog[key] || 0) + sec;
+      saveStudyLog(); // 오늘 공부 시간, 홈 요약까지 같이 갱신
+
+      // 캘린더에서 오늘 날짜가 선택되어 있으면, 캘린더 요약도 같이 갱신
+      if (typeof selectedCalendarDateStr !== "undefined" && selectedCalendarDateStr === key) {
+        renderCalendarSelectedTasks(selectedCalendarDateStr);
+      }
+    }
+
     function updateStudyDisplay() {
       const total = getTodaySeconds();
       studyTimeTodayEl.textContent = formatHMS(total);
@@ -2726,6 +2764,16 @@
       releaseWakeLockIfNeeded();
     }
 
+    // 공부 세션 시작 헬퍼 (공부 타이머/포모도로 공용)
+    function startStudySession() {
+      if (studyRunning) return;
+      studyRunning = true;
+      studySessionStart = new Date();
+      studyStatusEl.textContent = "공부 중";
+      saveStudySessionState();
+      startStudySessionTicking();
+    }
+
     function finishStudySession() {
       if (!studyRunning || !studySessionStart) return;
       const now = new Date();
@@ -2745,13 +2793,35 @@
       updateStudySessionTime();
     }
 
+    // 포모도로에서 집중 시작/종료할 때 공부 타이머와 연동하는 훅
+
+    window.handlePomoFocusStart = function () {
+      // 포모도로가 집중 모드로 들어갈 때
+      // 이미 공부 타이머가 돌고 있으면 그대로 사용하고,
+      // 아니면 새 공부 세션을 시작
+      if (!studyRunning) {
+        startStudySession();
+      }
+    };
+
+    window.handlePomoFocusEnd = function (reason) {
+      // 포모도로 집중이 끝나거나(타이머 0) / 일시정지 / 리셋될 때
+      // 그 시점까지의 집중 시간을 오늘 공부 시간에 반영
+      if (studyRunning && studySessionStart) {
+        finishStudySession();
+      }
+    };
+
     studyStartBtn.addEventListener("click", () => {
+      // 포모도로 집중 모드가 이미 돌고 있을 때는
+      // 시간이 두 번 합산되지 않도록 막기
+      if (pomoRunning && pomoMode === "focus") {
+        alert("지금 포모도로 집중 중이라, 공부 타이머를 따로 켜면 시간이 두 번 합산될 수 있어서 막아뒀어요.\n포모도로를 끄거나 쉬는 시간일 때 공부 타이머를 켜 주세요.");
+        return;
+      }
+
       if (studyRunning) return;
-      studyRunning = true;
-      studySessionStart = new Date();
-      studyStatusEl.textContent = "공부 중";
-      saveStudySessionState();
-      startStudySessionTicking();
+      startStudySession();
       openFocusOverlay("study");
     });
 
