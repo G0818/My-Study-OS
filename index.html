@@ -2140,7 +2140,20 @@
       return `${String(h).padStart(2, "0")}:00`;
     }
 
+    // 👉 시간표 데이터 + 선택된 칸 목록 (전역)
     let timetableData = {};
+    let selectedCells = [];
+
+    // 칸 선택 토글 함수
+    function toggleSelectCell(cell, key) {
+      if (cell.classList.contains("selected")) {
+        cell.classList.remove("selected");
+        selectedCells = selectedCells.filter((k) => k !== key);
+      } else {
+        cell.classList.add("selected");
+        selectedCells.push(key);
+      }
+    }
 
     function loadTimetable() {
       try {
@@ -2155,15 +2168,24 @@
       localStorage.setItem(TIMETABLE_KEY, JSON.stringify(timetableData));
     }
 
+    // 🔥 핵심: timetableData는
+    //  - 예전 데이터: "문자열" (텍스트만)
+    //  - 병합 데이터: { text: "내용", merged: true }
+    // 두 가지 형식을 모두 지원하도록 처리
     function renderTimetable() {
       if (!timetableGridEl) return;
       timetableGridEl.innerHTML = "";
 
+      // 선택 초기화 (화면 다시 그리니까 선택 UI도 리셋)
+      selectedCells = [];
+
+      // 맨 왼쪽 상단(시간 제목 자리)
       const emptyHeader = document.createElement("div");
       emptyHeader.className = "timetable-header";
       emptyHeader.textContent = "시간";
       timetableGridEl.appendChild(emptyHeader);
 
+      // 요일 헤더
       timetableDays.forEach((day) => {
         const h = document.createElement("div");
         h.className = "timetable-header";
@@ -2171,59 +2193,55 @@
         timetableGridEl.appendChild(h);
       });
 
+      // 각 시간(행)
       timetableTimes.forEach((hour, timeIndex) => {
+        // 왼쪽 시간 라벨
         const rowLabel = document.createElement("div");
         rowLabel.className = "timetable-header";
         rowLabel.textContent = formatHourLabel(hour);
         timetableGridEl.appendChild(rowLabel);
 
+        // 요일별 셀
         timetableDays.forEach((_, dayIndex) => {
           const cell = document.createElement("div");
           cell.className = "timetable-cell";
           cell.contentEditable = "true";
-          const key = `${timeIndex}_${dayIndex}`;
 
-          if (timetableData[key]) {
-            cell.textContent = timetableData[key];
+          const key = `${timeIndex}_${dayIndex}`;
+          const raw = timetableData[key];
+
+          // 🔎 저장된 데이터 해석 (문자열 or 객체)
+          let text = "";
+          let merged = false;
+
+          if (typeof raw === "string") {
+            text = raw;
+          } else if (raw && typeof raw === "object") {
+            text = raw.text || "";
+            merged = !!raw.merged;
           }
 
+          if (text) cell.textContent = text;
+          if (merged) cell.classList.add("merged");
+
+          // ✅ 클릭하면 선택 토글
+          cell.addEventListener("click", (e) => {
+            // shift 같은건 지금은 안 쓰고 단순 토글
+            toggleSelectCell(cell, key);
+          });
+
+          // ✅ 내용 입력 시: 일반 텍스트로 저장 (병합 해제되는 셀 개념)
           cell.addEventListener("input", () => {
-            const text = cell.textContent.trim();
-            if (text) {
-              timetableData[key] = text;
+            const newText = cell.textContent.trim();
+            if (newText) {
+              timetableData[key] = newText; // 병합 여부 상관없이 "문자열"로 덮어쓰기
             } else {
               delete timetableData[key];
             }
             saveTimetable();
           });
 
-          // ★ 6단계: 병합 표시 처리
-          const data = timetableData[key];
-          if (data && data.merged) {
-            cell.classList.add("merged");
-            if (data.text) cell.textContent = data.text;
-          }
-
           timetableGridEl.appendChild(cell);
-
-          let selectedCells = [];
-
-          function toggleSelectCell(cell, key) {
-            if (cell.classList.contains("selected")) {
-              cell.classList.remove("selected");
-              selectedCells = selectedCells.filter(k => k !== key);
-            } else {
-              cell.classList.add("selected");
-              selectedCells.push(key);
-            }
-          }
-
-          cell.addEventListener("click", (e) => {
-            // 내용 편집 모드가 아니면 선택
-            if (!e.shiftKey) {
-              toggleSelectCell(cell, key);
-            }
-          });
         });
       });
     }
@@ -2231,36 +2249,68 @@
     loadTimetable();
     renderTimetable();
 
-    document.getElementById("merge-btn").addEventListener("click", () => {
-      if (selectedCells.length < 2) {
-        alert("두 칸 이상 선택하세요.");
-        return;
-      }
+    // ===== 병합 버튼 =====
+    const mergeBtn = document.getElementById("merge-btn");
+    const unmergeBtn = document.getElementById("unmerge-btn");
 
-      const newText = prompt("이 칸들이 가질 내용을 입력하세요.");
-
-      selectedCells.forEach(key => {
-        timetableData[key] = { text: newText, merged: true };
-      });
-
-      saveTimetable();
-      renderTimetable();
-
-      selectedCells = [];
-    });
-
-    document.getElementById("unmerge-btn").addEventListener("click", () => {
-      selectedCells.forEach(key => {
-        if (timetableData[key]) {
-          timetableData[key].merged = false;
+    // ✅ 선택 칸 병합
+    if (mergeBtn) {
+      mergeBtn.addEventListener("click", () => {
+        if (selectedCells.length < 2) {
+          alert("두 칸 이상 선택하세요.");
+          return;
         }
+
+        const input = prompt("선택한 칸에 어떤 내용을 표시할까요?");
+        if (input === null) return; // 취소
+        const newText = input.trim();
+        if (!newText) {
+          alert("내용이 비어 있습니다.");
+          return;
+        }
+
+        // 선택된 모든 칸에 동일한 내용 + merged: true 저장
+        selectedCells.forEach((key) => {
+          timetableData[key] = {
+            text: newText,
+            merged: true,
+          };
+        });
+
+        saveTimetable();
+        renderTimetable();
       });
+    }
 
-      saveTimetable();
-      renderTimetable();
+    // ✅ 병합 해제
+    if (unmergeBtn) {
+      unmergeBtn.addEventListener("click", () => {
+        if (selectedCells.length === 0) {
+          alert("병합을 해제할 칸을 먼저 선택해 주세요.");
+          return;
+        }
 
-      selectedCells = [];
-    });
+        selectedCells.forEach((key) => {
+          const raw = timetableData[key];
+          if (!raw) return;
+
+          if (typeof raw === "object" && raw !== null) {
+            // { text, merged } → 병합 해제 시 text만 문자열로 되돌리기
+            const t = (raw.text || "").trim();
+            if (t) {
+              timetableData[key] = t; // 병합 플래그 제거
+            } else {
+              delete timetableData[key];
+            }
+          } else {
+            // 이미 문자열이면 병합 아님 → 그대로 둬도 됨
+          }
+        });
+
+        saveTimetable();
+        renderTimetable();
+      });
+    }
 
     // ===== 캘린더 =====
     const calendarGrid = document.getElementById("calendar-grid");
