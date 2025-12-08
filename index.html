@@ -768,6 +768,16 @@
       min-width: 900px;
     }
 
+    .timetable-controls {
+      display: flex;
+      gap: 8px;              /* 버튼 사이 간격 */
+      margin-bottom: 16px;   /* 버튼들과 시간표 사이 간격 */
+    }
+
+    .timetable-controls .secondary {
+      margin: 0;             /* 혹시 남아 있을지 모를 여백 초기화 */
+    }
+
     .timetable-header {
       border-radius: 8px;
       border: 1px solid rgba(31,41,55,0.3);
@@ -987,8 +997,10 @@
             <span class="pill">시간 단위</span>
           </div>
           <div class="timetable-wrapper">
-            <button id="merge-btn" class="secondary" style="margin-top:10px;">선택 칸 병합</button>
-            <button id="unmerge-btn" class="secondary" style="margin-left:6px;">병합 해제</button>
+            <div class="timetable-controls">
+              <button id="merge-btn" class="secondary">선택 칸 병합</button>
+              <button id="unmerge-btn" class="secondary">병합 해제</button>
+            </div>
             <div id="timetable-grid" class="timetable-grid"></div>
           </div>
           <div class="hint">
@@ -1705,20 +1717,66 @@
           renderCalendarSelectedTasks(selectedCalendarDateStr);
         });
 
-        const editBtn = document.createElement("button");
-        editBtn.className = "tiny";
-        editBtn.textContent = "수정";
         editBtn.addEventListener("click", () => {
-          const newTitle = prompt("제목 수정:", item.title);
-          const newDate = prompt("날짜 수정 (YYYY-MM-DD):", item.date);
+          // 커스텀 팝업을 HTML로 직접 만들기
+          const popup = document.createElement("div");
+          popup.style.position = "fixed";
+          popup.style.left = "0";
+          popup.style.top = "0";
+          popup.style.width = "100%";
+          popup.style.height = "100%";
+          popup.style.background = "rgba(0,0,0,0.6)";
+          popup.style.display = "flex";
+          popup.style.justifyContent = "center";
+          popup.style.alignItems = "center";
+          popup.style.zIndex = "9999";
 
-          if (newTitle && newTitle.trim()) item.title = newTitle.trim();
-          if (newDate && newDate.trim()) item.date = newDate.trim();
+          popup.innerHTML = `
+            <div style="
+              background: white; padding: 16px; border-radius: 12px; width: 260px;
+              display: flex; flex-direction: column; gap: 10px; color: black;">
+              <div style="font-weight: 600; font-size: 15px;">D-Day 수정</div>
 
-          saveDDays();
-          renderDDays();
-          renderCalendar();
-          renderCalendarSelectedTasks(selectedCalendarDateStr);
+              <input id="edit-dday-title" type="text"
+                style="padding:6px; border:1px solid #ccc; border-radius:8px;"
+                value="${item.title}">
+
+              <input id="edit-dday-date" type="date"
+                style="padding:6px; border:1px solid #ccc; border-radius:8px;"
+                value="${item.date}">
+
+              <div style="display:flex; gap:8px; justify-content:flex-end;">
+                <button id="dday-edit-cancel"
+                  style="padding:6px 10px; border-radius:8px;">취소</button>
+
+                <button id="dday-edit-save"
+                  style="padding:6px 10px; border-radius:8px; background:#4f46e5; color:white;">저장</button>
+              </div>
+            </div>
+          `;
+
+          document.body.appendChild(popup);
+
+          document.getElementById("dday-edit-cancel").onclick = () => popup.remove();
+
+          document.getElementById("dday-edit-save").onclick = () => {
+            const newTitle = document.getElementById("edit-dday-title").value.trim();
+            const newDate  = document.getElementById("edit-dday-date").value;
+
+            if (!newTitle || !newDate) {
+              alert("제목과 날짜를 모두 입력해 주세요.");
+              return;
+            }
+
+            item.title = newTitle;
+            item.date = newDate;
+
+            popup.remove();
+            saveDDays();
+            renderDDays();
+            renderCalendar();
+            renderCalendarSelectedTasks(selectedCalendarDateStr);
+          };
         });
 
         const pinnedId = getPinnedDdayId();
@@ -2037,20 +2095,65 @@
         actions.className = "todo-actions";
 
         // ★ 여기서 수정 버튼을 "내용 + 날짜 수정"으로 바꿀 예정 (다음 섹션)
-        const editBtn = document.createElement("button");
-        editBtn.className = "tiny";
-        editBtn.textContent = "수정";
         editBtn.addEventListener("click", () => {
-          const newText = prompt("내용 수정:", item.text);
-          const newDate = prompt("날짜 수정 (YYYY-MM-DD):", item.date || "");
+          const popup = document.createElement("div");
+          popup.style.position = "fixed";
+          popup.style.left = "0";
+          popup.style.top = "0";
+          popup.style.width = "100%";
+          popup.style.height = "100%";
+          popup.style.background = "rgba(0,0,0,0.6)";
+          popup.style.display = "flex";
+          popup.style.justifyContent = "center";
+          popup.style.alignItems = "center";
+          popup.style.zIndex = "9999";
 
-          if (newText && newText.trim()) item.text = newText.trim();
-          if (newDate && newDate.trim()) item.date = newDate.trim();
+          popup.innerHTML = `
+            <div style="
+              background: white; padding: 16px; border-radius: 12px; width: 260px;
+              display: flex; flex-direction: column; gap: 10px; color: black;">
+              <div style="font-weight: 600; font-size: 15px;">To-do 수정</div>
 
-          saveTodos();
-          renderTodoList();
-          renderCalendar();
-          renderCalendarSelectedTasks(selectedCalendarDateStr);
+              <input id="edit-todo-text" type="text"
+                style="padding:6px; border:1px solid #ccc; border-radius:8px;"
+                value="${item.text}">
+
+              <input id="edit-todo-date" type="date"
+                style="padding:6px; border:1px solid #ccc; border-radius:8px;"
+                value="${item.date || ""}">
+
+              <div style="display:flex; gap:8px; justify-content:flex-end;">
+                <button id="todo-edit-cancel"
+                  style="padding:6px 10px; border-radius:8px;">취소</button>
+
+                <button id="todo-edit-save"
+                  style="padding:6px 10px; border-radius:8px; background:#4f46e5; color:white;">저장</button>
+              </div>
+            </div>
+          `;
+
+          document.body.appendChild(popup);
+
+          document.getElementById("todo-edit-cancel").onclick = () => popup.remove();
+
+          document.getElementById("todo-edit-save").onclick = () => {
+            const newText = document.getElementById("edit-todo-text").value.trim();
+            const newDate = document.getElementById("edit-todo-date").value;
+
+            if (!newText) {
+              alert("내용을 입력해 주세요.");
+              return;
+            }
+
+            item.text = newText;
+            item.date = newDate;
+
+            popup.remove();
+            saveTodos();
+            renderTodoList();
+            renderCalendar();
+            renderCalendarSelectedTasks(selectedCalendarDateStr);
+          };
         });
 
         const delBtn = document.createElement("button");
