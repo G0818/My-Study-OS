@@ -792,6 +792,15 @@
       border-color: rgba(148,163,184,0.55);
     }
 
+    .timetable-cell.selected {
+      outline: 2px solid var(--accent-strong);
+      background: rgba(99,102,241,0.15);
+    }
+
+    .timetable-cell.merged {
+      border-color: transparent !important;
+    }
+
     /* 달력 경계선도 진하게 */
     body:not(.theme-light) .calendar-day,
     body:not(.theme-light) .calendar-weekday {
@@ -970,6 +979,8 @@
             <span class="pill">시간 단위</span>
           </div>
           <div class="timetable-wrapper">
+            <button id="merge-btn" class="secondary" style="margin-top:10px;">선택 칸 병합</button>
+            <button id="unmerge-btn" class="secondary" style="margin-left:6px;">병합 해제</button>
             <div id="timetable-grid" class="timetable-grid"></div>
           </div>
           <div class="hint">
@@ -1359,6 +1370,13 @@
       return `${y}-${m}-${day}`;
     }
 
+    // ★ 공부 시간은 새벽 4시 기준으로 '오늘'을 나누기
+    function getStudyDateKey(d = new Date()) {
+      const copy = new Date(d.getTime());
+      copy.setHours(copy.getHours() - 4); // 4시간 빼고 그 날짜를 오늘로 취급
+      return formatDate(copy);
+    }
+
     // ===== 오늘 날짜 표시 =====
     const todayLabel = document.getElementById("today-label");
     const today = new Date();
@@ -1679,17 +1697,27 @@
           renderCalendarSelectedTasks(selectedCalendarDateStr);
         });
 
+        const editBtn = document.createElement("button");
+        editBtn.className = "tiny";
+        editBtn.textContent = "수정";
+        editBtn.addEventListener("click", () => {
+          const newTitle = prompt("제목 수정:", item.title);
+          const newDate = prompt("날짜 수정 (YYYY-MM-DD):", item.date);
+
+          if (newTitle && newTitle.trim()) item.title = newTitle.trim();
+          if (newDate && newDate.trim()) item.date = newDate.trim();
+
+          saveDDays();
+          renderDDays();
+          renderCalendar();
+          renderCalendarSelectedTasks(selectedCalendarDateStr);
+        });
+
         const pinnedId = getPinnedDdayId();
 
         const pinBtn = document.createElement("button");
         pinBtn.className = "tiny";
         pinBtn.textContent = item.id === pinnedId ? "★ 고정됨" : "☆ 고정";
-
-        pinBtn.addEventListener("click", () => {
-          setPinnedDdayId(item.id);
-          renderDDays();                                    // 리스트 갱신
-          renderCalendarSelectedTasks(selectedCalendarDateStr);  // 아래 패널 갱신
-        });
 
         // 오른쪽 버튼 영역
         const btnWrap = document.createElement("div");
@@ -1697,6 +1725,7 @@
         btnWrap.style.flexDirection = "column";
         btnWrap.style.gap = "4px";
         btnWrap.appendChild(pinBtn);
+        btnWrap.appendChild(editBtn);
         btnWrap.appendChild(delBtn);
 
         li.appendChild(info);
@@ -1914,7 +1943,24 @@
     }
 
     function renderTodoList() {
-      const list = todoData[currentScope] || [];
+      let list = todoData[currentScope] || [];
+      const todayStr = formatDate(today);
+
+      // ★ 하루 계획일 때만
+      if (currentScope === "day") {
+        // 1) 오늘 이전 날짜는 To-do에서 숨김 (달력에는 데이터 그대로 남아있음)
+        list = list.filter(item => !item.date || item.date >= todayStr);
+
+        // 2) 날짜 오름차순 정렬 (가까운 날이 위, 먼 날이 아래)
+        list.sort((a, b) => {
+          const ad = a.date || "9999-12-31";
+          const bd = b.date || "9999-12-31";
+          if (ad < bd) return -1;
+          if (ad > bd) return 1;
+          return 0;
+        });
+      }
+
       todoListEl.innerHTML = "";
       list.forEach((item, idx) => {
         const li = document.createElement("li");
@@ -1927,7 +1973,6 @@
         statusBtn.className = "status-btn";
         statusBtn.textContent = getStatusSymbol(item.status || "");
         statusBtn.classList.remove("success", "partial", "fail");
-        // 기본 스타일은 CSS에 맡기고, 여기서는 초기화만
         statusBtn.style.backgroundColor = "";
         statusBtn.style.borderColor = "";
         statusBtn.style.color = "";
@@ -1937,7 +1982,6 @@
         if (item.status === "fail") statusBtn.classList.add("fail");
 
         if (todoStyle === "color-only") {
-          // 색만 사용 모드에서는 네모칸을 색으로 채우기
           if (item.status === "success") {
             statusBtn.style.backgroundColor = "var(--success)";
             statusBtn.style.borderColor = "var(--success)";
@@ -1984,25 +2028,36 @@
         const actions = document.createElement("div");
         actions.className = "todo-actions";
 
+        // ★ 여기서 수정 버튼을 "내용 + 날짜 수정"으로 바꿀 예정 (다음 섹션)
         const editBtn = document.createElement("button");
         editBtn.className = "tiny";
         editBtn.textContent = "수정";
         editBtn.addEventListener("click", () => {
-          const newText = prompt("할 일을 수정하세요", item.text);
-          if (newText && newText.trim()) {
-            item.text = newText.trim();
-            saveTodos();
-            renderTodoList();
-          }
+          const newText = prompt("내용 수정:", item.text);
+          const newDate = prompt("날짜 수정 (YYYY-MM-DD):", item.date || "");
+
+          if (newText && newText.trim()) item.text = newText.trim();
+          if (newDate && newDate.trim()) item.date = newDate.trim();
+
+          saveTodos();
+          renderTodoList();
+          renderCalendar();
+          renderCalendarSelectedTasks(selectedCalendarDateStr);
         });
 
         const delBtn = document.createElement("button");
         delBtn.className = "tiny";
         delBtn.textContent = "삭제";
         delBtn.addEventListener("click", () => {
-          todoData[currentScope].splice(idx, 1);
+          const rawList = todoData[currentScope] || [];
+          const indexInRaw = rawList.indexOf(item);
+          if (indexInRaw !== -1) {
+            rawList.splice(indexInRaw, 1);
+          }
           saveTodos();
           renderTodoList();
+          renderCalendar();
+          renderCalendarSelectedTasks(selectedCalendarDateStr);
         });
 
         actions.appendChild(editBtn);
@@ -2019,6 +2074,7 @@
       if (!text) return;
 
       let dateStr = null;
+
       if (currentScope === "year") {
         const y = todoYearSelect.value;
         dateStr = `${y}-01-01`;
@@ -2033,7 +2089,9 @@
         const baseDate = new Date(y, mIndex, 1 + (w - 1) * 7);
         dateStr = formatDate(baseDate);
       } else if (currentScope === "day") {
-        dateStr = todoDateInput.value || null;
+        // ★ 날짜를 선택하지 않았다면 오늘 날짜로 자동 설정
+        const chosen = todoDateInput.value;
+        dateStr = chosen && chosen.trim() ? chosen.trim() : formatDate(today);
       }
 
       todoData[currentScope].push({ text, status: "", date: dateStr });
@@ -2139,13 +2197,70 @@
             saveTimetable();
           });
 
+          // ★ 6단계: 병합 표시 처리
+          const data = timetableData[key];
+          if (data && data.merged) {
+            cell.classList.add("merged");
+            if (data.text) cell.textContent = data.text;
+          }
+
           timetableGridEl.appendChild(cell);
+
+          let selectedCells = [];
+
+          function toggleSelectCell(cell, key) {
+            if (cell.classList.contains("selected")) {
+              cell.classList.remove("selected");
+              selectedCells = selectedCells.filter(k => k !== key);
+            } else {
+              cell.classList.add("selected");
+              selectedCells.push(key);
+            }
+          }
+
+          cell.addEventListener("click", (e) => {
+            // 내용 편집 모드가 아니면 선택
+            if (!e.shiftKey) {
+              toggleSelectCell(cell, key);
+            }
+          });
         });
       });
     }
 
     loadTimetable();
     renderTimetable();
+
+    document.getElementById("merge-btn").addEventListener("click", () => {
+      if (selectedCells.length < 2) {
+        alert("두 칸 이상 선택하세요.");
+        return;
+      }
+
+      const newText = prompt("이 칸들이 가질 내용을 입력하세요.");
+
+      selectedCells.forEach(key => {
+        timetableData[key] = { text: newText, merged: true };
+      });
+
+      saveTimetable();
+      renderTimetable();
+
+      selectedCells = [];
+    });
+
+    document.getElementById("unmerge-btn").addEventListener("click", () => {
+      selectedCells.forEach(key => {
+        if (timetableData[key]) {
+          timetableData[key].merged = false;
+        }
+      });
+
+      saveTimetable();
+      renderTimetable();
+
+      selectedCells = [];
+    });
 
     // ===== 캘린더 =====
     const calendarGrid = document.getElementById("calendar-grid");
@@ -2707,7 +2822,7 @@
     }
 
     function getTodaySeconds() {
-      const key = formatDate(today);
+      const key = getStudyDateKey();
       return studyLog[key] || 0;
     }
 
@@ -2720,11 +2835,10 @@
     function addStudySecondsForToday(sec) {
       if (!sec || sec <= 0) return;
 
-      const key = formatDate(today);
+      const key = getStudyDateKey();
       studyLog[key] = (studyLog[key] || 0) + sec;
-      saveStudyLog(); // 오늘 공부 시간, 홈 요약까지 같이 갱신
+      saveStudyLog();
 
-      // 캘린더에서 오늘 날짜가 선택되어 있으면, 캘린더 요약도 같이 갱신
       if (typeof selectedCalendarDateStr !== "undefined" && selectedCalendarDateStr === key) {
         renderCalendarSelectedTasks(selectedCalendarDateStr);
       }
@@ -2782,7 +2896,7 @@
         Math.floor((now.getTime() - studySessionStart.getTime()) / 1000)
       );
       studyLastSessionSeconds = diffSec;
-      const key = formatDate(today);
+      const key = getStudyDateKey();
       studyLog[key] = (studyLog[key] || 0) + diffSec;
       studyRunning = false;
       studySessionStart = null;
@@ -3063,6 +3177,12 @@
         wakeLockRequested = false;
       }
     }
+
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "visible" && (pomoRunning || studyRunning)) {
+        requestWakeLock();
+      }
+    });
 
     // ===== 홈 요약 =====
     const summaryStudyTimeEl = document.getElementById("summary-study-time");
