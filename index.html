@@ -1824,50 +1824,91 @@
       renderCalendarSelectedTasks(selectedCalendarDateStr);
     });
 
-    // ===== Goals =====
+    // ===== Goals (오늘의 목표: 새벽 4시 기준으로 날짜별 관리) =====
     const GOALS_KEY = "study_os_goals";
     const goalInput = document.getElementById("goal-input");
     const goalAddBtn = document.getElementById("goal-add-btn");
     const goalsList = document.getElementById("goals-list");
     const goalsClearBtn = document.getElementById("goals-clear-btn");
 
+    // 형식: [{ text: "수학 3시간", dateKey: "YYYY-MM-DD" }, ...]
     let goals = [];
+
     function loadGoals() {
       try {
         const saved = localStorage.getItem(GOALS_KEY);
-        goals = saved ? JSON.parse(saved) : [];
+        if (!saved) {
+          goals = [];
+          return;
+        }
+
+        const parsed = JSON.parse(saved);
+
+        if (Array.isArray(parsed)) {
+          // 🔁 예전 버전: ["문장1", "문장2", ...] 형식이면 → 오늘 날짜로 마이그레이션
+          if (parsed.length && typeof parsed[0] === "string") {
+            const dateKey = getStudyDateKey();
+            goals = parsed.map((txt) => ({
+              text: txt,
+              dateKey
+            }));
+          } else {
+            // 이미 { text, dateKey } 형식이라고 가정
+            goals = parsed;
+          }
+        } else {
+          goals = [];
+        }
       } catch {
         goals = [];
       }
     }
+
     function saveGoals() {
       localStorage.setItem(GOALS_KEY, JSON.stringify(goals));
     }
+
     function renderGoals() {
       goalsList.innerHTML = "";
-      goals.forEach((g, idx) => {
+
+      const todayKey = getStudyDateKey(); // 새벽 4시 기준의 "오늘"
+      const todayGoals = goals.filter((g) => g.dateKey === todayKey);
+
+      todayGoals.forEach((g) => {
         const li = document.createElement("li");
         li.className = "goal-item";
+
         const span = document.createElement("span");
         span.className = "goal-text";
-        span.textContent = g;
+        span.textContent = g.text;
+
         const btn = document.createElement("button");
         btn.className = "tiny";
         btn.textContent = "삭제";
         btn.addEventListener("click", () => {
-          goals.splice(idx, 1);
-          saveGoals();
-          renderGoals();
+          const idx = goals.indexOf(g); // 전체 배열에서 위치 찾기
+          if (idx !== -1) {
+            goals.splice(idx, 1);
+            saveGoals();
+            renderGoals();
+          }
         });
+
         li.appendChild(span);
         li.appendChild(btn);
         goalsList.appendChild(li);
       });
+
+      // 필요하면, 오늘 목표가 없을 때 안내 문구를 추가해도 됨 (지금은 생략)
     }
+
     function addGoal() {
       const text = goalInput.value.trim();
       if (!text) return;
-      goals.push(text);
+
+      const dateKey = getStudyDateKey(); // 새벽 4시 기준 오늘
+      goals.push({ text, dateKey });
+
       goalInput.value = "";
       saveGoals();
       renderGoals();
@@ -1877,9 +1918,12 @@
     goalInput.addEventListener("keydown", (e) => {
       if (e.key === "Enter") addGoal();
     });
+
+    // ⚠️ "전체 삭제" 버튼은 이제 "오늘의 목표만 모두 삭제"
     goalsClearBtn.addEventListener("click", () => {
       if (!confirm("오늘 목표를 모두 삭제할까요?")) return;
-      goals = [];
+      const todayKey = getStudyDateKey();
+      goals = goals.filter((g) => g.dateKey !== todayKey);
       saveGoals();
       renderGoals();
     });
@@ -3416,6 +3460,28 @@
       });
     }
     
+    // 🔹 집중 모드 상태 저장용 키
+    const FOCUS_STATE_KEY = "study_os_focus_state_v1";
+
+    function saveFocusState(state) {
+      try {
+        localStorage.setItem(FOCUS_STATE_KEY, JSON.stringify(state));
+      } catch (e) {
+        console.warn("[Focus] 상태 저장 실패", e);
+      }
+    }
+
+    function loadFocusState() {
+      try {
+        const raw = localStorage.getItem(FOCUS_STATE_KEY);
+        if (!raw) return null;
+        return JSON.parse(raw);
+      } catch (e) {
+        console.warn("[Focus] 상태 불러오기 실패", e);
+        return null;
+      }
+    }
+
     // ===== 집중 모드 =====
     const focusOverlay = document.getElementById("focus-overlay");
     const focusExitBtn = document.getElementById("focus-exit-btn");
@@ -3432,6 +3498,13 @@
       focusMode = mode;
       focusOverlay.style.display = "flex";
       focusStartTime = new Date();
+
+      // 🔹 상태를 localStorage에 기록 (타이머와 함께 켜졌다는 의미)
+      if (mode === "study" || mode === "pomo") {
+        saveFocusState({ active: true, mode });
+      } else {
+        saveFocusState({ active: true, mode: "generic" });
+      }
 
       if (mode === "study") {
         focusTitleEl.textContent = "공부 집중 모드";
@@ -3455,8 +3528,12 @@
         clearInterval(focusIntervalId);
         focusIntervalId = null;
       }
-      focusMode = "generic";
       focusExtraInfoEl.textContent = "";
+
+      // 🔹 오버레이가 완전히 닫힐 때는 활성 상태 해제
+      saveFocusState({ active: false, mode: null });
+
+      focusMode = "generic";
     }
 
     function updateFocusTimer() {
@@ -3521,6 +3598,23 @@
       closeFocusOverlay();
     });
 
+    // 🔹 필요하면 자동으로 집중 모드 화면 복원
+    function restoreFocusOverlayIfNeeded() {
+      const state = loadFocusState();
+      if (!state || !state.active) return;
+
+      // generic 모드는 자동 복원하지 않음 (공부/포모도로만)
+      if (state.mode === "study") {
+        if (studyRunning) {
+          openFocusOverlay("study");
+        }
+      } else if (state.mode === "pomo") {
+        if (pomoRunning) {
+          openFocusOverlay("pomo");
+        }
+      }
+    }
+
     // ===== Wake Lock =====
     let wakeLock = null;
     let wakeLockRequested = false;
@@ -3549,8 +3643,13 @@
     }
 
     document.addEventListener("visibilitychange", () => {
-      if (document.visibilityState === "visible" && (pomoRunning || studyRunning)) {
-        requestWakeLock();
+      if (document.visibilityState === "visible") {
+        // 타이머가 돌아가고 있으면 다시 화면 꺼짐 방지 요청
+        if (pomoRunning || studyRunning) {
+          requestWakeLock();
+        }
+        // 🔹 앱으로 돌아왔을 때 집중 모드 자동 복원 시도
+        restoreFocusOverlayIfNeeded();
       }
     });
 
@@ -3652,14 +3751,32 @@
       }
     }
 
+    let lastGoalsDateKey = getStudyDateKey();
+    
     function checkScheduledNotifications() {
       const now = new Date();
       checkDdayNotifications(now);
       checkStudyStartReminder(now);
     }
 
-    // 1초마다 알림 조건 체크 (부하 거의 없음)
-    setInterval(checkScheduledNotifications, 1000);
+    // 1초마다 알림 + 날짜 전환 체크
+    function tickEverySecond() {
+      // 기존 알림 로직
+      checkScheduledNotifications();
+
+      // 새벽 4시 기준 "오늘"이 바뀌었는지 체크
+      const currentKey = getStudyDateKey();
+      if (currentKey !== lastGoalsDateKey) {
+        lastGoalsDateKey = currentKey;
+
+        // 오늘의 목표 / 홈 요약 / 달력의 "선택한 날짜" 공부 시간 갱신
+        renderGoals();
+        updateHomeSummary();
+        renderCalendarSelectedTasks(selectedCalendarDateStr);
+      }
+    }
+
+    setInterval(tickEverySecond, 1000);
 
     // ===== To-do 스타일 라디오 적용 =====
     const todoStyleRadios = document.querySelectorAll('input[name="todo-style"]');
@@ -3996,6 +4113,12 @@
       alert("초기화가 완료되었습니다. 페이지를 새로고침합니다.");
       window.location.reload();
     });
+
+    // 페이지 처음 열릴 때도 타이머가 살아있다면 집중 모드 복원 시도
+    window.addEventListener("load", () => {
+      restoreFocusOverlayIfNeeded();
+    });
+
   </script>
 </body>
 </html>
