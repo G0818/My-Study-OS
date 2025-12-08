@@ -1585,6 +1585,11 @@
         ddayReminderTime = ddayReminderInput.value;
         localStorage.setItem(DDAY_REMINDER_TIME_KEY, ddayReminderTime || "");
         alert("D-Day 알림 시간이 저장되었습니다.");
+
+        // ★ D-Day들이 이미 등록되어 있다면, 전부 서버에 예약
+        if (typeof scheduleDdayServerAlarmsForAll === "function") {
+          scheduleDdayServerAlarmsForAll();
+        }
       });
     }
 
@@ -1599,6 +1604,11 @@
         console.log("[DEBUG] 저장된 studyReminderTime =", studyReminderTime);
 
         alert("공부 시작 알림 시간이 저장되었습니다.");
+
+        // ★ 앞으로 7일치 공부 시작 알람을 서버에 예약
+        if (typeof scheduleStudyStartAlarmsForNextNDays === "function") {
+          scheduleStudyStartAlarmsForNextNDays(7);
+        }
       });
     }
 
@@ -1680,6 +1690,11 @@
       renderDDays();
       renderCalendar(); // 달력 점 갱신
       renderCalendarSelectedTasks(selectedCalendarDateStr);
+
+      // ★ D-Day 알림 시간이 설정되어 있다면, 방금 추가한 D-Day도 포함해서 서버 예약
+      if (ddayReminderTime && typeof scheduleDdayServerAlarmsForAll === "function") {
+        scheduleDdayServerAlarmsForAll();
+      }
     }
 
     function renderDDays() {
@@ -3761,6 +3776,94 @@
       const now = new Date();
       checkDdayNotifications(now);
       checkStudyStartReminder(now);
+    }
+
+    // ===== 서버 기반 D-Day 알람 예약 =====
+    function scheduleDdayServerAlarmsForAll() {
+      // scheduleServerAlarm 이 준비 안 돼 있으면 그냥 스킵
+      if (typeof window.scheduleServerAlarm !== "function") {
+        console.warn("[Push] scheduleServerAlarm 함수가 아직 준비되지 않았습니다.");
+        return;
+      }
+
+      if (!ddayReminderTime) {
+        console.warn("[Push] D-Day 알림 시간이 설정되어 있지 않습니다.");
+        return;
+      }
+
+      if (!ddayItems || !ddayItems.length) {
+        console.warn("[Push] 등록된 D-Day가 없습니다.");
+        return;
+      }
+
+      const [hh, mm] = ddayReminderTime.split(":");
+      const now = new Date();
+
+      ddayItems.forEach((item) => {
+        if (!item.date) return;
+
+        const d = new Date(item.date);
+        if (isNaN(d.getTime())) return;
+
+        // "D-1일" 기준 시간 (사용자가 정한 시각)
+        const alarmDate = new Date(
+          d.getFullYear(),
+          d.getMonth(),
+          d.getDate() - 1,
+          Number(hh),
+          Number(mm),
+          0
+        );
+
+        // 이미 지난 시각이면 예약하지 않음
+        if (alarmDate.getTime() <= now.getTime()) return;
+
+        window.scheduleServerAlarm(alarmDate, {
+          title: "My Study OS - D-Day",
+          body: `내일은 "${item.title}" D-Day 입니다!`,
+          type: "dday",
+        });
+      });
+
+      console.log("[Push] 모든 D-Day에 대해 서버 알람 예약 시도 완료");
+    }
+
+    // ===== 서버 기반 공부 시작 알람 (앞으로 N일) 예약 =====
+    function scheduleStudyStartAlarmsForNextNDays(days = 7) {
+      if (typeof window.scheduleServerAlarm !== "function") {
+        console.warn("[Push] scheduleServerAlarm 함수가 아직 준비되지 않았습니다.");
+        return;
+      }
+
+      if (!studyReminderTime) {
+        console.warn("[Push] 공부 시작 알림 시간이 설정되어 있지 않습니다.");
+        return;
+      }
+
+      const [hh, mm] = studyReminderTime.split(":");
+      const now = new Date();
+
+      for (let i = 0; i < days; i++) {
+        const base = new Date(
+          now.getFullYear(),
+          now.getMonth(),
+          now.getDate() + i,
+          Number(hh),
+          Number(mm),
+          0
+        );
+
+        // 이미 지난 시각은 건너뛰기
+        if (base.getTime() <= now.getTime()) continue;
+
+        window.scheduleServerAlarm(base, {
+          title: "My Study OS - 공부 시작",
+          body: "정해둔 공부 시작 시간이예요. 오늘도 한 번 달려볼까요?",
+          type: "study",
+        });
+      }
+
+      console.log("[Push] 앞으로", days, "일 분량의 공부 시작 알람 예약 완료");
     }
 
     // 1초마다 알림 + 날짜 전환 체크
