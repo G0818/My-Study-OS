@@ -1390,6 +1390,53 @@
       return `${y}-${m}-${day}`;
     }
 
+    // ★ 날짜 선택 전용 헬퍼 (숨겨진 <input type="date">를 띄워서 선택만 하게 함)
+    function pickDate(initialValue) {
+      return new Promise((resolve) => {
+        const input = document.createElement("input");
+        input.type = "date";
+        input.style.position = "fixed";
+        input.style.left = "-10000px";
+        input.style.top = "0";
+
+        if (initialValue) {
+          input.value = initialValue;
+        }
+
+        const cleanup = () => {
+          input.removeEventListener("change", onChange);
+          input.removeEventListener("blur", onBlur);
+          if (input.parentNode) {
+            document.body.removeChild(input);
+          }
+        };
+
+        const onChange = () => {
+          const val = input.value;
+          cleanup();
+          resolve(val || null);   // 선택 안 하면 null
+        };
+
+        const onBlur = () => {
+          // 사용자가 그냥 닫아버린 경우: 기존 값 유지용으로 null 반환
+          cleanup();
+          resolve(null);
+        };
+
+        input.addEventListener("change", onChange);
+        input.addEventListener("blur", onBlur);
+
+        document.body.appendChild(input);
+
+        // 크롬 등: showPicker 지원, 기타: click()
+        if (typeof input.showPicker === "function") {
+          input.showPicker();
+        } else {
+          input.click();
+        }
+      });
+    }
+
     // ★ 공부 시간은 새벽 4시 기준으로 '오늘'을 나누기
     function getStudyDateKey(d = new Date()) {
       const copy = new Date(d.getTime());
@@ -1720,12 +1767,18 @@
         const editBtn = document.createElement("button");
         editBtn.className = "tiny";
         editBtn.textContent = "수정";
-        editBtn.addEventListener("click", () => {
-          const newTitle = prompt("제목 수정:", item.title);
-          const newDate = prompt("날짜 수정 (YYYY-MM-DD):", item.date);
+        editBtn.addEventListener("click", async () => {
+          // 1) 제목은 기존처럼 텍스트 수정
+          const newTitle = prompt("제목 수정:", item.title || "");
+          if (newTitle && newTitle.trim()) {
+            item.title = newTitle.trim();
+          }
 
-          if (newTitle && newTitle.trim()) item.title = newTitle.trim();
-          if (newDate && newDate.trim()) item.date = newDate.trim();
+          // 2) 날짜는 달력으로만 선택
+          const picked = await pickDate(item.date || formatDate(today));
+          if (picked) {
+            item.date = picked;  // YYYY-MM-DD 형식만 들어옴
+          }
 
           saveDDays();
           renderDDays();
@@ -2052,12 +2105,18 @@
         const editBtn = document.createElement("button");
         editBtn.className = "tiny";
         editBtn.textContent = "수정";
-        editBtn.addEventListener("click", () => {
-          const newText = prompt("내용 수정:", item.text);
-          const newDate = prompt("날짜 수정 (YYYY-MM-DD):", item.date || "");
+        editBtn.addEventListener("click", async () => {
+          // 1) 내용 수정
+          const newText = prompt("내용 수정:", item.text || "");
+          if (newText && newText.trim()) {
+            item.text = newText.trim();
+          }
 
-          if (newText && newText.trim()) item.text = newText.trim();
-          if (newDate && newDate.trim()) item.date = newDate.trim();
+          // 2) 날짜 선택 (연/월/주/일 전부 실제 날짜 하나로 저장되어 있으니까 그대로 사용)
+          const picked = await pickDate(item.date || formatDate(today));
+          if (picked) {
+            item.date = picked;
+          }
 
           saveTodos();
           renderTodoList();
