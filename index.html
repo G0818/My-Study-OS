@@ -2166,6 +2166,16 @@
       }
     }
 
+    function clearSelection() {
+      // 선택 표시된 셀의 selected 클래스를 모두 제거
+      document
+        .querySelectorAll(".timetable-cell.selected")
+        .forEach((cell) => cell.classList.remove("selected"));
+
+      // 선택 목록 비우기
+      selectedCells = [];
+    }
+
     function loadTimetable() {
       try {
         const saved = localStorage.getItem(TIMETABLE_KEY);
@@ -2336,21 +2346,24 @@
       mergeBtn.addEventListener("click", () => {
         if (selectedCells.length < 2) {
           alert("두 칸 이상을 선택해야 병합할 수 있어요.");
+          clearSelection();        // ❗ 선택 전부 해제
           return;
         }
 
         const rect = getSelectionRect();
         if (!rect) {
           alert("가로·세로로 연속된 직사각형 모양으로 선택해 주세요.");
+          clearSelection();        // ❗ 직사각형 아니면 선택 전부 해제
           return;
         }
 
         if (hasMergeConflict(rect)) {
           alert("이미 병합된 칸과 겹칩니다. 먼저 병합 해제를 해 주세요.");
+          clearSelection();        // ❗ 겹칠 때도 선택 전부 해제
           return;
         }
 
-        // 기본 텍스트: 선택된 칸 중 첫 번째 텍스트
+        // ↓↓↓ 이 아래부터는 그대로 두면 됨 ↓↓↓
         let defaultText = "";
         for (const key of selectedCells) {
           const raw = timetableData[key];
@@ -2371,7 +2384,6 @@
         const cols = rect.maxC - rect.minC + 1;
         const masterKey = makeKey(rect.minR, rect.minC);
 
-        // 마스터 셀 설정
         timetableData[masterKey] = {
           text: newText,
           master: true,
@@ -2379,7 +2391,6 @@
           cols,
         };
 
-        // 나머지 칸은 hidden 처리
         for (let r = rect.minR; r <= rect.maxR; r++) {
           for (let c = rect.minC; c <= rect.maxC; c++) {
             const key = makeKey(r, c);
@@ -2392,7 +2403,7 @@
         }
 
         saveTimetable();
-        renderTimetable();
+        renderTimetable();   // 이때 화면도 다시 그려지면서 selected 클래스도 사라짐
       });
     }
 
