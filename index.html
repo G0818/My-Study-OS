@@ -1446,6 +1446,13 @@
       return formatDate(copy);
     }
 
+    // ✅ 새벽 4시 기준의 "오늘"을 Date 객체로 돌려주는 헬퍼
+    function getLogicalTodayDate() {
+      const key = getStudyDateKey(); // 예: "2025-12-10"
+      const [y, m, d] = key.split("-").map(Number);
+      return new Date(y, m - 1, d);  // 자바스크립트 Date는 month가 0부터
+    }
+
     // ===== 오늘 날짜 표시 =====
     const todayLabel = document.getElementById("today-label");
     const today = new Date();
@@ -1699,7 +1706,7 @@
       const pinnedId = getPinnedDdayId();
 
       // 오늘(시/분/초 0으로 맞춘 날짜)
-      const todayOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+      const todayOnly = getLogicalTodayDate();
 
       // ✅ D-Day 창에 "보여줄" 목록: 오늘 이후(오늘 포함)만
       const visibleItems = ddayItems.filter((item) => {
@@ -2193,7 +2200,7 @@
 
     function renderTodoList() {
       let list = todoData[currentScope] || [];
-      const todayStr = formatDate(today);
+      const todayStr = getStudyDateKey();
 
       // ★ 하루 계획일 때만
       if (currentScope === "day") {
