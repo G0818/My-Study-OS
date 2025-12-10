@@ -1696,7 +1696,21 @@
     }
 
     function renderDDays() {
-      if (!ddayItems.length) {
+      const pinnedId = getPinnedDdayId();
+
+      // 오늘(시/분/초 0으로 맞춘 날짜)
+      const todayOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+
+      // ✅ D-Day 창에 "보여줄" 목록: 오늘 이후(오늘 포함)만
+      const visibleItems = ddayItems.filter((item) => {
+        if (!item.date) return false;
+        const d = new Date(item.date);
+        const dOnly = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+        return dOnly >= todayOnly; // 과거(D+…)는 D-Day 창에서 제외
+      });
+
+      // D-Day가 하나도 없거나, 전부 과거인 경우
+      if (!visibleItems.length) {
         ddayMainLabelEl.textContent = "목표 날짜와 제목을 설정해 주세요.";
         ddayMainValueEl.textContent = "D-0";
         ddayMainTargetEl.textContent = "";
@@ -1704,19 +1718,16 @@
         return;
       }
 
-      const pinnedId = getPinnedDdayId();
-
-      // 날짜 + 핀 기준 정렬
-      const sorted = [...ddayItems].sort((a, b) => {
+      // 🔸 보이는 아이템들만 정렬 (핀 → 날짜 순)
+      const sorted = [...visibleItems].sort((a, b) => {
         if (a.id === pinnedId) return -1;
         if (b.id === pinnedId) return 1;
         return new Date(a.date) - new Date(b.date);
       });
 
-      const todayOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
       let defaultMain = sorted[0];
 
-      // 가장 가까운 미래/오늘 D-Day 찾기
+      // 가장 가까운 "오늘 이후" D-Day (visibleItems라 사실 전부 오늘 이후지만, 안전하게 유지)
       for (const item of sorted) {
         const d = new Date(item.date);
         const dOnly = new Date(d.getFullYear(), d.getMonth(), d.getDate());
@@ -1726,25 +1737,29 @@
         }
       }
 
-      // 핀 되어 있으면 그걸 메인으로, 없으면 기존 로직
+      // 핀 된 것이 visibleItems 안에 있다면 그걸 메인으로
       const pinnedMain = sorted.find((item) => item.id === pinnedId);
       const main = pinnedMain || defaultMain;
 
       const targetDate = new Date(main.date);
-      const targetDayOnly = new Date(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate());
+      const targetDayOnly = new Date(
+        targetDate.getFullYear(),
+        targetDate.getMonth(),
+        targetDate.getDate()
+      );
       const diffMs = targetDayOnly - todayOnly;
       const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24));
 
       let label = "";
       if (diffDays > 0) label = `D-${diffDays}`;
       else if (diffDays === 0) label = "D-DAY";
-      else label = `D+${Math.abs(diffDays)}`;
+      // diffDays < 0 은 visibleItems에서 이미 제외됨
 
       ddayMainLabelEl.textContent = main.title || "목표";
       ddayMainValueEl.textContent = label;
       ddayMainTargetEl.textContent = `${main.date} 까지`;
 
-      // 리스트 렌더
+      // 🔸 리스트 렌더 (역시 visibleItems만 사용)
       ddayListEl.innerHTML = "";
       sorted.forEach((item) => {
         const li = document.createElement("li");
@@ -1752,17 +1767,21 @@
 
         const info = document.createElement("div");
         const mainSpan = document.createElement("div");
+
+        const d = new Date(item.date);
+        const dOnly = new Date(d.getFullYear(), d.getMonth(), d.getDate());
         const diff = Math.round(
-          (new Date(item.date).setHours(0,0,0,0) - todayOnly.getTime()) /
-          (1000*60*60*24)
+          (dOnly.getTime() - todayOnly.getTime()) / (1000 * 60 * 60 * 24)
         );
+
         let tag = "";
         if (diff > 0) tag = `D-${diff}`;
         else if (diff === 0) tag = "D-DAY";
-        else tag = `D+${Math.abs(diff)}`;
+        // diff < 0 인 경우는 visibleItems 에서 이미 빠짐
 
         mainSpan.className = "dday-text-main";
         mainSpan.textContent = `${tag} · ${item.title}`;
+
         const subSpan = document.createElement("div");
         subSpan.className = "dday-text-sub";
         subSpan.textContent = item.date;
@@ -1770,6 +1789,7 @@
         info.appendChild(mainSpan);
         info.appendChild(subSpan);
 
+        // 🔸 버튼들
         const delBtn = document.createElement("button");
         delBtn.className = "tiny";
         delBtn.textContent = "삭제";
@@ -1788,7 +1808,6 @@
           // 1) 제목 수정
           const newTitle = prompt("제목 수정:", item.title || "");
           if (!newTitle || !newTitle.trim()) {
-            // 제목을 아예 비우면 수정 취소로 취급
             return;
           }
 
@@ -1798,7 +1817,6 @@
             "이 D-Day의 날짜를 선택해 주세요"
           );
 
-          // 취소한 경우 → 날짜는 그대로, 제목만 반영
           item.title = newTitle.trim();
           if (picked) {
             item.date = picked;   // 항상 YYYY-MM-DD
@@ -1810,13 +1828,21 @@
           renderCalendarSelectedTasks(selectedCalendarDateStr);
         });
 
-        const pinnedId = getPinnedDdayId();
-
         const pinBtn = document.createElement("button");
         pinBtn.className = "tiny";
         pinBtn.textContent = item.id === pinnedId ? "★ 고정됨" : "☆ 고정";
 
-        // 오른쪽 버튼 영역
+        // ✅ 고정 토글 동작
+        pinBtn.addEventListener("click", () => {
+          const currentPinned = getPinnedDdayId();
+          if (currentPinned === item.id) {
+            setPinnedDdayId(null);      // 고정 해제
+          } else {
+            setPinnedDdayId(item.id);   // 이 항목 고정
+          }
+          renderDDays();
+        });
+
         const btnWrap = document.createElement("div");
         btnWrap.style.display = "flex";
         btnWrap.style.flexDirection = "column";
@@ -2944,6 +2970,7 @@
     renderCalendar();
 
     // ===== 포모도로 =====
+    
     const POMO_CONFIG_KEY = "study_os_pomo_config_v1";
 
     const pomoDisplay = document.getElementById("pomo-display");
@@ -3022,6 +3049,7 @@
     let pomoSecondsLeft = pomoConfig.focus * 60;
     let pomoIntervalId = null;
     let pomoRunning = false;
+    let pomoLastTickTime = null;
 
     function updatePomoDisplay() {
       pomoDisplay.textContent = formatTime(pomoSecondsLeft);
@@ -3036,14 +3064,35 @@
 
     function startPomoTicking() {
       if (pomoIntervalId !== null) return;
+
       pomoRunning = true;
       requestWakeLock();
+
+      // 마지막으로 체크한 시각 저장
+      pomoLastTickTime = Date.now();
+
       pomoIntervalId = setInterval(() => {
-        pomoSecondsLeft--;
-        if (pomoSecondsLeft <= 0) {
-          handlePomoPhaseEnd();
+        if (pomoMode === "idle") {
+          // idle 상태인데 타이머가 돌고 있으면 안전하게 정지
+          stopPomoTicking();
+          return;
         }
-        updatePomoDisplay();
+
+        const now = Date.now();
+        // 직전 틱 이후 실제로 지난 시간(초)
+        let diffSec = Math.floor((now - pomoLastTickTime) / 1000);
+        if (diffSec < 1) diffSec = 1; // 최소 1초는 줄어들도록
+
+        pomoSecondsLeft -= diffSec;
+        pomoLastTickTime = now;
+
+        if (pomoSecondsLeft <= 0) {
+          pomoSecondsLeft = 0;
+          updatePomoDisplay();
+          handlePomoPhaseEnd();
+        } else {
+          updatePomoDisplay();
+        }
       }, 1000);
     }
 
@@ -3053,6 +3102,7 @@
         pomoIntervalId = null;
       }
       pomoRunning = false;
+      pomoLastTickTime = null;
       releaseWakeLockIfNeeded();
     }
 
