@@ -752,30 +752,11 @@
     }
 
     /* WEEKLY TIMETABLE - 시간 단위 */
-    .timetable-wrapper {
-      width: 100%;
-      overflow-x: auto;      /* ✅ 가로 스크롤 */
-      padding-bottom: 4px;   /* 스크롤바가 카드 테두리에 딱 붙지 않게 약간 여유 */
-    }
-
     .timetable-grid {
       display: grid;
-      grid-template-columns: 70px repeat(7, 1fr);
-      /* 1행: 헤더, 2~25행: 24시간 */
-      grid-auto-rows: minmax(32px, auto);
+      grid-template-columns: 70px repeat(7, minmax(1fr));
       gap: 4px;
       font-size: 0.78rem;
-      min-width: 900px;
-    }
-
-    .timetable-controls {
-      display: flex;
-      gap: 8px;              /* 버튼 사이 간격 */
-      margin-bottom: 16px;   /* 버튼들과 시간표 사이 간격 */
-    }
-
-    .timetable-controls .secondary {
-      margin: 0;             /* 혹시 남아 있을지 모를 여백 초기화 */
     }
 
     .timetable-header {
@@ -785,6 +766,7 @@
       background: var(--bg-soft);
       text-align: center;
       font-weight: 600;
+      min-width: 0;
     }
 
     .timetable-cell {
@@ -794,12 +776,7 @@
       background: var(--bg-soft);
       min-height: 32px;
       word-break: break-word;
-
-      /* 가운데 정렬 (엑셀 느낌) */
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
+      min-width:0;
     }
 
     .timetable-cell[contenteditable="true"] { outline: none; }
@@ -808,15 +785,6 @@
     body:not(.theme-light) .timetable-header,
     body:not(.theme-light) .timetable-cell {
       border-color: rgba(148,163,184,0.55);
-    }
-
-    .timetable-cell.selected {
-      outline: 2px solid var(--accent-strong);
-      background: rgba(99,102,241,0.15);
-    }
-
-    .timetable-cell.merged {
-      border-color: transparent !important;
     }
 
     /* 달력 경계선도 진하게 */
@@ -882,7 +850,7 @@
         <div class="grid-two">
           <div class="card">
             <div class="card-header">
-              <div class="card-title">D-Day</div>
+              <div class="card-title">D-Day & 목표</div>
               <span class="pill">Home</span>
             </div>
 
@@ -891,7 +859,7 @@
             <div id="dday-main-target"></div>
 
             <div class="input-row" style="margin-top:10px;">
-              <input type="text" id="dday-title-input" />
+              <input type="text" id="dday-title-input" placeholder="예: 과학고 입시" />
               <input type="date" id="dday-date-input" />
               <button id="dday-add-btn">추가</button>
             </div>
@@ -996,13 +964,7 @@
             <div class="card-title">일주일 시간표</div>
             <span class="pill">시간 단위</span>
           </div>
-          <div class="timetable-wrapper">
-            <div class="timetable-controls">
-              <button id="merge-btn" class="secondary">선택 칸 병합</button>
-              <button id="unmerge-btn" class="secondary">병합 해제</button>
-            </div>
-            <div id="timetable-grid" class="timetable-grid"></div>
-          </div>
+          <div id="timetable-grid" class="timetable-grid"></div>
           <div class="hint">
             · 왼쪽은 시간(00:00 ~ 23:00), 위쪽은 월~일입니다.<br />
             · 칸을 눌러 과목/활동을 입력하면 자동으로 저장돼요.
@@ -1252,10 +1214,6 @@
               포모도로 종료, 내일 D-Day, 공부 시작 시간에 알림을 받을 수 있어요.
             </p>
 
-            <!-- <div class="input-row" style="margin-top:8px;">
-              <button id="server-alarm-test-btn" class="secondary">서버 알람 2분 뒤 테스트</button>
-            </div> -->
-
             <div class="input-row" style="margin-top:8px;">
               <button id="notify-permission-btn">알림 권한 요청</button>
             </div>
@@ -1367,14 +1325,16 @@
 
             <div style="margin-bottom: 14px;">
               <b>• 네트워크 연결 필요 조건</b><br>
-              알림은 서버를 통해 전송되므로,<br>
+              알림은 Cloudflare Worker → FCM 서버를 통해 전송되므로,<br>
               <b>푸시가 보내지는 순간</b> 기기가 와이파이 또는 모바일 데이터에 연결되어 있어야 합니다.<br>
               <span style="color:#ffd54f;"><b>단, 앱 자체 기능(포모도로·D-Day 계산·공부 시작 시간 계산)은 오프라인에서도 정상 작동합니다.</b></span>
             </div>
 
-            <div style="margin-bottom: 14px;">
-              <b>• 알람은 설정해 놓은 시간에서 1분~2분 정도 차이가 날 수 있습니다.</b><br>
-              <b>• 알람 기능을 사용하기 위해서는 구글 로그인을 해야 합니다.</b>
+            <div>
+              <b>• 앱(탭) 종료 주의</b><br>
+              홈 화면에 추가해 사용하는 경우, 앱 전환 화면에서 My Study OS를 위로 스와이프하여 종료하지 않는 한<br>
+              백그라운드에서도 알림 계산 기능은 계속 작동합니다.<br>
+              그러나 앱을 완전히 종료하면 알림 계산이 중단되어 푸시가 발송되지 않습니다.
             </div>
           </div>
 
@@ -1390,67 +1350,6 @@
       const m = String(d.getMonth() + 1).padStart(2, "0");
       const day = String(d.getDate()).padStart(2, "0");
       return `${y}-${m}-${day}`;
-    }
-
-    // ★ 날짜 선택 전용 헬퍼 (숨겨진 <input type="date">를 띄워서 선택만 하게 함)
-    function pickDate(initialValue) {
-      return new Promise((resolve) => {
-        const input = document.createElement("input");
-        input.type = "date";
-        input.style.position = "fixed";
-        input.style.left = "-10000px";
-        input.style.top = "0";
-
-        if (initialValue) {
-          input.value = initialValue;
-        }
-
-        const cleanup = () => {
-          input.removeEventListener("change", onChange);
-          input.removeEventListener("blur", onBlur);
-          if (input.parentNode) {
-            document.body.removeChild(input);
-          }
-        };
-
-        const onChange = () => {
-          const val = input.value;
-          cleanup();
-          resolve(val || null);   // 선택 안 하면 null
-        };
-
-        const onBlur = () => {
-          // 사용자가 그냥 닫아버린 경우: 기존 값 유지용으로 null 반환
-          cleanup();
-          resolve(null);
-        };
-
-        input.addEventListener("change", onChange);
-        input.addEventListener("blur", onBlur);
-
-        document.body.appendChild(input);
-
-        // 크롬 등: showPicker 지원, 기타: click()
-        if (typeof input.showPicker === "function") {
-          input.showPicker();
-        } else {
-          input.click();
-        }
-      });
-    }
-
-    // ★ 공부 시간은 새벽 4시 기준으로 '오늘'을 나누기
-    function getStudyDateKey(d = new Date()) {
-      const copy = new Date(d.getTime());
-      copy.setHours(copy.getHours() - 4); // 4시간 빼고 그 날짜를 오늘로 취급
-      return formatDate(copy);
-    }
-
-    // ✅ 새벽 4시 기준의 "오늘"을 Date 객체로 돌려주는 헬퍼
-    function getLogicalTodayDate() {
-      const key = getStudyDateKey(); // 예: "2025-12-10"
-      const [y, m, d] = key.split("-").map(Number);
-      return new Date(y, m - 1, d);  // 자바스크립트 Date는 month가 0부터
     }
 
     // ===== 오늘 날짜 표시 =====
@@ -1590,11 +1489,6 @@
         ddayReminderTime = ddayReminderInput.value;
         localStorage.setItem(DDAY_REMINDER_TIME_KEY, ddayReminderTime || "");
         alert("D-Day 알림 시간이 저장되었습니다.");
-
-        // ★ D-Day들이 이미 등록되어 있다면, 전부 서버에 예약
-        if (typeof scheduleDdayServerAlarmsForAll === "function") {
-          scheduleDdayServerAlarmsForAll();
-        }
       });
     }
 
@@ -1609,11 +1503,6 @@
         console.log("[DEBUG] 저장된 studyReminderTime =", studyReminderTime);
 
         alert("공부 시작 알림 시간이 저장되었습니다.");
-
-        // ★ 앞으로 7일치 공부 시작 알람을 서버에 예약
-        if (typeof scheduleStudyStartAlarmsForNextNDays === "function") {
-          scheduleStudyStartAlarmsForNextNDays(7);
-        }
       });
     }
 
@@ -1695,29 +1584,10 @@
       renderDDays();
       renderCalendar(); // 달력 점 갱신
       renderCalendarSelectedTasks(selectedCalendarDateStr);
-
-      // ★ D-Day 알림 시간이 설정되어 있다면, 방금 추가한 D-Day도 포함해서 서버 예약
-      if (ddayReminderTime && typeof scheduleDdayServerAlarmsForAll === "function") {
-        scheduleDdayServerAlarmsForAll();
-      }
     }
 
     function renderDDays() {
-      const pinnedId = getPinnedDdayId();
-
-      // 오늘(시/분/초 0으로 맞춘 날짜)
-      const todayOnly = getLogicalTodayDate();
-
-      // ✅ D-Day 창에 "보여줄" 목록: 오늘 이후(오늘 포함)만
-      const visibleItems = ddayItems.filter((item) => {
-        if (!item.date) return false;
-        const d = new Date(item.date);
-        const dOnly = new Date(d.getFullYear(), d.getMonth(), d.getDate());
-        return dOnly >= todayOnly; // 과거(D+…)는 D-Day 창에서 제외
-      });
-
-      // D-Day가 하나도 없거나, 전부 과거인 경우
-      if (!visibleItems.length) {
+      if (!ddayItems.length) {
         ddayMainLabelEl.textContent = "목표 날짜와 제목을 설정해 주세요.";
         ddayMainValueEl.textContent = "D-0";
         ddayMainTargetEl.textContent = "";
@@ -1725,16 +1595,19 @@
         return;
       }
 
-      // 🔸 보이는 아이템들만 정렬 (핀 → 날짜 순)
-      const sorted = [...visibleItems].sort((a, b) => {
+      const pinnedId = getPinnedDdayId();
+
+      // 날짜 + 핀 기준 정렬
+      const sorted = [...ddayItems].sort((a, b) => {
         if (a.id === pinnedId) return -1;
         if (b.id === pinnedId) return 1;
         return new Date(a.date) - new Date(b.date);
       });
 
+      const todayOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
       let defaultMain = sorted[0];
 
-      // 가장 가까운 "오늘 이후" D-Day (visibleItems라 사실 전부 오늘 이후지만, 안전하게 유지)
+      // 가장 가까운 미래/오늘 D-Day 찾기
       for (const item of sorted) {
         const d = new Date(item.date);
         const dOnly = new Date(d.getFullYear(), d.getMonth(), d.getDate());
@@ -1744,29 +1617,25 @@
         }
       }
 
-      // 핀 된 것이 visibleItems 안에 있다면 그걸 메인으로
+      // 핀 되어 있으면 그걸 메인으로, 없으면 기존 로직
       const pinnedMain = sorted.find((item) => item.id === pinnedId);
       const main = pinnedMain || defaultMain;
 
       const targetDate = new Date(main.date);
-      const targetDayOnly = new Date(
-        targetDate.getFullYear(),
-        targetDate.getMonth(),
-        targetDate.getDate()
-      );
+      const targetDayOnly = new Date(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate());
       const diffMs = targetDayOnly - todayOnly;
       const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24));
 
       let label = "";
       if (diffDays > 0) label = `D-${diffDays}`;
       else if (diffDays === 0) label = "D-DAY";
-      // diffDays < 0 은 visibleItems에서 이미 제외됨
+      else label = `D+${Math.abs(diffDays)}`;
 
       ddayMainLabelEl.textContent = main.title || "목표";
       ddayMainValueEl.textContent = label;
       ddayMainTargetEl.textContent = `${main.date} 까지`;
 
-      // 🔸 리스트 렌더 (역시 visibleItems만 사용)
+      // 리스트 렌더
       ddayListEl.innerHTML = "";
       sorted.forEach((item) => {
         const li = document.createElement("li");
@@ -1774,21 +1643,17 @@
 
         const info = document.createElement("div");
         const mainSpan = document.createElement("div");
-
-        const d = new Date(item.date);
-        const dOnly = new Date(d.getFullYear(), d.getMonth(), d.getDate());
         const diff = Math.round(
-          (dOnly.getTime() - todayOnly.getTime()) / (1000 * 60 * 60 * 24)
+          (new Date(item.date).setHours(0,0,0,0) - todayOnly.getTime()) /
+          (1000*60*60*24)
         );
-
         let tag = "";
         if (diff > 0) tag = `D-${diff}`;
         else if (diff === 0) tag = "D-DAY";
-        // diff < 0 인 경우는 visibleItems 에서 이미 빠짐
+        else tag = `D+${Math.abs(diff)}`;
 
         mainSpan.className = "dday-text-main";
         mainSpan.textContent = `${tag} · ${item.title}`;
-
         const subSpan = document.createElement("div");
         subSpan.className = "dday-text-sub";
         subSpan.textContent = item.date;
@@ -1796,7 +1661,6 @@
         info.appendChild(mainSpan);
         info.appendChild(subSpan);
 
-        // 🔸 버튼들
         const delBtn = document.createElement("button");
         delBtn.className = "tiny";
         delBtn.textContent = "삭제";
@@ -1808,54 +1672,24 @@
           renderCalendarSelectedTasks(selectedCalendarDateStr);
         });
 
-        const editBtn = document.createElement("button");
-        editBtn.className = "tiny";
-        editBtn.textContent = "수정";
-        editBtn.addEventListener("click", async () => {
-          // 1) 제목 수정
-          const newTitle = prompt("제목 수정:", item.title || "");
-          if (!newTitle || !newTitle.trim()) {
-            return;
-          }
-
-          // 2) 날짜 선택: 오버레이 달력 팝업 사용
-          const picked = await openDatePickerDialog(
-            item.date || formatDate(today),
-            "이 D-Day의 날짜를 선택해 주세요"
-          );
-
-          item.title = newTitle.trim();
-          if (picked) {
-            item.date = picked;   // 항상 YYYY-MM-DD
-          }
-
-          saveDDays();
-          renderDDays();
-          renderCalendar();
-          renderCalendarSelectedTasks(selectedCalendarDateStr);
-        });
+        const pinnedId = getPinnedDdayId();
 
         const pinBtn = document.createElement("button");
         pinBtn.className = "tiny";
         pinBtn.textContent = item.id === pinnedId ? "★ 고정됨" : "☆ 고정";
 
-        // ✅ 고정 토글 동작
         pinBtn.addEventListener("click", () => {
-          const currentPinned = getPinnedDdayId();
-          if (currentPinned === item.id) {
-            setPinnedDdayId(null);      // 고정 해제
-          } else {
-            setPinnedDdayId(item.id);   // 이 항목 고정
-          }
-          renderDDays();
+          setPinnedDdayId(item.id);
+          renderDDays();                                    // 리스트 갱신
+          renderCalendarSelectedTasks(selectedCalendarDateStr);  // 아래 패널 갱신
         });
 
+        // 오른쪽 버튼 영역
         const btnWrap = document.createElement("div");
         btnWrap.style.display = "flex";
         btnWrap.style.flexDirection = "column";
         btnWrap.style.gap = "4px";
         btnWrap.appendChild(pinBtn);
-        btnWrap.appendChild(editBtn);
         btnWrap.appendChild(delBtn);
 
         li.appendChild(info);
@@ -1874,91 +1708,50 @@
       renderCalendarSelectedTasks(selectedCalendarDateStr);
     });
 
-    // ===== Goals (오늘의 목표: 새벽 4시 기준으로 날짜별 관리) =====
+    // ===== Goals =====
     const GOALS_KEY = "study_os_goals";
     const goalInput = document.getElementById("goal-input");
     const goalAddBtn = document.getElementById("goal-add-btn");
     const goalsList = document.getElementById("goals-list");
     const goalsClearBtn = document.getElementById("goals-clear-btn");
 
-    // 형식: [{ text: "수학 3시간", dateKey: "YYYY-MM-DD" }, ...]
     let goals = [];
-
     function loadGoals() {
       try {
         const saved = localStorage.getItem(GOALS_KEY);
-        if (!saved) {
-          goals = [];
-          return;
-        }
-
-        const parsed = JSON.parse(saved);
-
-        if (Array.isArray(parsed)) {
-          // 🔁 예전 버전: ["문장1", "문장2", ...] 형식이면 → 오늘 날짜로 마이그레이션
-          if (parsed.length && typeof parsed[0] === "string") {
-            const dateKey = getStudyDateKey();
-            goals = parsed.map((txt) => ({
-              text: txt,
-              dateKey
-            }));
-          } else {
-            // 이미 { text, dateKey } 형식이라고 가정
-            goals = parsed;
-          }
-        } else {
-          goals = [];
-        }
+        goals = saved ? JSON.parse(saved) : [];
       } catch {
         goals = [];
       }
     }
-
     function saveGoals() {
       localStorage.setItem(GOALS_KEY, JSON.stringify(goals));
     }
-
     function renderGoals() {
       goalsList.innerHTML = "";
-
-      const todayKey = getStudyDateKey(); // 새벽 4시 기준의 "오늘"
-      const todayGoals = goals.filter((g) => g.dateKey === todayKey);
-
-      todayGoals.forEach((g) => {
+      goals.forEach((g, idx) => {
         const li = document.createElement("li");
         li.className = "goal-item";
-
         const span = document.createElement("span");
         span.className = "goal-text";
-        span.textContent = g.text;
-
+        span.textContent = g;
         const btn = document.createElement("button");
         btn.className = "tiny";
         btn.textContent = "삭제";
         btn.addEventListener("click", () => {
-          const idx = goals.indexOf(g); // 전체 배열에서 위치 찾기
-          if (idx !== -1) {
-            goals.splice(idx, 1);
-            saveGoals();
-            renderGoals();
-          }
+          goals.splice(idx, 1);
+          saveGoals();
+          renderGoals();
         });
-
         li.appendChild(span);
         li.appendChild(btn);
         goalsList.appendChild(li);
       });
-
-      // 필요하면, 오늘 목표가 없을 때 안내 문구를 추가해도 됨 (지금은 생략)
     }
-
     function addGoal() {
       const text = goalInput.value.trim();
       if (!text) return;
-
-      const dateKey = getStudyDateKey(); // 새벽 4시 기준 오늘
-      goals.push({ text, dateKey });
-
+      goals.push(text);
       goalInput.value = "";
       saveGoals();
       renderGoals();
@@ -1968,12 +1761,9 @@
     goalInput.addEventListener("keydown", (e) => {
       if (e.key === "Enter") addGoal();
     });
-
-    // ⚠️ "전체 삭제" 버튼은 이제 "오늘의 목표만 모두 삭제"
     goalsClearBtn.addEventListener("click", () => {
       if (!confirm("오늘 목표를 모두 삭제할까요?")) return;
-      const todayKey = getStudyDateKey();
-      goals = goals.filter((g) => g.dateKey !== todayKey);
+      goals = [];
       saveGoals();
       renderGoals();
     });
@@ -2116,107 +1906,8 @@
       return dateStr;
     }
 
-    // 공통 날짜 선택 다이얼로그 (input type="date"만 사용)
-    function openDatePickerDialog(initialValue, labelText = "날짜를 선택해 주세요") {
-      return new Promise((resolve) => {
-        const overlay = document.createElement("div");
-        overlay.style.position = "fixed";
-        overlay.style.inset = "0";
-        overlay.style.background = "rgba(15,23,42,0.45)";
-        overlay.style.display = "flex";
-        overlay.style.alignItems = "center";
-        overlay.style.justifyContent = "center";
-        overlay.style.zIndex = "9999";
-
-        const box = document.createElement("div");
-        box.style.background = "var(--bg-card)";
-        box.style.borderRadius = "18px";
-        box.style.padding = "18px 20px";
-        box.style.boxShadow = "0 18px 45px rgba(15,23,42,0.7)";
-        box.style.display = "flex";
-        box.style.flexDirection = "column";
-        box.style.gap = "12px";
-        box.style.minWidth = "260px";
-        box.style.maxWidth = "90vw";
-
-        const label = document.createElement("div");
-        label.textContent = labelText;
-        label.style.fontSize = "14px";
-        label.style.fontWeight = "500";
-        label.style.marginBottom = "4px";
-
-        const input = document.createElement("input");
-        input.type = "date";
-        input.value = initialValue || formatDate(today);
-        input.style.padding = "8px 10px";
-        input.style.borderRadius = "10px";
-        input.style.border = "1px solid var(--border-subtle)";
-        input.style.background = "var(--bg-soft)";
-        input.style.color = "var(--text)";
-        input.style.fontSize = "14px";
-
-        const btnRow = document.createElement("div");
-        btnRow.style.display = "flex";
-        btnRow.style.justifyContent = "flex-end";
-        btnRow.style.gap = "8px";
-        btnRow.style.marginTop = "8px";
-
-        const cancelBtn = document.createElement("button");
-        cancelBtn.textContent = "취소";
-        cancelBtn.className = "tiny";
-
-        const okBtn = document.createElement("button");
-        okBtn.textContent = "확인";
-        okBtn.className = "tiny";
-
-        btnRow.appendChild(cancelBtn);
-        btnRow.appendChild(okBtn);
-
-        box.appendChild(label);
-        box.appendChild(input);
-        box.appendChild(btnRow);
-        overlay.appendChild(box);
-        document.body.appendChild(overlay);
-
-        function close(val) {
-          document.body.removeChild(overlay);
-          resolve(val);
-        }
-
-        cancelBtn.addEventListener("click", () => close(null));
-        okBtn.addEventListener("click", () => {
-          // date input 이라 형식은 항상 YYYY-MM-DD
-          close(input.value || null);
-        });
-        overlay.addEventListener("click", (e) => {
-          if (e.target === overlay) {
-            close(null);
-          }
-        });
-
-        input.focus();
-      });
-    }
-
     function renderTodoList() {
-      let list = todoData[currentScope] || [];
-      const todayStr = getStudyDateKey();
-
-      // ★ 하루 계획일 때만
-      if (currentScope === "day") {
-        // 1) 오늘 이전 날짜는 To-do에서 숨김 (달력에는 데이터 그대로 남아있음)
-        list = list.filter(item => !item.date || item.date >= todayStr);
-
-        // 2) 날짜 오름차순 정렬 (가까운 날이 위, 먼 날이 아래)
-        list.sort((a, b) => {
-          const ad = a.date || "9999-12-31";
-          const bd = b.date || "9999-12-31";
-          if (ad < bd) return -1;
-          if (ad > bd) return 1;
-          return 0;
-        });
-      }
-
+      const list = todoData[currentScope] || [];
       todoListEl.innerHTML = "";
       list.forEach((item, idx) => {
         const li = document.createElement("li");
@@ -2229,6 +1920,7 @@
         statusBtn.className = "status-btn";
         statusBtn.textContent = getStatusSymbol(item.status || "");
         statusBtn.classList.remove("success", "partial", "fail");
+        // 기본 스타일은 CSS에 맡기고, 여기서는 초기화만
         statusBtn.style.backgroundColor = "";
         statusBtn.style.borderColor = "";
         statusBtn.style.color = "";
@@ -2238,6 +1930,7 @@
         if (item.status === "fail") statusBtn.classList.add("fail");
 
         if (todoStyle === "color-only") {
+          // 색만 사용 모드에서는 네모칸을 색으로 채우기
           if (item.status === "success") {
             statusBtn.style.backgroundColor = "var(--success)";
             statusBtn.style.borderColor = "var(--success)";
@@ -2284,50 +1977,25 @@
         const actions = document.createElement("div");
         actions.className = "todo-actions";
 
-        // ★ 여기서 수정 버튼을 "내용 + 날짜 수정"으로 바꿀 예정 (다음 섹션)
         const editBtn = document.createElement("button");
         editBtn.className = "tiny";
         editBtn.textContent = "수정";
-        editBtn.addEventListener("click", async () => {
-          // 1) 내용 먼저 수정
-          const newText = prompt("내용 수정:", item.text || "");
-          if (!newText || !newText.trim()) {
-            // 내용 비우면 수정 취소
-            return;
+        editBtn.addEventListener("click", () => {
+          const newText = prompt("할 일을 수정하세요", item.text);
+          if (newText && newText.trim()) {
+            item.text = newText.trim();
+            saveTodos();
+            renderTodoList();
           }
-
-          // 2) 날짜는 오버레이 달력 팝업으로만 선택
-          const picked = await openDatePickerDialog(
-            item.date || formatDate(today),
-            "이 To-do의 날짜를 선택해 주세요"
-          );
-
-          // 텍스트는 항상 반영
-          item.text = newText.trim();
-          // 날짜는 팝업에서 '확인'을 눌렀을 때만 변경
-          if (picked) {
-            item.date = picked;   // YYYY-MM-DD
-          }
-
-          saveTodos();
-          renderTodoList();
-          renderCalendar();
-          renderCalendarSelectedTasks(selectedCalendarDateStr);
         });
 
         const delBtn = document.createElement("button");
         delBtn.className = "tiny";
         delBtn.textContent = "삭제";
         delBtn.addEventListener("click", () => {
-          const rawList = todoData[currentScope] || [];
-          const indexInRaw = rawList.indexOf(item);
-          if (indexInRaw !== -1) {
-            rawList.splice(indexInRaw, 1);
-          }
+          todoData[currentScope].splice(idx, 1);
           saveTodos();
           renderTodoList();
-          renderCalendar();
-          renderCalendarSelectedTasks(selectedCalendarDateStr);
         });
 
         actions.appendChild(editBtn);
@@ -2344,7 +2012,6 @@
       if (!text) return;
 
       let dateStr = null;
-
       if (currentScope === "year") {
         const y = todoYearSelect.value;
         dateStr = `${y}-01-01`;
@@ -2359,9 +2026,7 @@
         const baseDate = new Date(y, mIndex, 1 + (w - 1) * 7);
         dateStr = formatDate(baseDate);
       } else if (currentScope === "day") {
-        // ★ 날짜를 선택하지 않았다면 오늘 날짜로 자동 설정
-        const chosen = todoDateInput.value;
-        dateStr = chosen && chosen.trim() ? chosen.trim() : formatDate(today);
+        dateStr = todoDateInput.value || null;
       }
 
       todoData[currentScope].push({ text, status: "", date: dateStr });
@@ -2399,44 +2064,18 @@
     const timetableGridEl = document.getElementById("timetable-grid");
     const timetableDays = ["월", "화", "수", "목", "금", "토", "일"];
 
-    // 0시~23시
+    // 0시~23시를 숫자로 저장
     const timetableTimes = [];
-    for (let h = 0; h <= 23; h++) timetableTimes.push(h);
+    for (let h = 0; h <= 23; h++) {
+      timetableTimes.push(h);
+    }
 
-    // grid 상에서 행/열 위치 오프셋
-    // 1행: 요일 헤더, 1열: 시간 헤더
-    const ROW_OFFSET = 2; // 2행부터 실제 시간
-    const COL_OFFSET = 2; // 2열부터 실제 요일
+    // 시간표 라벨 포맷 함수
+    function formatHourLabel(h) {
+      return `${String(h).padStart(2, "0")}:00`;
+    }
 
-    // 데이터 + 선택 셀 목록
     let timetableData = {};
-    let selectedCells = [];
-
-    // key → { text, master, rows, cols, hidden, parent }
-    //  - master: 이 병합 블록의 좌상단 셀인지 여부
-    //  - rows, cols: 병합된 행/열 수 (master 에만 있음)
-    //  - hidden: 병합된 블록 안에서 숨겨지는 칸
-    //  - parent: 숨겨진 칸이 속한 master 셀의 key
-
-    function toggleSelectCell(cell, key) {
-      if (cell.classList.contains("selected")) {
-        cell.classList.remove("selected");
-        selectedCells = selectedCells.filter((k) => k !== key);
-      } else {
-        cell.classList.add("selected");
-        selectedCells.push(key);
-      }
-    }
-
-    function clearSelection() {
-      // 선택 표시된 셀의 selected 클래스를 모두 제거
-      document
-        .querySelectorAll(".timetable-cell.selected")
-        .forEach((cell) => cell.classList.remove("selected"));
-
-      // 선택 목록 비우기
-      selectedCells = [];
-    }
 
     function loadTimetable() {
       try {
@@ -2451,280 +2090,55 @@
       localStorage.setItem(TIMETABLE_KEY, JSON.stringify(timetableData));
     }
 
-    // 행/열 인덱스에서 key 만들기
-    function makeKey(r, c) {
-      return `${r}_${c}`;
-    }
-
-    // key → { row, col }
-    function parseKey(key) {
-      const [r, c] = key.split("_").map(Number);
-      return { row: r, col: c };
-    }
-
     function renderTimetable() {
       if (!timetableGridEl) return;
       timetableGridEl.innerHTML = "";
-      selectedCells = [];
 
-      // 좌상단 헤더 (시간)
       const emptyHeader = document.createElement("div");
       emptyHeader.className = "timetable-header";
       emptyHeader.textContent = "시간";
-      emptyHeader.style.gridRow = "1";
-      emptyHeader.style.gridColumn = "1";
       timetableGridEl.appendChild(emptyHeader);
 
-      // 요일 헤더 (1행, 2~8열)
-      timetableDays.forEach((day, dayIndex) => {
+      timetableDays.forEach((day) => {
         const h = document.createElement("div");
         h.className = "timetable-header";
         h.textContent = day;
-        h.style.gridRow = "1";
-        h.style.gridColumn = String(dayIndex + COL_OFFSET);
         timetableGridEl.appendChild(h);
       });
 
-      // 시간 헤더 (2~25행, 1열)
       timetableTimes.forEach((hour, timeIndex) => {
         const rowLabel = document.createElement("div");
         rowLabel.className = "timetable-header";
-        rowLabel.textContent = `${String(hour).padStart(2, "0")}:00`;
-        rowLabel.style.gridRow = String(timeIndex + ROW_OFFSET);
-        rowLabel.style.gridColumn = "1";
+        rowLabel.textContent = formatHourLabel(hour);
         timetableGridEl.appendChild(rowLabel);
-      });
 
-      // 본 셀들
-      for (let r = 0; r < timetableTimes.length; r++) {
-        for (let c = 0; c < timetableDays.length; c++) {
-          const key = makeKey(r, c);
-          const raw = timetableData[key];
-
-          // 숨겨진 칸이면 DOM 자체를 만들지 않음 (마스터 셀이 덮어씀)
-          if (raw && typeof raw === "object" && raw.hidden) continue;
-
+        timetableDays.forEach((_, dayIndex) => {
           const cell = document.createElement("div");
           cell.className = "timetable-cell";
           cell.contentEditable = "true";
+          const key = `${timeIndex}_${dayIndex}`;
 
-          let text = "";
-          let master = false;
-          let spanRows = 1;
-          let spanCols = 1;
-
-          if (typeof raw === "string") {
-            text = raw;
-          } else if (raw && typeof raw === "object") {
-            text = raw.text || "";
-            master = !!raw.master;
-            spanRows = raw.rows || 1;
-            spanCols = raw.cols || 1;
+          if (timetableData[key]) {
+            cell.textContent = timetableData[key];
           }
 
-          if (text) cell.textContent = text;
-
-          // grid 위치 지정 (엑셀 병합처럼)
-          const gridRowStart = r + ROW_OFFSET;
-          const gridColStart = c + COL_OFFSET;
-          cell.style.gridRow = `${gridRowStart} / span ${spanRows}`;
-          cell.style.gridColumn = `${gridColStart} / span ${spanCols}`;
-
-          // 클릭 시 선택 토글
-          cell.addEventListener("click", (e) => {
-            // 편집을 위해 이미 포커스된 상태에서 또 클릭해도 selection 유지
-            toggleSelectCell(cell, key);
-          });
-
-          // 내용 수정
           cell.addEventListener("input", () => {
-            const newText = cell.textContent.trim();
-            const cur = timetableData[key];
-
-            if (cur && typeof cur === "object" && cur.master) {
-              // 병합된 마스터 셀의 내용 수정
-              cur.text = newText;
-              if (!newText) cur.text = "";
+            const text = cell.textContent.trim();
+            if (text) {
+              timetableData[key] = text;
             } else {
-              // 일반 셀
-              if (newText) {
-                timetableData[key] = newText;
-              } else {
-                delete timetableData[key];
-              }
+              delete timetableData[key];
             }
             saveTimetable();
           });
 
           timetableGridEl.appendChild(cell);
-        }
-      }
+        });
+      });
     }
 
     loadTimetable();
     renderTimetable();
-
-    // ===== 병합 / 병합 해제 버튼 =====
-    const mergeBtn = document.getElementById("merge-btn");
-    const unmergeBtn = document.getElementById("unmerge-btn");
-
-    // 선택된 key 들이 "연속된 직사각형"인지 체크
-    function getSelectionRect() {
-      if (selectedCells.length < 2) return null;
-
-      const coords = selectedCells.map(parseKey);
-      const rows = coords.map((p) => p.row);
-      const cols = coords.map((p) => p.col);
-      const minR = Math.min(...rows);
-      const maxR = Math.max(...rows);
-      const minC = Math.min(...cols);
-      const maxC = Math.max(...cols);
-
-      const expectedCount = (maxR - minR + 1) * (maxC - minC + 1);
-      if (expectedCount !== selectedCells.length) {
-        return null; // 구멍이 있거나 직사각형이 아님
-      }
-
-      return { minR, maxR, minC, maxC };
-    }
-
-    // 선택 영역에 이미 병합된 셀 있는지 확인
-    function hasMergeConflict(rect) {
-      for (let r = rect.minR; r <= rect.maxR; r++) {
-        for (let c = rect.minC; c <= rect.maxC; c++) {
-          const key = makeKey(r, c);
-          const raw = timetableData[key];
-          if (!raw) continue;
-          if (typeof raw === "object" && (raw.master || raw.hidden)) {
-            return true;
-          }
-        }
-      }
-      return false;
-    }
-
-    // ✅ 선택 칸 병합
-    if (mergeBtn) {
-      mergeBtn.addEventListener("click", () => {
-        if (selectedCells.length < 2) {
-          alert("두 칸 이상을 선택해야 병합할 수 있어요.");
-          clearSelection();        // ❗ 선택 전부 해제
-          return;
-        }
-
-        const rect = getSelectionRect();
-        if (!rect) {
-          alert("가로·세로로 연속된 직사각형 모양으로 선택해 주세요.");
-          clearSelection();        // ❗ 직사각형 아니면 선택 전부 해제
-          return;
-        }
-
-        if (hasMergeConflict(rect)) {
-          alert("이미 병합된 칸과 겹칩니다. 먼저 병합 해제를 해 주세요.");
-          clearSelection();        // ❗ 겹칠 때도 선택 전부 해제
-          return;
-        }
-
-        // ↓↓↓ 이 아래부터는 그대로 두면 됨 ↓↓↓
-        let defaultText = "";
-        for (const key of selectedCells) {
-          const raw = timetableData[key];
-          if (typeof raw === "string") {
-            defaultText = raw;
-            break;
-          } else if (raw && typeof raw === "object" && raw.text) {
-            defaultText = raw.text;
-            break;
-          }
-        }
-
-        const input = prompt("병합된 칸에 표시할 내용을 입력하세요.", defaultText);
-        if (input === null) return;
-        const newText = input.trim();
-
-        const rows = rect.maxR - rect.minR + 1;
-        const cols = rect.maxC - rect.minC + 1;
-        const masterKey = makeKey(rect.minR, rect.minC);
-
-        timetableData[masterKey] = {
-          text: newText,
-          master: true,
-          rows,
-          cols,
-        };
-
-        for (let r = rect.minR; r <= rect.maxR; r++) {
-          for (let c = rect.minC; c <= rect.maxC; c++) {
-            const key = makeKey(r, c);
-            if (key === masterKey) continue;
-            timetableData[key] = {
-              hidden: true,
-              parent: masterKey,
-            };
-          }
-        }
-
-        saveTimetable();
-        renderTimetable();   // 이때 화면도 다시 그려지면서 selected 클래스도 사라짐
-      });
-    }
-
-    // ✅ 병합 해제 (선택된 칸이 속한 병합 블록을 풀기)
-    if (unmergeBtn) {
-      unmergeBtn.addEventListener("click", () => {
-        if (selectedCells.length === 0) {
-          alert("병합을 해제할 칸을 선택해 주세요.");
-          return;
-        }
-
-        const masterKeys = new Set();
-
-        selectedCells.forEach((key) => {
-          const raw = timetableData[key];
-          if (!raw) return;
-          if (typeof raw === "object" && raw.master) {
-            masterKeys.add(key);
-          } else if (typeof raw === "object" && raw.hidden && raw.parent) {
-            masterKeys.add(raw.parent);
-          }
-        });
-
-        if (masterKeys.size === 0) {
-          alert("선택한 칸 중 병합된 칸을 찾지 못했어요.");
-          return;
-        }
-
-        masterKeys.forEach((masterKey) => {
-          const master = timetableData[masterKey];
-          if (!master || typeof master !== "object" || !master.master) return;
-
-          const { row: baseR, col: baseC } = parseKey(masterKey);
-          const rows = master.rows || 1;
-          const cols = master.cols || 1;
-          const text = master.text || "";
-
-          for (let r = baseR; r < baseR + rows; r++) {
-            for (let c = baseC; c < baseC + cols; c++) {
-              const key = makeKey(r, c);
-              if (key === masterKey) {
-                // 마스터 칸은 일반 텍스트 셀로 되돌리기
-                if (text) {
-                  timetableData[key] = text;
-                } else {
-                  delete timetableData[key];
-                }
-              } else {
-                // 나머지 hidden 셀은 완전히 제거
-                delete timetableData[key];
-              }
-            }
-          }
-        });
-
-        saveTimetable();
-        renderTimetable();
-      });
-    }
 
     // ===== 캘린더 =====
     const calendarGrid = document.getElementById("calendar-grid");
@@ -2977,7 +2391,6 @@
     renderCalendar();
 
     // ===== 포모도로 =====
-    
     const POMO_CONFIG_KEY = "study_os_pomo_config_v1";
 
     const pomoDisplay = document.getElementById("pomo-display");
@@ -3056,7 +2469,6 @@
     let pomoSecondsLeft = pomoConfig.focus * 60;
     let pomoIntervalId = null;
     let pomoRunning = false;
-    let pomoLastTickTime = null;
 
     function updatePomoDisplay() {
       pomoDisplay.textContent = formatTime(pomoSecondsLeft);
@@ -3071,35 +2483,14 @@
 
     function startPomoTicking() {
       if (pomoIntervalId !== null) return;
-
       pomoRunning = true;
       requestWakeLock();
-
-      // 마지막으로 체크한 시각 저장
-      pomoLastTickTime = Date.now();
-
       pomoIntervalId = setInterval(() => {
-        if (pomoMode === "idle") {
-          // idle 상태인데 타이머가 돌고 있으면 안전하게 정지
-          stopPomoTicking();
-          return;
-        }
-
-        const now = Date.now();
-        // 직전 틱 이후 실제로 지난 시간(초)
-        let diffSec = Math.floor((now - pomoLastTickTime) / 1000);
-        if (diffSec < 1) diffSec = 1; // 최소 1초는 줄어들도록
-
-        pomoSecondsLeft -= diffSec;
-        pomoLastTickTime = now;
-
+        pomoSecondsLeft--;
         if (pomoSecondsLeft <= 0) {
-          pomoSecondsLeft = 0;
-          updatePomoDisplay();
           handlePomoPhaseEnd();
-        } else {
-          updatePomoDisplay();
         }
+        updatePomoDisplay();
       }, 1000);
     }
 
@@ -3109,18 +2500,11 @@
         pomoIntervalId = null;
       }
       pomoRunning = false;
-      pomoLastTickTime = null;
       releaseWakeLockIfNeeded();
     }
 
     function handlePomoPhaseEnd() {
       if (pomoMode === "focus") {
-        // 집중 구간이 타이머 0으로 끝날 때 → 지금까지 집중한 시간 공부 시간에 반영
-        if (typeof window.handlePomoFocusEnd === "function") {
-          window.handlePomoFocusEnd("auto");
-        }
-
-        // 이후는 기존 로직 그대로
         if (pomoCycleCount >= pomoConfig.cyclesBeforeLong) {
           pomoMode = "long";
           pomoSecondsLeft = pomoConfig.longBreak * 60;
@@ -3195,35 +2579,17 @@
         updatePomoDisplay();
       }
       startPomoTicking();
-
-      // 포모도로 집중 시작 시 → 공부 세션도 같이 시작 (중복 집계는 훅 함수에서 처리)
-      if (pomoMode === "focus" && typeof window.handlePomoFocusStart === "function") {
-        window.handlePomoFocusStart();
-      }
-
       openFocusOverlay("pomo");
     });
 
     pomoPauseBtn.addEventListener("click", () => {
       if (!pomoRunning) return;
       stopPomoTicking();
-
-      // 집중 도중 일시 정지 → 그 시점까지 집중한 시간 공부 시간에 반영
-      if (pomoMode === "focus" && typeof window.handlePomoFocusEnd === "function") {
-        window.handlePomoFocusEnd("pause");
-      }
-
       pomoPhaseEl.textContent += " (일시 정지)";
     });
 
     pomoResetBtn.addEventListener("click", () => {
       if (!confirm("포모도로 타이머를 리셋할까요?")) return;
-
-      // 집중 중에 리셋하면, 리셋 누르기 전까지의 집중 시간은 공부 시간에 반영
-      if (pomoMode === "focus" && typeof window.handlePomoFocusEnd === "function") {
-        window.handlePomoFocusEnd("reset");
-      }
-
       stopPomoTicking();
       pomoMode = "idle";
       pomoCycleCount = 0;
@@ -3310,26 +2676,13 @@
     }
 
     function getTodaySeconds() {
-      const key = getStudyDateKey();
+      const key = formatDate(today);
       return studyLog[key] || 0;
     }
 
     function getStudySecondsForDate(dateStr) {
       if (!studyLog) return 0;
       return studyLog[dateStr] || 0;
-    }
-
-    // 오늘 날짜 공부 시간에 초를 더해주는 헬퍼
-    function addStudySecondsForToday(sec) {
-      if (!sec || sec <= 0) return;
-
-      const key = getStudyDateKey();
-      studyLog[key] = (studyLog[key] || 0) + sec;
-      saveStudyLog();
-
-      if (typeof selectedCalendarDateStr !== "undefined" && selectedCalendarDateStr === key) {
-        renderCalendarSelectedTasks(selectedCalendarDateStr);
-      }
     }
 
     function updateStudyDisplay() {
@@ -3366,16 +2719,6 @@
       releaseWakeLockIfNeeded();
     }
 
-    // 공부 세션 시작 헬퍼 (공부 타이머/포모도로 공용)
-    function startStudySession() {
-      if (studyRunning) return;
-      studyRunning = true;
-      studySessionStart = new Date();
-      studyStatusEl.textContent = "공부 중";
-      saveStudySessionState();
-      startStudySessionTicking();
-    }
-
     function finishStudySession() {
       if (!studyRunning || !studySessionStart) return;
       const now = new Date();
@@ -3384,7 +2727,7 @@
         Math.floor((now.getTime() - studySessionStart.getTime()) / 1000)
       );
       studyLastSessionSeconds = diffSec;
-      const key = getStudyDateKey();
+      const key = formatDate(today);
       studyLog[key] = (studyLog[key] || 0) + diffSec;
       studyRunning = false;
       studySessionStart = null;
@@ -3395,35 +2738,13 @@
       updateStudySessionTime();
     }
 
-    // 포모도로에서 집중 시작/종료할 때 공부 타이머와 연동하는 훅
-
-    window.handlePomoFocusStart = function () {
-      // 포모도로가 집중 모드로 들어갈 때
-      // 이미 공부 타이머가 돌고 있으면 그대로 사용하고,
-      // 아니면 새 공부 세션을 시작
-      if (!studyRunning) {
-        startStudySession();
-      }
-    };
-
-    window.handlePomoFocusEnd = function (reason) {
-      // 포모도로 집중이 끝나거나(타이머 0) / 일시정지 / 리셋될 때
-      // 그 시점까지의 집중 시간을 오늘 공부 시간에 반영
-      if (studyRunning && studySessionStart) {
-        finishStudySession();
-      }
-    };
-
     studyStartBtn.addEventListener("click", () => {
-      // 포모도로 집중 모드가 이미 돌고 있을 때는
-      // 시간이 두 번 합산되지 않도록 막기
-      if (pomoRunning && pomoMode === "focus") {
-        alert("지금 포모도로 집중 중이라, 공부 타이머를 따로 켜면 시간이 두 번 합산될 수 있어서 막아뒀어요.\n포모도로를 끄거나 쉬는 시간일 때 공부 타이머를 켜 주세요.");
-        return;
-      }
-
       if (studyRunning) return;
-      startStudySession();
+      studyRunning = true;
+      studySessionStart = new Date();
+      studyStatusEl.textContent = "공부 중";
+      saveStudySessionState();
+      startStudySessionTicking();
       openFocusOverlay("study");
     });
 
@@ -3534,28 +2855,6 @@
       });
     }
     
-    // 🔹 집중 모드 상태 저장용 키
-    const FOCUS_STATE_KEY = "study_os_focus_state_v1";
-
-    function saveFocusState(state) {
-      try {
-        localStorage.setItem(FOCUS_STATE_KEY, JSON.stringify(state));
-      } catch (e) {
-        console.warn("[Focus] 상태 저장 실패", e);
-      }
-    }
-
-    function loadFocusState() {
-      try {
-        const raw = localStorage.getItem(FOCUS_STATE_KEY);
-        if (!raw) return null;
-        return JSON.parse(raw);
-      } catch (e) {
-        console.warn("[Focus] 상태 불러오기 실패", e);
-        return null;
-      }
-    }
-
     // ===== 집중 모드 =====
     const focusOverlay = document.getElementById("focus-overlay");
     const focusExitBtn = document.getElementById("focus-exit-btn");
@@ -3572,13 +2871,6 @@
       focusMode = mode;
       focusOverlay.style.display = "flex";
       focusStartTime = new Date();
-
-      // 🔹 상태를 localStorage에 기록 (타이머와 함께 켜졌다는 의미)
-      if (mode === "study" || mode === "pomo") {
-        saveFocusState({ active: true, mode });
-      } else {
-        saveFocusState({ active: true, mode: "generic" });
-      }
 
       if (mode === "study") {
         focusTitleEl.textContent = "공부 집중 모드";
@@ -3602,12 +2894,8 @@
         clearInterval(focusIntervalId);
         focusIntervalId = null;
       }
-      focusExtraInfoEl.textContent = "";
-
-      // 🔹 오버레이가 완전히 닫힐 때는 활성 상태 해제
-      saveFocusState({ active: false, mode: null });
-
       focusMode = "generic";
+      focusExtraInfoEl.textContent = "";
     }
 
     function updateFocusTimer() {
@@ -3649,45 +2937,17 @@
     }
 
     focusExitBtn.addEventListener("click", () => {
-      // 1) 공부 타이머 모드에서 나갈 때: 세션 종료 + 기록
+      // 공부 타이머: 세션 종료 + 기록
       if (focusMode === "study" && studyRunning) {
         finishStudySession();
       }
-
-      // 2) 포모도로 모드에서 나갈 때
-      if (focusMode === "pomo") {
-        // (1) 포모도로 타이머 일시 정지
-        if (pomoRunning) {
-          stopPomoTicking();
-          pomoPhaseEl.textContent += " (일시 정지)";
-        }
-
-        // (2) 지금까지의 집중 시간 → 공부 시간에 반영 + 공부 타이머 멈추기
-        if (typeof window.handlePomoFocusEnd === "function") {
-          window.handlePomoFocusEnd("focus-exit");
-        }
+      // 포모도로: 타이머만 일시정지 (리셋 X)
+      if (focusMode === "pomo" && pomoRunning) {
+        stopPomoTicking();
+        pomoPhaseEl.textContent += " (일시 정지)";
       }
-
-      // 3) 오버레이 닫기
       closeFocusOverlay();
     });
-
-    // 🔹 필요하면 자동으로 집중 모드 화면 복원
-    function restoreFocusOverlayIfNeeded() {
-      const state = loadFocusState();
-      if (!state || !state.active) return;
-
-      // generic 모드는 자동 복원하지 않음 (공부/포모도로만)
-      if (state.mode === "study") {
-        if (studyRunning) {
-          openFocusOverlay("study");
-        }
-      } else if (state.mode === "pomo") {
-        if (pomoRunning) {
-          openFocusOverlay("pomo");
-        }
-      }
-    }
 
     // ===== Wake Lock =====
     let wakeLock = null;
@@ -3715,17 +2975,6 @@
         wakeLockRequested = false;
       }
     }
-
-    document.addEventListener("visibilitychange", () => {
-      if (document.visibilityState === "visible") {
-        // 타이머가 돌아가고 있으면 다시 화면 꺼짐 방지 요청
-        if (pomoRunning || studyRunning) {
-          requestWakeLock();
-        }
-        // 🔹 앱으로 돌아왔을 때 집중 모드 자동 복원 시도
-        restoreFocusOverlayIfNeeded();
-      }
-    });
 
     // ===== 홈 요약 =====
     const summaryStudyTimeEl = document.getElementById("summary-study-time");
@@ -3825,120 +3074,14 @@
       }
     }
 
-    let lastGoalsDateKey = getStudyDateKey();
-    
     function checkScheduledNotifications() {
       const now = new Date();
       checkDdayNotifications(now);
       checkStudyStartReminder(now);
     }
 
-    // ===== 서버 기반 D-Day 알람 예약 =====
-    function scheduleDdayServerAlarmsForAll() {
-      // scheduleServerAlarm 이 준비 안 돼 있으면 그냥 스킵
-      if (typeof window.scheduleServerAlarm !== "function") {
-        console.warn("[Push] scheduleServerAlarm 함수가 아직 준비되지 않았습니다.");
-        return;
-      }
-
-      if (!ddayReminderTime) {
-        console.warn("[Push] D-Day 알림 시간이 설정되어 있지 않습니다.");
-        return;
-      }
-
-      if (!ddayItems || !ddayItems.length) {
-        console.warn("[Push] 등록된 D-Day가 없습니다.");
-        return;
-      }
-
-      const [hh, mm] = ddayReminderTime.split(":");
-      const now = new Date();
-
-      ddayItems.forEach((item) => {
-        if (!item.date) return;
-
-        const d = new Date(item.date);
-        if (isNaN(d.getTime())) return;
-
-        // "D-1일" 기준 시간 (사용자가 정한 시각)
-        const alarmDate = new Date(
-          d.getFullYear(),
-          d.getMonth(),
-          d.getDate() - 1,
-          Number(hh),
-          Number(mm),
-          0
-        );
-
-        // 이미 지난 시각이면 예약하지 않음
-        if (alarmDate.getTime() <= now.getTime()) return;
-
-        window.scheduleServerAlarm(alarmDate, {
-          title: "My Study OS - D-Day",
-          body: `내일은 "${item.title}" D-Day 입니다!`,
-          type: "dday",
-        });
-      });
-
-      console.log("[Push] 모든 D-Day에 대해 서버 알람 예약 시도 완료");
-    }
-
-    // ===== 서버 기반 공부 시작 알람 (앞으로 N일) 예약 =====
-    function scheduleStudyStartAlarmsForNextNDays(days = 7) {
-      if (typeof window.scheduleServerAlarm !== "function") {
-        console.warn("[Push] scheduleServerAlarm 함수가 아직 준비되지 않았습니다.");
-        return;
-      }
-
-      if (!studyReminderTime) {
-        console.warn("[Push] 공부 시작 알림 시간이 설정되어 있지 않습니다.");
-        return;
-      }
-
-      const [hh, mm] = studyReminderTime.split(":");
-      const now = new Date();
-
-      for (let i = 0; i < days; i++) {
-        const base = new Date(
-          now.getFullYear(),
-          now.getMonth(),
-          now.getDate() + i,
-          Number(hh),
-          Number(mm),
-          0
-        );
-
-        // 이미 지난 시각은 건너뛰기
-        if (base.getTime() <= now.getTime()) continue;
-
-        window.scheduleServerAlarm(base, {
-          title: "My Study OS - 공부 시작",
-          body: "정해둔 공부 시작 시간이예요. 오늘도 한 번 달려볼까요?",
-          type: "study",
-        });
-      }
-
-      console.log("[Push] 앞으로", days, "일 분량의 공부 시작 알람 예약 완료");
-    }
-
-    // 1초마다 알림 + 날짜 전환 체크
-    function tickEverySecond() {
-      // 기존 알림 로직
-      checkScheduledNotifications();
-
-      // 새벽 4시 기준 "오늘"이 바뀌었는지 체크
-      const currentKey = getStudyDateKey();
-      if (currentKey !== lastGoalsDateKey) {
-        lastGoalsDateKey = currentKey;
-
-        // 오늘의 목표 / 홈 요약 / 달력의 "선택한 날짜" 공부 시간 갱신
-        renderGoals();
-        updateHomeSummary();
-        renderCalendarSelectedTasks(selectedCalendarDateStr);
-      }
-    }
-
-    setInterval(tickEverySecond, 1000);
+    // 1초마다 알림 조건 체크 (부하 거의 없음)
+    setInterval(checkScheduledNotifications, 1000);
 
     // ===== To-do 스타일 라디오 적용 =====
     const todoStyleRadios = document.querySelectorAll('input[name="todo-style"]');
@@ -4100,81 +3243,6 @@
 
     // 콘솔에서 테스트할 수 있게 전역으로 꺼내두기
     window.sendPushViaWorker = sendPushViaWorker;
-
-    // === "예약 알람"을 서버에 저장하는 함수 ===
-    /**
-     * alarmDate: Date 객체 (로컬 시간 기준)
-     * options: { title?: string, body?: string, type?: string }
-     */
-    async function scheduleServerAlarm(alarmDate, options = {}) {
-      if (!alarmDate || !(alarmDate instanceof Date) || isNaN(alarmDate.getTime())) {
-        console.warn("[Push] 잘못된 alarmDate 입니다.", alarmDate);
-        return;
-      }
-
-      if (!currentFcmToken) {
-        console.warn("[Push] FCM 토큰이 아직 없습니다. (로그인 후 initFcmForUser가 호출되어야 함)");
-        alert("알림을 예약하기 전에 먼저 로그인하고 알림 권한을 허용해야 해요.");
-        return;
-      }
-
-      const alarmTimeIso = alarmDate.toISOString(); // 서버는 이 값을 기준으로 비교
-
-      const payload = {
-        token: currentFcmToken,
-        alarmTime: alarmTimeIso,
-        title: options.title || "My Study OS 알람",
-        body: options.body || "설정한 시간이 되었어요!",
-        type: options.type || "generic",
-      };
-
-      try {
-        const res = await fetch("https://my-study-os-push.ganghealthy.workers.dev/schedule-alarm", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        });
-
-        let data = null;
-        try {
-          data = await res.json();
-        } catch (e) {
-          // 응답이 JSON이 아닐 수도 있어서 방어
-        }
-
-        if (!res.ok) {
-          console.error("[Push] 서버 알람 예약 실패:", res.status, data);
-          alert("서버에 알람을 예약하는 데 실패했어요 ㅠㅠ");
-          return;
-        }
-
-        console.log("[Push] 서버 알람 예약 성공:", data);
-        // 필요하면 여기서 data.id 등을 localStorage에 저장해둘 수도 있음
-      } catch (err) {
-        console.error("[Push] 서버 알람 예약 중 오류:", err);
-        alert("서버와 통신하는 동안 오류가 발생했어요.");
-      }
-    }
-
-    const serverAlarmTestBtn = document.getElementById("server-alarm-test-btn");
-    if (serverAlarmTestBtn) {
-      serverAlarmTestBtn.addEventListener("click", () => {
-        // 지금 기준 2분 뒤로 예약해보기
-        const now = new Date();
-        const alarmDate = new Date(now.getTime() + 2 * 60 * 1000);
-
-        scheduleServerAlarm(alarmDate, {
-          title: "서버 알람 테스트",
-          body: "2분 전에 예약한 서버 푸시 알람입니다.",
-          type: "test",
-        });
-
-        alert("2분 뒤에 울리는 서버 알람을 예약했어요. (브라우저는 꺼놔도 됩니다)");
-      });
-    }
-
-    // 디버깅용으로 전역에 꺼내두면, 콘솔에서 직접 테스트 가능
-    window.scheduleServerAlarm = scheduleServerAlarm;
 
     // 앱이 켜져 있을 때 오는 푸시(포그라운드) 처리
     onMessage(messaging, (payload) => {
@@ -4350,12 +3418,6 @@
       alert("초기화가 완료되었습니다. 페이지를 새로고침합니다.");
       window.location.reload();
     });
-
-    // 페이지 처음 열릴 때도 타이머가 살아있다면 집중 모드 복원 시도
-    window.addEventListener("load", () => {
-      restoreFocusOverlayIfNeeded();
-    });
-
   </script>
 </body>
 </html>
