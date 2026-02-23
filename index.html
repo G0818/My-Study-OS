@@ -753,10 +753,11 @@
 
     /* WEEKLY TIMETABLE - 시간 단위 */
     .timetable-grid {
-      display: grid;
-      grid-template-columns: 70px repeat(7, minmax(1fr));
-      gap: 4px;
-      font-size: 0.78rem;
+        display: grid;
+        width: 100%;
+        grid-template-columns: 70px repeat(7, minmax(0, 1fr));
+        gap: 4px;
+        font-size: 0.78rem;
     }
 
     .timetable-header {
