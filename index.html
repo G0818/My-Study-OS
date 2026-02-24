@@ -770,14 +770,13 @@
       min-width: 0;
     }
 
-    .timetable-cell {
-      border-radius: 8px;
-      border: 1px solid rgba(31,41,55,0.3);
-      padding: 4px;
-      background: var(--bg-soft);
-      min-height: 32px;
-      word-break: break-word;
-      min-width:0;
+    /* 빈 칸(기본 네모) 안 보이게 */
+    .timetable-cell{
+        background: transparent !important;
+        border: 0 !important;
+        padding: 0 !important;
+        min-height: 0 !important;
+        pointer-events: none; /* 셀 클릭 막기 (블록만 쓰는 경우) */
     }
 
     .timetable-cell[contenteditable="true"] { outline: none; }
@@ -2182,9 +2181,18 @@
         const rowH = parseFloat(getComputedStyle(timetableGridEl).gridAutoRows) || 32;
 
         timetableEvents.forEach(ev=>{
-            const left = timeColW + ev.dayIndex * (dayCellW + gap);
-            const top  = headerH + ev.startHour * (rowH + gap);
-            const height = (ev.endHour - ev.startHour) * (rowH + gap) - gap;
+            const wrapRect = timetableWrapEl.getBoundingClientRect();
+            const gridRect = timetableGridEl.getBoundingClientRect();
+
+            // grid가 wrap 안에서 시작하는 위치(보정값)
+            const offsetX = gridRect.left - wrapRect.left;
+            const offsetY = gridRect.top  - wrapRect.top;
+
+            const unitH = rowH + gap; // 1시간 높이(행높이+gap)
+
+            const left = offsetX + timeColW + ev.dayIndex * (dayCellW + gap);
+            const top  = offsetY + headerH + ev.startHour * unitH;
+            const height = (ev.endHour - ev.startHour) * unitH - gap;
 
             const div = document.createElement("div");
             div.className = "tt-event";
