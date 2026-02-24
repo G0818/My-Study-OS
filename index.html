@@ -812,7 +812,13 @@
     }
 
     .tt-event .tt-event-title{ font-weight: 700; }
-    .tt-event .tt-event-time{ font-size: 0.72rem; color: var(--text-muted); margin-top: 2px; }
+    .tt-event { color: var(--tt-event-text); }
+
+    .tt-event .tt-event-time{
+        color: var(--tt-event-subtext);
+        font-size: 0.72rem;
+        margin-top: 2px;
+    }
 
     /* 다크 모드에서 경계선 더 선명하게 */
     body:not(.theme-light) .timetable-header,
@@ -1514,6 +1520,8 @@
 
         // 테마에 따라 투명도 자동 보정
         const isLight = document.body.classList.contains("theme-light");
+        const textColor = isLight ? "#111827" : "#e5e7eb";  // 라이트: 검정, 다크: 밝은 회색
+        const subTextColor = isLight ? "rgba(17,24,39,0.7)" : "rgba(229,231,235,0.75)";
         const bgAlpha = isLight ? 0.16 : 0.18;
         const bdAlpha = 0.55;
 
