@@ -796,6 +796,7 @@
         --tt-event-bg: rgba(99,102,241,0.18);
         --tt-event-border: rgba(99,102,241,0.55);
         --tt-event-text: var(--text);
+        --tt-event-subtext: var(--text-muted);
     }
 
     .tt-event{
@@ -1522,7 +1523,7 @@
         const isLight = document.body.classList.contains("theme-light");
         const textColor = isLight ? "#111827" : "#e5e7eb";  // 라이트: 검정, 다크: 밝은 회색
         const subTextColor = isLight ? "rgba(17,24,39,0.7)" : "rgba(229,231,235,0.75)";
-        const bgAlpha = isLight ? 0.16 : 0.18;
+        const bgAlpha = isLight ? 0.22 : 0.18;
         const bdAlpha = 0.55;
 
         const r = parseInt(hex.slice(1,3),16);
@@ -1531,6 +1532,8 @@
 
         document.documentElement.style.setProperty("--tt-event-bg", `rgba(${r},${g},${b},${bgAlpha})`);
         document.documentElement.style.setProperty("--tt-event-border", `rgba(${r},${g},${b},${bdAlpha})`);
+        document.documentElement.style.setProperty("--tt-event-text", textColor);
+        document.documentElement.style.setProperty("--tt-event-subtext", subTextColor);
     }
 
     function initTimetableColorSetting(){
