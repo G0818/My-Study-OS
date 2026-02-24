@@ -798,13 +798,6 @@
         --tt-event-text: var(--text);
     }
 
-    .theme-light{
-        --tt-event-accent: #2563eb;
-        --tt-event-bg: rgba(37,99,235,0.16);
-        --tt-event-border: rgba(37,99,235,0.55);
-        --tt-event-text: var(--text);
-    }
-
     .tt-event{
         position:absolute;
         border-radius: 10px;
@@ -835,6 +828,41 @@
 
     /* 집중 모드 버튼은 자동 실행으로 숨김 */
     #study-focus-btn { display: none; }
+
+    .tt-color-row{
+        display:flex;
+        gap:10px;
+        align-items:center;
+        flex-wrap:wrap;
+        margin-top:8px;
+    }
+
+    .tt-color-radio{
+        position:absolute;
+        opacity:0;
+        pointer-events:none;
+    }
+
+    .tt-color-chip{
+        width:22px;
+        height:22px;
+        border-radius:999px;
+        border:1px solid rgba(148,163,184,0.7);
+        box-shadow: 0 2px 6px rgba(0,0,0,0.18);
+        cursor:pointer;
+    }
+
+    .tt-color-item{
+        display:flex;
+        align-items:center;
+        gap:6px;
+        cursor:pointer;
+    }
+
+    .tt-color-radio:checked + .tt-color-chip{
+        outline:2px solid var(--accent-strong);
+        outline-offset:2px;
+    }
 
   </style>
 </head>
@@ -1354,21 +1382,30 @@
             </div>
             <p class="tagline">일정 블록 색을 선택할 수 있어요.</p>
 
-            <div class="input-row" style="margin-top:8px;font-size:0.8rem;">
-                <label style="display:flex;align-items:center;gap:6px;">
-                    <input type="radio" name="tt-color" value="indigo" checked /> 인디고
+            <div class="tt-color-row">
+                <label class="tt-color-item" title="Indigo">
+                    <input class="tt-color-radio" type="radio" name="tt-color" value="indigo" checked>
+                    <span class="tt-color-chip" style="background:#6366f1"></span>
                 </label>
-                <label style="display:flex;align-items:center;gap:6px;">
-                    <input type="radio" name="tt-color" value="blue" /> 블루
+
+                <label class="tt-color-item" title="Blue">
+                    <input class="tt-color-radio" type="radio" name="tt-color" value="blue">
+                    <span class="tt-color-chip" style="background:#2563eb"></span>
                 </label>
-                <label style="display:flex;align-items:center;gap:6px;">
-                    <input type="radio" name="tt-color" value="green" /> 그린
+
+                <label class="tt-color-item" title="Green">
+                    <input class="tt-color-radio" type="radio" name="tt-color" value="green">
+                    <span class="tt-color-chip" style="background:#22c55e"></span>
                 </label>
-                <label style="display:flex;align-items:center;gap:6px;">
-                    <input type="radio" name="tt-color" value="orange" /> 오렌지
+
+                <label class="tt-color-item" title="Orange">
+                    <input class="tt-color-radio" type="radio" name="tt-color" value="orange">
+                    <span class="tt-color-chip" style="background:#f59e0b"></span>
                 </label>
-                <label style="display:flex;align-items:center;gap:6px;">
-                    <input type="radio" name="tt-color" value="pink" /> 핑크
+
+                <label class="tt-color-item" title="Pink">
+                    <input class="tt-color-radio" type="radio" name="tt-color" value="pink">
+                    <span class="tt-color-chip" style="background:#ec4899"></span>
                 </label>
             </div>
 
