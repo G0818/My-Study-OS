@@ -994,9 +994,9 @@
           </div>
         </div>
         <div id="timetable-wrap" style="position:relative;">
+            <div id="timetable-grid" class="timetable-grid"></div>
             <div id="timetable-events-layer" style="position:absolute; inset:0; pointer-events:none;"></div>
         </div>
-          <div id="timetable-grid" class="timetable-grid"></div>
           <div class="hint">
             · 왼쪽은 시간(00:00 ~ 23:00), 위쪽은 월~일입니다.<br />
             · 칸을 눌러 과목/활동을 입력하면 자동으로 저장돼요.
@@ -1463,6 +1463,17 @@
         sections.forEach((sec) => {
           sec.classList.toggle("active", sec.id === target);
         });
+        // 탭 전환 직후 레이아웃 기반 화면은 재렌더(0폭/0높이 방지)
+        setTimeout(() => {
+            if (target === "timetable") {
+                renderTimetable();
+                renderTimetableEvents();
+            }
+            if (target === "calendar") {
+                renderCalendar();
+                renderCalendarSelectedTasks(selectedCalendarDateStr);
+            }
+        }, 0);
       });
     });
 
@@ -2302,6 +2313,10 @@
 
     loadTimetable();
     renderTimetable();
+
+    loadTimetableEvents();
+    renderTimetableEvents();
+
     window.addEventListener("resize", renderTimetableEvents);
 
     // ===== 캘린더 =====
