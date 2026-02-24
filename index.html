@@ -782,6 +782,30 @@
 
     .timetable-cell[contenteditable="true"] { outline: none; }
 
+    /* 시간표: 모바일에서 1시간 칸 높이 키우기 */
+    :root { --tt-row-h: 32px; }
+    @media (max-width: 520px){
+        :root { --tt-row-h: 52px; } /* 폰에서 더 큼 */
+    }
+    .timetable-grid{
+        grid-auto-rows: var(--tt-row-h);  /* 1시간 = 1행 높이 */
+    }
+
+    /* 일정 블록(네이버 캘린더처럼) */
+    .tt-event{
+        position:absolute;
+        border-radius: 10px;
+        border: 1px solid rgba(99,102,241,0.6);
+        background: rgba(79,70,229,0.18);
+        padding: 6px 8px;
+        font-size: 0.78rem;
+        line-height: 1.25;
+        overflow:hidden;
+        pointer-events:auto;
+    }
+    .tt-event .tt-event-title{ font-weight: 700; }
+    .tt-event .tt-event-time{ font-size: 0.72rem; color: var(--text-muted); margin-top: 2px; }
+
     /* 다크 모드에서 경계선 더 선명하게 */
     body:not(.theme-light) .timetable-header,
     body:not(.theme-light) .timetable-cell {
@@ -963,8 +987,15 @@
         <div class="card">
           <div class="card-header">
             <div class="card-title">일주일 시간표</div>
+            <div class="input-row" style="margin:0;">
+                <button id="timetable-add-event-btn">일정 추가</button>
+                <button id="timetable-clear-btn" class="secondary">시간표 전체 초기화</button>
             <span class="pill">시간 단위</span>
           </div>
+        </div>
+        <div id="timetable-wrap" style="position:relative;">
+            <div id="timetable-events-layer" style="position:absolute; inset:0; pointer-events:none;"></div>
+        </div>
           <div id="timetable-grid" class="timetable-grid"></div>
           <div class="hint">
             · 왼쪽은 시간(00:00 ~ 23:00), 위쪽은 월~일입니다.<br />
@@ -1699,6 +1730,25 @@
       });
     }
 
+    function prunePastDDays(){
+        const now = new Date();
+        const today0 = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+
+        const before = ddayItems.length;
+        ddayItems = ddayItems.filter(item=>{
+            const d = new Date(item.date);
+            const d0 = new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+            return d0 >= today0; // 오늘 포함, 과거 삭제
+        });
+
+        const pinnedId = getPinnedDdayId();
+        if (pinnedId != null && !ddayItems.some(x => x.id === pinnedId)){
+            setPinnedDdayId(null);
+        }
+
+        if (ddayItems.length !== before) saveDDays();
+    }
+
     ddayAddBtn.addEventListener("click", addDDay);
     ddayClearBtn.addEventListener("click", () => {
       if (!confirm("모든 D-Day를 초기화할까요?")) return;
@@ -1771,6 +1821,7 @@
 
     loadGoals();
     loadDDays();
+    prunePastDDays();
     renderDDays();
     renderGoals();
     setupSearch("dday-search", "dday-list");
@@ -1853,6 +1904,21 @@
       } catch {
         // ignore
       }
+    }
+
+    function prunePastDayTodos(){
+        const now = new Date();
+        const today0 = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+
+        const before = (todoData.day || []).length;
+        todoData.day = (todoData.day || []).filter(item=>{
+            if (!item.date) return true;
+            const d = new Date(item.date);
+            const d0 = new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+            return d0 >= today0; // 오늘 포함, 과거 삭제
+        });
+
+        if ((todoData.day || []).length !== before) saveTodos();
     }
 
     function saveTodos() {
@@ -2056,6 +2122,7 @@
     });
 
     loadTodos();
+    prunePastDayTodos();
     updateTodoDateInputs();
     renderTodoList();
     setupSearch("todo-search", "todo-list");
@@ -2064,6 +2131,101 @@
     const TIMETABLE_KEY = "study_os_timetable_v1";
     const timetableGridEl = document.getElementById("timetable-grid");
     const timetableDays = ["월", "화", "수", "목", "금", "토", "일"];
+
+    // === (추가) 블록형 일정 저장 ===
+    const TIMETABLE_EVENTS_KEY = "study_os_timetable_events_v1";
+    const timetableWrapEl = document.getElementById("timetable-wrap");
+    const eventsLayerEl = document.getElementById("timetable-events-layer");
+    const addEventBtn = document.getElementById("timetable-add-event-btn");
+    const clearBtn = document.getElementById("timetable-clear-btn");
+
+    let timetableEvents = []; // {id, dayIndex(0~6), startHour, endHour, title}
+
+    function loadTimetableEvents(){
+        try{
+            const saved = localStorage.getItem(TIMETABLE_EVENTS_KEY);
+            timetableEvents = saved ? JSON.parse(saved) : [];
+        }catch{
+            timetableEvents = [];
+        }
+    }
+    function saveTimetableEvents(){
+        localStorage.setItem(TIMETABLE_EVENTS_KEY, JSON.stringify(timetableEvents));
+    }
+
+    function renderTimetableEvents(){
+        if (!timetableWrapEl || !eventsLayerEl || !timetableGridEl) return;
+        eventsLayerEl.innerHTML = "";
+
+        const headers = timetableGridEl.querySelectorAll(".timetable-header");
+        if (headers.length < 8) return; // 시간 + 7일
+
+        const timeHeaderRect = headers[0].getBoundingClientRect();
+        const mondayRect = headers[1].getBoundingClientRect();
+
+        const timeColW = timeHeaderRect.width;
+        const headerH  = timeHeaderRect.height;
+        const dayCellW = mondayRect.width;
+
+        const gap = 4; // CSS gap
+        const rowH = parseFloat(getComputedStyle(timetableGridEl).gridAutoRows) || 32;
+
+        timetableEvents.forEach(ev=>{
+            const left = timeColW + ev.dayIndex * (dayCellW + gap);
+            const top  = headerH + ev.startHour * (rowH + gap);
+            const height = (ev.endHour - ev.startHour) * (rowH + gap) - gap;
+
+            const div = document.createElement("div");
+            div.className = "tt-event";
+            div.style.left = `${left}px`;
+            div.style.top = `${top}px`;
+            div.style.width = `${dayCellW}px`;
+            div.style.height = `${Math.max(18, height)}px`;
+            div.innerHTML = `
+                <div class="tt-event-title">${ev.title}</div>
+                <div class="tt-event-time">${String(ev.startHour).padStart(2,"0")}:00 ~ ${String(ev.endHour).padStart(2,"0")}:00</div>
+                <button class="tiny" style="margin-top:6px;">삭제</button>
+            `;
+
+            div.querySelector("button").addEventListener("click", (e)=>{
+                e.stopPropagation();
+                timetableEvents = timetableEvents.filter(x => x.id !== ev.id);
+                saveTimetableEvents();
+                renderTimetableEvents();
+            });
+
+            eventsLayerEl.appendChild(div);
+        });
+    }
+    
+    function addTimetableEvent(){
+        const dayStr = prompt("요일(월/화/수/목/금/토/일)");
+        if (!dayStr) return;
+        const dayIndex = timetableDays.indexOf(dayStr.trim());
+        if (dayIndex < 0) return alert("요일은 월~일 중에서 입력해 주세요.");
+
+        const start = Number(prompt("시작 시간(0~23)"));
+        const end   = Number(prompt("끝 시간(1~24), 시작보다 크게"));
+        if (!Number.isFinite(start) || !Number.isFinite(end) || start<0 || start>23 || end<1 || end>24 || end<=start){
+            return alert("시간 입력이 올바르지 않습니다.");
+        }
+
+        const title = (prompt("일정 제목") || "").trim();
+        if (!title) return;
+
+        timetableEvents.push({ id: Date.now()+Math.random(), dayIndex, startHour:start, endHour:end, title });
+        saveTimetableEvents();
+        renderTimetableEvents();
+    }
+
+    addEventBtn?.addEventListener("click", addTimetableEvent);
+
+    clearBtn?.addEventListener("click", ()=>{
+        if(!confirm("시간표의 모든 일정 블록을 삭제할까요?")) return;
+        timetableEvents = [];
+        saveTimetableEvents();
+        renderTimetableEvents();
+    });
 
     // 0시~23시를 숫자로 저장
     const timetableTimes = [];
@@ -2140,6 +2302,7 @@
 
     loadTimetable();
     renderTimetable();
+    window.addEventListener("resize", renderTimetableEvents);
 
     // ===== 캘린더 =====
     const calendarGrid = document.getElementById("calendar-grid");
