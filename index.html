@@ -507,6 +507,16 @@
     .todo-legend .fail    { color: var(--danger); }
     .todo-legend .none    { color: rgba(148,163,184,0.8); }
 
+    /* 폼 컨트롤 기본 스키마(아이콘/내장 UI) */
+    body:not(.theme-light) { color-scheme: dark; }
+    body.theme-light { color-scheme: light; }
+
+    /* Chrome/Safari: date/time 달력 아이콘이 어두워서 안 보일 때 */
+    body:not(.theme-light) input[type="date"]::-webkit-calendar-picker-indicator,
+    body:not(.theme-light) input[type="time"]::-webkit-calendar-picker-indicator {
+      filter: invert(1) opacity(0.9);
+    }
+    
     /* POMODORO */
     #pomo-display {
       font-size: 2.1rem;
@@ -754,10 +764,7 @@
     /* WEEKLY TIMETABLE - 시간 단위 */
     .timetable-grid {
         display: grid;
-        width: 100%;
-        grid-template-columns: 30px repeat(7, minmax(0, 1fr));
-        gap: 4px;
-        font-size: 0.78rem;
+        grid-template-columns: repeat(7, minmax(0, 1fr));
     }
 
     .timetable-header {
@@ -1028,18 +1035,7 @@
           <div class="hint">
             · ○: 성공 / △: 어느 정도 / ✕: 못 함 / □: 아직 평가 전<br />
             · 날짜를 넣으면 ‘달력’ 탭에서 날짜별로 계획을 확인할 수 있어요.
-          </div>
-
-          /* 폼 컨트롤 기본 스키마(아이콘/내장 UI) */
-          body:not(.theme-light) { color-scheme: dark; }
-          body.theme-light { color-scheme: light; }
-
-          /* Chrome/Safari: date/time 달력 아이콘이 어두워서 안 보일 때 */
-          body:not(.theme-light) input[type="date"]::-webkit-calendar-picker-indicator,
-          body:not(.theme-light) input[type="time"]::-webkit-calendar-picker-indicator {
-            filter: invert(1) opacity(0.9);
-          }
-          
+          </div>          
         </div>
       </section>
 
@@ -2379,71 +2375,6 @@
     function saveTimetableEvents(){
         localStorage.setItem(TIMETABLE_EVENTS_KEY, JSON.stringify(timetableEvents));
     }
-
-    function renderTimetableEvents(){
-        if (!timetableWrapEl || !eventsLayerEl || !timetableGridEl) return;
-        eventsLayerEl.innerHTML = "";
-
-        const wrapRect = timetableWrapEl.getBoundingClientRect();
-
-        // grid 내부 요소들: [0]시간헤더 + [1~7]요일헤더 + 그 다음부터 본문
-        const children = Array.from(timetableGridEl.children);
-        if (children.length < 8 + 8) return;
-
-        const timeHeaderEl = children[0];
-        const mondayHeaderEl = children[1];
-
-        // ✅ "00:00 행의 월요일 칸"을 기준점으로 잡는다
-        // 헤더 8개 다음 row의 첫 셀은 00:00 라벨, 그 다음이 월요일 칸
-        const firstTimeLabelEl = children[8];     // 00:00 라벨
-        const firstMondayCellEl = children[9];    // 00:00-월요일 칸
-
-        const timeHeaderRect = timeHeaderEl.getBoundingClientRect();
-        const mondayHeaderRect = mondayHeaderEl.getBoundingClientRect();
-        const firstMondayRect = firstMondayCellEl.getBoundingClientRect();
-
-        const timeColW = timeHeaderRect.width;
-        const headerH = timeHeaderRect.height;
-
-        const dayCellW = mondayHeaderRect.width;
-
-        const gap = 4; // CSS gap
-        const rowH = parseFloat(getComputedStyle(timetableGridEl).gridAutoRows) || 32;
-        const unitH = rowH + gap;
-
-        const baseLeft = firstMondayRect.left - wrapRect.left; // ✅ 월요일 칸이 시작하는 진짜 x
-        const baseTop  = firstMondayRect.top  - wrapRect.top;  // ✅ 00:00 행이 시작하는 진짜 y
-
-        timetableEvents.forEach(ev => {
-            const startMin = (ev.startMin ?? (ev.startHour * 60));
-            const endMin   = (ev.endMin   ?? (ev.endHour   * 60));
-
-            const left = baseLeft + ev.dayIndex * (dayCellW + gap);
-            const top = baseTop + (startMin / 60) * unitH;
-            const height = ((endMin - startMin) / 60) * unitH - gap;
-
-            const div = document.createElement("div");
-            div.className = "tt-event";
-            div.style.left = `${left}px`;
-            div.style.top = `${top}px`;
-            div.style.width = `${dayCellW}px`;
-            div.style.height = `${Math.max(18, height)}px`;
-            div.innerHTML = `
-                <div class="tt-event-title">${ev.title}</div>
-                <div class="tt-event-time">${fmtHHMM(startMin)} ~ ${fmtHHMM(endMin)}</div>
-                <button class="tiny" style="margin-top:6px;">삭제</button>
-            `;
-
-            div.querySelector("button").addEventListener("click", (e)=>{
-                e.stopPropagation();
-                timetableEvents = timetableEvents.filter(x => x.id !== ev.id);
-                saveTimetableEvents();
-                renderTimetableEvents();
-            });
-
-            eventsLayerEl.appendChild(div);
-        });
-        }
 
     function parseHHMM(s){
         const m = /^(\d{1,2}):(\d{2})$/.exec((s || "").trim());
@@ -3877,4 +3808,3 @@
   </script>
 </body>
 </html>
-
