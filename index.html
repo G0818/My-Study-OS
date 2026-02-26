@@ -761,29 +761,30 @@
       justify-content: center;
     }
 
-    /* WEEKLY TIMETABLE - 시간 단위 */
-    .timetable-grid {
-        display: grid;
-        grid-template-columns: repeat(7, minmax(0, 1fr));
+    /* WEEKLY TIMETABLE - 시간표 (왼쪽 시간줄 제거 버전) */
+    .timetable-grid{
+      display: grid;
+      grid-template-columns: repeat(7, minmax(0, 1fr)); /* 월~일만 7칸 */
+      gap: 4px; /* ✅ JS에서도 gap 계산에 씀 */
+      grid-auto-rows: var(--tt-row-h);
     }
 
     .timetable-header {
       border-radius: 8px;
       border: 1px solid rgba(31,41,55,0.3);
-      padding: 4px;
+      padding: 8px 4px;
       background: var(--bg-soft);
       text-align: center;
-      font-weight: 600;
-      min-width: 0;
+      font-weight: 700;
     }
 
-    /* 빈 칸(기본 네모) 안 보이게 */
+    /* ✅ “빈 칸”은 아예 안 보이게(블록만 보이게) */
     .timetable-cell{
-        background: transparent !important;
-        border: 0 !important;
-        padding: 0 !important;
-        min-height: 0 !important;
-        pointer-events: none; /* 셀 클릭 막기 (블록만 쓰는 경우) */
+      background: transparent !important;
+      border: 0 !important;
+      padding: 0 !important;
+      border-radius: 0 !important;
+      min-height: 0 !important;
     }
 
     .timetable-cell[contenteditable="true"] { outline: none; }
@@ -2480,59 +2481,93 @@
       localStorage.setItem(TIMETABLE_KEY, JSON.stringify(timetableData));
     }
 
+    function renderTimetable(){
+      if (!timetableGridEl) return;
+      timetableGridEl.innerHTML = "";
+
+      // 1) 헤더(월~일) 7개
+      for (let d = 0; d < 7; d++){
+        const h = document.createElement("div");
+        h.className = "timetable-header";
+        h.dataset.day = String(d);
+        h.textContent = WEEK_DAYS[d]; // ["월","화","수","목","금","토","일"]
+        timetableGridEl.appendChild(h);
+      }
+
+      // 2) 본문 셀(00~23시 * 7일) : "칸"은 존재하지만 화면엔 안 보이게(배경 투명)
+      for (let hour = 0; hour < 24; hour++){
+        for (let d = 0; d < 7; d++){
+          const cell = document.createElement("div");
+          cell.className = "timetable-cell";
+          cell.dataset.day = String(d);
+          cell.dataset.hour = String(hour);
+          timetableGridEl.appendChild(cell);
+        }
+      }
+    }
+    
     function renderTimetableEvents(){
-      if (!timetableGridEl || !eventsLayerEl) return;
+      if (!timetableGridEl || !eventsLayerEl || !timetableWrapEl) return;
       eventsLayerEl.innerHTML = "";
 
       const wrapRect = timetableWrapEl.getBoundingClientRect();
-      const children = Array.from(timetableGridEl.children);
 
-      // ✅ 헤더 7개 + 다음줄(00:00행) 7개는 있어야 함
-      if (children.length < 7 + 7) return;
+      // ✅ 인덱스(children[7] 같은거) 쓰지 말고, 정확한 셀을 찾아서 기준잡기
+      const headerMon = timetableGridEl.querySelector('.timetable-header[data-day="0"]');
+      const cellMon0  = timetableGridEl.querySelector('.timetable-cell[data-day="0"][data-hour="0"]');
+      if (!headerMon || !cellMon0) return;
 
-      const mondayHeaderEl = children[0];     // ✅ (월이 첫 번째 헤더)
-      const firstMondayCellEl = children[7];  // ✅ 헤더7개 다음이 00:00-월 칸
+      const headerRect = headerMon.getBoundingClientRect();
+      const cellRect   = cellMon0.getBoundingClientRect();
 
-      const mondayHeaderRect = mondayHeaderEl.getBoundingClientRect();
-      const firstMondayRect  = firstMondayCellEl.getBoundingClientRect();
+      const style = getComputedStyle(timetableGridEl);
+      const rowH = parseFloat(style.gridAutoRows) || 32;
 
-      const gap = 4;
-      const rowH = parseFloat(getComputedStyle(timetableGridEl).gridAutoRows) || 32;
-      const unitH = rowH + gap;
+      const gapY = parseFloat(style.rowGap) || parseFloat(style.gap) || 0;
+      const gapX = parseFloat(style.columnGap) || parseFloat(style.gap) || 0;
 
-      const dayCellW = mondayHeaderRect.width;
+      const unitH = rowH + gapY;          // 1시간당 세로 이동
+      const dayW  = headerRect.width;      // 요일 칸 너비
 
-      const baseLeft = firstMondayRect.left - wrapRect.left;
-      const baseTop  = firstMondayRect.top  - wrapRect.top;
+      const baseLeft = cellRect.left - wrapRect.left;
+      const baseTop  = cellRect.top  - wrapRect.top;
 
       timetableEvents.forEach(ev => {
         const startMin = ev.startMin;
-        const endMin = ev.endMin;
+        const endMin   = ev.endMin;
 
-        const left = baseLeft + ev.dayIndex * (dayCellW + gap);
         const top = baseTop + (startMin / 60) * unitH;
-        const height = ((endMin - startMin) / 60) * unitH - gap;
+        const height = Math.max(14, ((endMin - startMin) / 60) * unitH - gapY);
 
-        const div = document.createElement("div");
-        div.className = "tt-event";
-        div.style.left = `${left}px`;
-        div.style.top = `${top}px`;
-        div.style.width = `${dayCellW}px`;
-        div.style.height = `${Math.max(18, height)}px`;
-        div.innerHTML = `
-          <div class="tt-event-title">${ev.title}</div>
-          <div class="tt-event-time">${fmtHHMM(startMin)} ~ ${fmtHHMM(endMin)}</div>
-          <button class="tiny" style="margin-top:6px;">삭제</button>
+        const left = baseLeft + ev.dayIndex * (dayW + gapX);
+        const width = dayW;
+
+        const box = document.createElement("div");
+        box.className = "timetable-event-block";
+        box.style.position = "absolute";
+        box.style.left = `${left}px`;
+        box.style.top = `${top}px`;
+        box.style.width = `${width}px`;
+        box.style.height = `${height}px`;
+        box.style.pointerEvents = "auto"; // 삭제 버튼 클릭되게
+
+        box.innerHTML = `
+          <div style="font-weight:700; margin-bottom:4px;">${escapeHtml(ev.title || "")}</div>
+          <div style="opacity:.85; font-size:12px;">${minToHHMM(startMin)} ~ ${minToHHMM(endMin)}</div>
+          <button class="tiny-btn" data-id="${ev.id}" style="margin-top:6px;">삭제</button>
         `;
 
-        div.querySelector("button").addEventListener("click", (e)=>{
-          e.stopPropagation();
-          timetableEvents = timetableEvents.filter(x => x.id !== ev.id);
+        eventsLayerEl.appendChild(box);
+      });
+
+      // 삭제 버튼
+      eventsLayerEl.querySelectorAll('button[data-id]').forEach(btn => {
+        btn.onclick = () => {
+          const id = btn.getAttribute("data-id");
+          timetableEvents = timetableEvents.filter(x => String(x.id) !== String(id));
           saveTimetableEvents();
           renderTimetableEvents();
-        });
-
-        eventsLayerEl.appendChild(div);
+        };
       });
     }
 
