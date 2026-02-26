@@ -755,7 +755,7 @@
     .timetable-grid {
         display: grid;
         width: 100%;
-        grid-template-columns: 70px repeat(7, minmax(0, 1fr));
+        grid-template-columns: 45px repeat(7, minmax(0, 1fr));
         gap: 4px;
         font-size: 0.78rem;
     }
@@ -1029,6 +1029,17 @@
             · ○: 성공 / △: 어느 정도 / ✕: 못 함 / □: 아직 평가 전<br />
             · 날짜를 넣으면 ‘달력’ 탭에서 날짜별로 계획을 확인할 수 있어요.
           </div>
+
+          /* 폼 컨트롤 기본 스키마(아이콘/내장 UI) */
+          body:not(.theme-light) { color-scheme: dark; }
+          body.theme-light { color-scheme: light; }
+
+          /* Chrome/Safari: date/time 달력 아이콘이 어두워서 안 보일 때 */
+          body:not(.theme-light) input[type="date"]::-webkit-calendar-picker-indicator,
+          body:not(.theme-light) input[type="time"]::-webkit-calendar-picker-indicator {
+            filter: invert(1) opacity(0.9);
+          }
+          
         </div>
       </section>
 
@@ -1036,7 +1047,7 @@
       <section id="timetable" class="section">
         <div class="card">
           <div class="card-header">
-            <div class="card-title">일주일 시간표</div>
+            <div class="card-title">시간표</div>
             <div class="input-row" style="margin:0;">
                 <button id="timetable-add-event-btn">일정 추가</button>
                 <button id="timetable-clear-btn" class="secondary">시간표 전체 초기화</button>
@@ -1050,6 +1061,32 @@
           <div class="hint">
             · 왼쪽은 시간(00:00 ~ 23:00), 위쪽은 월~일입니다.<br />
             · 칸을 눌러 과목/활동을 입력하면 자동으로 저장돼요.
+          </div>
+        </div>
+        <!-- 시간표 일정 추가 모달 -->
+        <div id="tt-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.55); z-index:999; align-items:center; justify-content:center; padding:16px;">
+          <div style="width:100%; max-width:420px; background:var(--bg-card); border:1px solid var(--border-subtle); border-radius:16px; padding:14px;">
+            <div style="font-weight:700; margin-bottom:10px;">시간표 일정 추가</div>
+
+            <div class="input-row">
+              <select id="tt-day">
+                <option>월</option><option>화</option><option>수</option><option>목</option><option>금</option><option>토</option><option>일</option>
+              </select>
+            </div>
+
+            <div class="input-row">
+              <input id="tt-start" type="time" step="600" />
+              <input id="tt-end" type="time" step="600" />
+            </div>
+
+            <div class="input-row">
+              <input id="tt-title" type="text" placeholder="일정 제목" />
+            </div>
+
+            <div class="input-row" style="justify-content:flex-end;">
+              <button id="tt-cancel" class="secondary" type="button">취소</button>
+              <button id="tt-save" type="button">저장</button>
+            </div>
           </div>
         </div>
       </section>
@@ -1471,6 +1508,14 @@
       return `${y}-${m}-${day}`;
     }
 
+    function dateKeyWithShift(hoursShift, now = new Date()) {
+      const shifted = new Date(now.getTime() - hoursShift * 60 * 60 * 1000);
+      return formatDate(shifted); // YYYY-MM-DD
+    }
+    function getTodoTodayKey4am(now = new Date()) {
+      return dateKeyWithShift(4, now); // 4시간 빼서 "오늘" 판단
+    }
+
     // ===== 오늘 날짜 표시 =====
     const todayLabel = document.getElementById("today-label");
     const today = new Date();
@@ -1795,6 +1840,26 @@
         return new Date(a.date) - new Date(b.date);
       });
 
+      // 🔹 자정 기준 오늘 0시
+      const now = new Date();
+      const today0 = new Date(
+        now.getFullYear(),
+        now.getMonth(),
+        now.getDate()
+      ).getTime();
+
+      // 🔹 홈에서 보여줄 D-Day만 필터
+      const visibleForHome = sorted.filter(item => {
+        const d = new Date(item.date);
+        const d0 = new Date(
+          d.getFullYear(),
+          d.getMonth(),
+          d.getDate()
+        ).getTime();
+
+        return d0 >= today0; // 오늘 0시 이후만
+      });
+
       const todayOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
       let defaultMain = sorted[0];
 
@@ -1828,7 +1893,7 @@
 
       // 리스트 렌더
       ddayListEl.innerHTML = "";
-      sorted.forEach((item) => {
+      visibleForHome.forEach((item) => {
         const li = document.createElement("li");
         li.className = "dday-item";
 
@@ -1980,7 +2045,6 @@
 
     loadGoals();
     loadDDays();
-    prunePastDDays();
     renderDDays();
     renderGoals();
     setupSearch("dday-search", "dday-list");
@@ -2134,6 +2198,11 @@
 
     function renderTodoList() {
       const list = todoData[currentScope] || [];
+      // ✅ 하루 계획(day)은 "새벽 4시 기준 오늘"만 홈/To-do 탭에서 보여주기
+      if (currentScope === "day") {
+        const todayKey = getTodoTodayKey4am(new Date());
+        list = (todoData.day || []).filter(item => item.date === todayKey);
+      }
       todoListEl.innerHTML = "";
       list.forEach((item, idx) => {
         const li = document.createElement("li");
@@ -2281,7 +2350,6 @@
     });
 
     loadTodos();
-    prunePastDayTodos();
     updateTodoDateInputs();
     renderTodoList();
     setupSearch("todo-search", "todo-list");
@@ -2391,36 +2459,58 @@
         return `${String(hh).padStart(2,"0")}:${String(mm).padStart(2,"0")}`;
     }
     
-    function addTimetableEvent(){
-        const dayStr = prompt("요일(월/화/수/목/금/토/일)");
-        if (!dayStr) return;
-        const dayIndex = timetableDays.indexOf(dayStr.trim());
-        if (dayIndex < 0) return alert("요일은 월~일 중에서 입력해 주세요.");
+    const ttModal = document.getElementById("tt-modal");
+    const ttDayEl = document.getElementById("tt-day");
+    const ttStartEl = document.getElementById("tt-start");
+    const ttEndEl = document.getElementById("tt-end");
+    const ttTitleEl = document.getElementById("tt-title");
+    const ttCancelBtn = document.getElementById("tt-cancel");
+    const ttSaveBtn = document.getElementById("tt-save");
 
-        const startStr = prompt("시작 시간(HH:MM) 예: 07:30");
-        const endStr   = prompt("끝 시간(HH:MM) 예: 10:10");
-        const startMin = parseHHMM(startStr);
-        const endMin   = parseHHMM(endStr);
-
-        if (startMin == null || endMin == null || endMin <= startMin){
-            return alert("시간 입력이 올바르지 않습니다. (끝 시간이 시작보다 커야 함)");
-        }
-
-        const title = (prompt("일정 제목") || "").trim();
-        if (!title) return;
-
-        // ✅ 분 단위 저장
-        timetableEvents.push({
-            id: Date.now() + Math.random(),
-            dayIndex,
-            startMin,
-            endMin,
-            title
-        });
-
-        saveTimetableEvents();
-        renderTimetableEvents();
+    function openTtModal(){
+      // 기본값: 오늘 요일/시간대 대충 채우기
+      ttTitleEl.value = "";
+      ttStartEl.value = "07:00";
+      ttEndEl.value = "08:00";
+      ttModal.style.display = "flex";
+      setTimeout(()=>ttTitleEl.focus(), 0);
     }
+    function closeTtModal(){
+      ttModal.style.display = "none";
+    }
+
+    function addTimetableEvent(){
+      openTtModal();
+    }
+
+    ttCancelBtn?.addEventListener("click", closeTtModal);
+    ttModal?.addEventListener("click", (e)=>{ if(e.target === ttModal) closeTtModal(); });
+
+    ttSaveBtn?.addEventListener("click", ()=>{
+      const dayIndex = timetableDays.indexOf((ttDayEl.value || "").trim());
+      if (dayIndex < 0) return alert("요일을 선택해 주세요.");
+
+      const startMin = parseHHMM(ttStartEl.value);
+      const endMin   = parseHHMM(ttEndEl.value);
+      if (startMin == null || endMin == null || endMin <= startMin){
+        return alert("시간이 올바르지 않습니다. (끝 시간이 시작보다 커야 함)");
+      }
+
+      const title = (ttTitleEl.value || "").trim();
+      if (!title) return alert("제목을 입력해 주세요.");
+
+      timetableEvents.push({
+        id: Date.now() + Math.random(),
+        dayIndex,
+        startMin,
+        endMin,
+        title
+      });
+
+      saveTimetableEvents();
+      renderTimetableEvents();
+      closeTtModal();
+    });
 
     addEventBtn?.addEventListener("click", addTimetableEvent);
 
@@ -2439,6 +2529,8 @@
 
     // 시간표 라벨 포맷 함수
     function formatHourLabel(h) {
+      // 2시간 단위만 표시 (00,02,04...22)
+      if (h % 2 !== 0) return "";
       return `${String(h).padStart(2, "0")}:00`;
     }
 
