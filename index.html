@@ -2480,42 +2480,59 @@
       localStorage.setItem(TIMETABLE_KEY, JSON.stringify(timetableData));
     }
 
-    function renderTimetable() {
-      if (!timetableGridEl) return;
-      timetableGridEl.innerHTML = "";
+    function renderTimetableEvents(){
+      if (!timetableGridEl || !eventsLayerEl) return;
+      eventsLayerEl.innerHTML = "";
 
-      const emptyHeader = document.createElement("div");
-      emptyHeader.className = "timetable-header";
-      emptyHeader.textContent = "시간";
-      timetableGridEl.appendChild(emptyHeader);
+      const wrapRect = timetableWrapEl.getBoundingClientRect();
+      const children = Array.from(timetableGridEl.children);
 
-      timetableDays.forEach((day) => {
-        const h = document.createElement("div");
-        h.className = "timetable-header";
-        h.textContent = day;
-        timetableGridEl.appendChild(h);
-      });
+      // ✅ 헤더 7개 + 다음줄(00:00행) 7개는 있어야 함
+      if (children.length < 7 + 7) return;
 
-      timetableTimes.forEach((hour, timeIndex) => {
-        const rowLabel = document.createElement("div");
-        rowLabel.className = "timetable-header";
-        rowLabel.textContent = formatHourLabel(hour);
-        timetableGridEl.appendChild(rowLabel);
+      const mondayHeaderEl = children[0];     // ✅ (월이 첫 번째 헤더)
+      const firstMondayCellEl = children[7];  // ✅ 헤더7개 다음이 00:00-월 칸
 
-        timetableDays.forEach((_, dayIndex) => {
-          const cell = document.createElement("div");
-          cell.className = "timetable-cell";
+      const mondayHeaderRect = mondayHeaderEl.getBoundingClientRect();
+      const firstMondayRect  = firstMondayCellEl.getBoundingClientRect();
 
-            // ✅ 입력 완전 차단: 블록 방식만 쓰기
-            cell.contentEditable = "false";
+      const gap = 4;
+      const rowH = parseFloat(getComputedStyle(timetableGridEl).gridAutoRows) || 32;
+      const unitH = rowH + gap;
 
-            // 혹시 브라우저가 포커스를 주는 경우까지 막기
-            cell.tabIndex = -1;
+      const dayCellW = mondayHeaderRect.width;
 
-            timetableGridEl.appendChild(cell);
+      const baseLeft = firstMondayRect.left - wrapRect.left;
+      const baseTop  = firstMondayRect.top  - wrapRect.top;
 
-          timetableGridEl.appendChild(cell);
+      timetableEvents.forEach(ev => {
+        const startMin = ev.startMin;
+        const endMin = ev.endMin;
+
+        const left = baseLeft + ev.dayIndex * (dayCellW + gap);
+        const top = baseTop + (startMin / 60) * unitH;
+        const height = ((endMin - startMin) / 60) * unitH - gap;
+
+        const div = document.createElement("div");
+        div.className = "tt-event";
+        div.style.left = `${left}px`;
+        div.style.top = `${top}px`;
+        div.style.width = `${dayCellW}px`;
+        div.style.height = `${Math.max(18, height)}px`;
+        div.innerHTML = `
+          <div class="tt-event-title">${ev.title}</div>
+          <div class="tt-event-time">${fmtHHMM(startMin)} ~ ${fmtHHMM(endMin)}</div>
+          <button class="tiny" style="margin-top:6px;">삭제</button>
+        `;
+
+        div.querySelector("button").addEventListener("click", (e)=>{
+          e.stopPropagation();
+          timetableEvents = timetableEvents.filter(x => x.id !== ev.id);
+          saveTimetableEvents();
+          renderTimetableEvents();
         });
+
+        eventsLayerEl.appendChild(div);
       });
     }
 
