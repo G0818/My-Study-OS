@@ -761,6 +761,46 @@
       justify-content: center;
     }
 
+    /* 기본 달력 아이콘 완전 숨김 */
+    input[type="date"]::-webkit-calendar-picker-indicator,
+    input[type="time"]::-webkit-calendar-picker-indicator {
+      opacity: 0;
+      position: absolute;
+      right: 0;
+      width: 100%;
+      height: 100%;
+      cursor: pointer;
+    }
+
+    /* date input 감싸기 */
+    .date-input-wrapper {
+      position: relative;
+      display: inline-block;
+      width: 100%;
+    }
+
+    /* 커스텀 아이콘 */
+    .date-input-wrapper::after {
+      content: "📅";
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      pointer-events: none;
+      font-size: 14px;
+      opacity: 0.9;
+    }
+
+    /* 다크 모드에서는 밝게 */
+    body:not(.theme-light) .date-input-wrapper::after {
+      color: #ffffff;
+    }
+
+    /* 라이트 모드에서는 어둡게 */
+    body.theme-light .date-input-wrapper::after {
+      color: #111827;
+    }
+
     /* WEEKLY TIMETABLE - 시간표 (왼쪽 시간줄 제거 버전) */
     .timetable-grid{
       display: grid;
@@ -1026,7 +1066,9 @@
             </div>
             <div class="goal-date-group" id="todo-day-wrapper">
               <label for="todo-date-input">Date</label>
-              <input type="date" id="todo-date-input" />
+              <div class="date-input-wrapper">
+                <input type="date" id="todo-date-input" />
+              </div>
             </div>
             <button id="todo-add-btn" type="button">추가</button>
           </div>
