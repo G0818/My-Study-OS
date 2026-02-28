@@ -919,6 +919,139 @@
         outline-offset:2px;
     }
 
+    /* ===== Sidebar (icon rail + expand) ===== */
+    .app{
+      position: relative;
+      padding-left: 64px; /* ✅ 왼쪽 아이콘 레일 자리 */
+    }
+
+    .sidebar{
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      bottom: 12px;
+      width: 52px;             /* ✅ 기본: 아이콘만 */
+      border-radius: 16px;
+      background: rgba(79,70,229,0.22); /* 보라톤 */
+      border: 1px solid rgba(148,163,184,0.35);
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      overflow: hidden;
+      transition: width .18s ease;
+      z-index: 20;
+    }
+
+    .sidebar.open{
+      width: 220px;            /* ✅ 펼쳤을 때 */
+    }
+
+    .sidebar-toggle{
+      height: 52px;
+      border-radius: 14px;
+      background: rgba(79,70,229,0.28);
+      border: 0;
+      display: grid;
+      place-items: center;
+      margin: 8px;
+      cursor: pointer;
+    }
+
+    .hamburger{
+      width: 22px;
+      height: 2px;
+      background: #fff;
+      position: relative;
+      border-radius: 999px;
+      opacity: .95;
+    }
+    .hamburger::before,
+    .hamburger::after{
+      content:"";
+      position:absolute;
+      left:0;
+      width: 22px;
+      height: 2px;
+      background:#fff;
+      border-radius: 999px;
+    }
+    .hamburger::before{ top: -7px; }
+    .hamburger::after{ top: 7px; }
+
+    .sidebar-items{
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      padding: 8px;
+    }
+
+    .nav-item{
+      width: 100%;
+      height: 46px;
+      border-radius: 14px;
+      border: 0;
+      background: transparent;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 0 12px;
+      cursor: pointer;
+      box-shadow: none;
+    }
+
+    .nav-item:hover{
+      background: rgba(255,255,255,0.12);
+      transform: none;
+    }
+
+    .nav-item.active{
+      background: rgba(0,0,0,0.16);
+      outline: 1px solid rgba(255,255,255,0.35);
+    }
+
+    .nav-item .ico{
+      width: 28px;
+      display: inline-flex;
+      justify-content: center;
+      font-size: 18px;
+    }
+
+    .nav-item .label{
+      white-space: nowrap;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      opacity: 0;
+      transform: translateX(-6px);
+      transition: opacity .15s ease, transform .15s ease;
+    }
+
+    .sidebar.open .nav-item .label{
+      opacity: 1;
+      transform: translateX(0);
+    }
+
+    /* ✅ 오버레이(모바일에서 메뉴 열렸을 때 바깥 눌러 닫기) */
+    .sidebar-overlay{
+      position: absolute;
+      inset: 0;
+      background: rgba(0,0,0,0.25);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .15s ease;
+      z-index: 15;
+    }
+    .sidebar-overlay.show{
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    /* ✅ 작은 화면은 “오버레이 + 펼침” 느낌이 잘 나게 */
+    @media (max-width: 780px){
+      .app{ padding-left: 64px; }
+      .sidebar{ top: 10px; left: 10px; bottom: 10px; }
+    }
+
   </style>
 </head>
 <body class="theme-dark">
@@ -957,15 +1090,52 @@
       </button>
     </header>
 
-    <nav>
-      <button class="nav-btn active" data-section="home">홈</button>
-      <button class="nav-btn" data-section="todos">계획(To-do)</button>
-      <button class="nav-btn" data-section="timetable">시간표</button>
-      <button class="nav-btn" data-section="calendar">달력</button>
-      <button class="nav-btn" data-section="pomodoro">포모도로</button>
-      <button class="nav-btn" data-section="study">공부 타이머</button>
-      <button class="nav-btn" data-section="settings">설정</button>
-    </nav>
+    <!-- ✅ 사이드바 (아이콘 레일 + 펼침 메뉴) -->
+    <aside class="sidebar" id="sidebar">
+      <button class="sidebar-toggle" id="sidebarToggle" aria-label="메뉴 열기/닫기" title="메뉴">
+        <span class="hamburger" aria-hidden="true"></span>
+      </button>
+
+      <div class="sidebar-items">
+        <button class="nav-item active" data-section="home" title="홈" aria-label="홈">
+          <span class="ico" aria-hidden="true">🏠</span>
+          <span class="label">홈</span>
+        </button>
+
+        <button class="nav-item" data-section="todos" title="계획(To-do)" aria-label="계획(To-do)">
+          <span class="ico" aria-hidden="true">✅</span>
+          <span class="label">계획(To-do)</span>
+        </button>
+
+        <button class="nav-item" data-section="timetable" title="시간표" aria-label="시간표">
+          <span class="ico" aria-hidden="true">📚</span>
+          <span class="label">시간표</span>
+        </button>
+
+        <button class="nav-item" data-section="calendar" title="달력" aria-label="달력">
+          <span class="ico" aria-hidden="true">📅</span>
+          <span class="label">달력</span>
+        </button>
+
+        <button class="nav-item" data-section="pomodoro" title="포모도로" aria-label="포모도로">
+          <span class="ico" aria-hidden="true">⏱️</span>
+          <span class="label">포모도로</span>
+        </button>
+
+        <button class="nav-item" data-section="study" title="공부 타이머" aria-label="공부 타이머">
+          <span class="ico" aria-hidden="true">⏳</span>
+          <span class="label">공부 타이머</span>
+        </button>
+
+        <button class="nav-item" data-section="settings" title="설정" aria-label="설정">
+          <span class="ico" aria-hidden="true">⚙️</span>
+          <span class="label">설정</span>
+        </button>
+      </div>
+    </aside>
+
+    <!-- ✅ 모바일 오버레이 -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
     <main>
       <!-- HOME -->
@@ -1684,30 +1854,92 @@
       }
     }
 
-    // ===== 네비게이션 =====
-    const navButtons = document.querySelectorAll(".nav-btn");
+    // ===== 네비게이션 + 사이드바 =====
+    const sidebar = document.getElementById("sidebar");
+    const sidebarToggle = document.getElementById("sidebarToggle");
+    const sidebarOverlay = document.getElementById("sidebarOverlay");
+
+    const navButtons = document.querySelectorAll(".nav-item"); // ✅ 변경
     const sections = document.querySelectorAll(".section");
+
+    function openSidebar() {
+      sidebar.classList.add("open");
+      // 모바일 느낌으로 오버레이
+      if (window.matchMedia("(max-width: 780px)").matches) {
+        sidebarOverlay.classList.add("show");
+      }
+    }
+    function closeSidebar() {
+      sidebar.classList.remove("open");
+      sidebarOverlay.classList.remove("show");
+    }
+    function toggleSidebar() {
+      if (sidebar.classList.contains("open")) closeSidebar();
+      else openSidebar();
+    }
+
+    sidebarToggle?.addEventListener("click", (e) => {
+      e.stopPropagation();
+      toggleSidebar();
+    });
+
+    sidebarOverlay?.addEventListener("click", closeSidebar);
+
+    // PC: 왼쪽에 커서 두면 펼치기(마우스 올리면)
+    sidebar?.addEventListener("mouseenter", () => {
+      if (!window.matchMedia("(max-width: 780px)").matches) openSidebar();
+    });
+    sidebar?.addEventListener("mouseleave", () => {
+      if (!window.matchMedia("(max-width: 780px)").matches) closeSidebar();
+    });
+
+    // 탭 전환
     navButtons.forEach((btn) => {
       btn.addEventListener("click", () => {
         const target = btn.dataset.section;
+
         navButtons.forEach((b) => b.classList.remove("active"));
         btn.classList.add("active");
+
         sections.forEach((sec) => {
           sec.classList.toggle("active", sec.id === target);
         });
+
+        // 모바일이면 메뉴 닫기
+        if (window.matchMedia("(max-width: 780px)").matches) closeSidebar();
+
         // 탭 전환 직후 레이아웃 기반 화면은 재렌더(0폭/0높이 방지)
         setTimeout(() => {
-            if (target === "timetable") {
-                renderTimetable();
-                renderTimetableEvents();
-            }
-            if (target === "calendar") {
-                renderCalendar();
-                renderCalendarSelectedTasks(selectedCalendarDateStr);
-            }
+          if (target === "timetable") {
+            renderTimetable();
+            renderTimetableEvents();
+          }
+          if (target === "calendar") {
+            renderCalendar();
+            renderCalendarSelectedTasks(selectedCalendarDateStr);
+          }
         }, 0);
       });
     });
+
+    // 모바일: 왼쪽 가장자리에서 오른쪽으로 스와이프하면 열기
+    let touchStartX = null;
+    window.addEventListener("touchstart", (e) => {
+      if (!e.touches?.length) return;
+      touchStartX = e.touches[0].clientX;
+    });
+    window.addEventListener("touchmove", (e) => {
+      if (touchStartX == null || !e.touches?.length) return;
+      const x = e.touches[0].clientX;
+      const dx = x - touchStartX;
+
+      // 화면 왼쪽 16px 이내에서 시작 + 오른쪽으로 50px 이상 이동 => 열기
+      if (touchStartX <= 16 && dx > 50) {
+        openSidebar();
+        touchStartX = null;
+      }
+    });
+    window.addEventListener("touchend", () => (touchStartX = null));
 
     // ===== 리스트 검색 공통 함수 =====
     function setupSearch(inputId, listId) {
@@ -3915,9 +4147,3 @@
   </script>
 </body>
 </html>
-
-
-
-
-
-
