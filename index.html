@@ -993,9 +993,10 @@
       background: transparent;
       color: #fff;
       display: flex;
+      justify-content: center;
       align-items: center;
       gap: 10px;
-      padding: 0 12px;
+      padding: 0;
       cursor: pointer;
       box-shadow: none;
     }
@@ -1011,24 +1012,25 @@
     }
 
     .nav-item .ico{
-      width: 28px;
-      display: inline-flex;
-      justify-content: center;
-      font-size: 18px;
+      width: 36px;
+      height: 36px;
+      display: grid;
+      place-items: center;  
+      font-size: 20px;
     }
 
     .nav-item .label{
-      white-space: nowrap;
-      font-weight: 700;
-      letter-spacing: -0.02em;
-      opacity: 0;
-      transform: translateX(-6px);
-      transition: opacity .15s ease, transform .15s ease;
+      display: none;
+    }
+
+    .sidebar.open .nav-item{
+      justify-content: flex-start;   /* 펼쳤을 때만 왼쪽 정렬 */
+      padding-left: 14px;
+      gap: 10px;
     }
 
     .sidebar.open .nav-item .label{
-      opacity: 1;
-      transform: translateX(0);
+      display: inline;
     }
 
     /* ✅ 오버레이(모바일에서 메뉴 열렸을 때 바깥 눌러 닫기) */
