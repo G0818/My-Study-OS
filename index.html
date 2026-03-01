@@ -185,6 +185,15 @@
     }
 
     @media (max-width: 780px) {
+      /* 섹션 제목들 */
+      .section-title,
+      .card-title,
+      h2 {
+        font-size: 1.05rem;   /* 기존보다 살짝 작게 */
+        white-space: nowrap;  /* 줄바꿈 방지 */
+        overflow: hidden;
+        text-overflow: ellipsis; /* 혹시 넘치면 ... 처리 */
+      }
       .grid-two { grid-template-columns: 1fr; }
       body { padding: 10px; }
       .app {
