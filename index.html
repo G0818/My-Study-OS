@@ -941,7 +941,7 @@
       top: 12px;
       left: 12px;
       bottom: 12px;
-      width: 52px;
+      width: 68px;
       border-radius: 16px;
 
       /* ✅ 테마 변수 사용 */
@@ -966,7 +966,7 @@
       color: var(--sb-text);
     }
 
-    .sidebar.open{ width: 220px; }
+    .sidebar.open{ width: 240px; }
 
     .sidebar-toggle{
       height: 52px;
@@ -979,10 +979,30 @@
       cursor: pointer;
     }
 
-    .hamburger,
+    .hamburger{
+      width: 18px;
+      height: 2px;
+      background: var(--sb-text);
+      position: relative;
+      display: block;
+    }
+
     .hamburger::before,
     .hamburger::after{
+      content: "";
+      position: absolute;
+      left: 0;
+      width: 18px;
+      height: 2px;
       background: var(--sb-text);
+    }
+
+    .hamburger::before{
+      top: -6px;
+    }
+
+    .hamburger::after{
+      top: 6px;
     }
 
     /* 아이콘 버튼 */
@@ -2452,7 +2472,7 @@
     }
 
     function renderTodoList() {
-      const list = todoData[currentScope] || [];
+      let list = todoData[currentScope] || [];
       // ✅ 하루 계획(day)은 "새벽 4시 기준 오늘"만 홈/To-do 탭에서 보여주기
       if (currentScope === "day") {
         const todayKey = getTodoTodayKey4am(new Date());
@@ -2701,6 +2721,19 @@
 
       const title = (ttTitleEl.value || "").trim();
       if (!title) return alert("제목을 입력해 주세요.");
+
+      // 🔴 동일 요일 + 시간 겹침 검사
+      const isOverlap = timetableEvents.some(ev => {
+        if (ev.dayIndex !== dayIndex) return false;
+
+        // 시간 겹침 조건
+        return !(endMin <= ev.startMin || startMin >= ev.endMin);
+      });
+
+      if (isOverlap){
+        alert("해당 시간에는 이미 일정이 있습니다.");
+        return;
+      }
 
       timetableEvents.push({
         id: Date.now() + Math.random(),
@@ -4034,6 +4067,7 @@
     backupBtn.addEventListener("click", () => {
       const user = auth.currentUser;
       if (!user) return alert("로그인이 필요합니다!");
+      if (!confirm("현재 기기 데이터를 클라우드에 백업합니다. 계속할까요?")) return;
       saveCloud(user);
     });
 
