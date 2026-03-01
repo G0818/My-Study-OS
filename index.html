@@ -85,8 +85,8 @@
       position: relative;
       overflow: hidden;
       transition: background 0.25s ease, box-shadow 0.25s ease, border 0.25s ease;
-      --sb-collapsed: 56px;  /* 닫힘 폭 */
-      --sb-expanded: 210px;  /* 열림 폭 */
+      --sb-collapsed: 54px;  /* 닫힘 폭 */
+      --sb-expanded: 200px;  /* 열림 폭 */
       padding-left: calc(var(--sb-collapsed) + 18px); /* 닫힘일 때도 내용 안 가려지게 */
       transition: padding-left .18s ease;
     }
@@ -785,14 +785,22 @@
       justify-content: center;
     }
 
-    /* 기본 달력 아이콘 완전 숨김 */
-    input[type="date"]::-webkit-calendar-picker-indicator,
-    input[type="time"]::-webkit-calendar-picker-indicator {
+    /* ✅ date만 달력 아이콘을 '전체 클릭'로 확장 (time에는 절대 적용 금지!) */
+    input[type="date"]::-webkit-calendar-picker-indicator{
       opacity: 0;
       position: absolute;
       right: 0;
       width: 100%;
       height: 100%;
+      cursor: pointer;
+    }
+
+    /* ✅ time은 기본 동작 유지 (클릭 빨림 방지) */
+    input[type="time"]::-webkit-calendar-picker-indicator{
+      opacity: 1;
+      position: static;
+      width: auto;
+      height: auto;
       cursor: pointer;
     }
 
@@ -1105,10 +1113,12 @@
       font-size: 0.92rem;
     }
 
-    /* ✅ 작은 화면은 “오버레이 + 펼침” 느낌이 잘 나게 */
     @media (max-width: 780px){
-      .app{ padding-left: var(--sb-collapsed); }
-      .sidebar{ top: 10px; left: 10px; bottom: 10px; }
+      /* 본문은 레일 폭만큼만 밀기 */
+      .app{ padding-left: calc(var(--sb-collapsed) + 8px); }
+
+      /* 사이드바는 화면 맨 왼쪽에 딱 붙이기(쓸데없는 여백 제거) */
+      .sidebar{ top: 0; left: 0; bottom: 0; }
     }
 
   </style>
