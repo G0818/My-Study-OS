@@ -22,6 +22,14 @@
       --danger: #f97373;
       --success: #22c55e;
       --warning: #facc15;
+      /* sidebar - dark */
+      --sb-bg: rgba(15,23,42,0.78);
+      --sb-border: rgba(148,163,184,0.22);
+      --sb-shadow: 0 14px 34px rgba(0,0,0,0.45);
+      --sb-text: rgba(255,255,255,0.92);
+      --sb-hover: rgba(255,255,255,0.10);
+      --sb-active: rgba(255,255,255,0.14);
+      --sb-toggle-bg: rgba(255,255,255,0.10);
     }
 
     .theme-light {
@@ -34,6 +42,14 @@
       --accent-strong: #1d4ed8;
       --text: #111827;
       --text-muted: #6b7280;
+      /* sidebar - light */
+      --sb-bg: rgba(255,255,255,0.78);
+      --sb-border: rgba(15,23,42,0.12);
+      --sb-shadow: 0 12px 26px rgba(15,23,42,0.14);
+      --sb-text: rgba(15,23,42,0.92);
+      --sb-hover: rgba(15,23,42,0.06);
+      --sb-active: rgba(15,23,42,0.08);
+      --sb-toggle-bg: rgba(15,23,42,0.06);
     }
 
     * {
@@ -920,20 +936,23 @@
     }
 
     /* ===== Sidebar (icon rail + expand) ===== */
-    .app{
-      position: relative;
-      padding-left: 80px; /* ✅ 왼쪽 아이콘 레일 자리 */
-    }
-
     .sidebar{
       position: absolute;
       top: 12px;
       left: 12px;
       bottom: 12px;
-      width: 52px;             /* ✅ 기본: 아이콘만 */
+      width: 52px;
       border-radius: 16px;
-      background: rgba(79,70,229,0.22); /* 보라톤 */
-      border: 1px solid rgba(148,163,184,0.35);
+
+      /* ✅ 테마 변수 사용 */
+      background: var(--sb-bg);
+      border: 1px solid var(--sb-border);
+      box-shadow: var(--sb-shadow);
+
+      /* ✅ 글래스 효과 + 뒤 글씨 정리 */
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+
       display: flex;
       flex-direction: column;
       align-items: stretch;
@@ -942,95 +961,68 @@
       z-index: 20;
     }
 
-    .sidebar.open{
-      width: 220px;            /* ✅ 펼쳤을 때 */
+    /* (중요) 라벨 텍스트가 뒤에 묻히지 않게 */
+    .sidebar *{
+      color: var(--sb-text);
     }
+
+    .sidebar.open{ width: 220px; }
 
     .sidebar-toggle{
       height: 52px;
       border-radius: 14px;
-      background: rgba(79,70,229,0.28);
-      border: 0;
+      background: var(--sb-toggle-bg);
+      border: 1px solid var(--sb-border);
       display: grid;
       place-items: center;
       margin: 8px;
       cursor: pointer;
     }
 
-    .hamburger{
-      width: 22px;
-      height: 2px;
-      background: #fff;
-      position: relative;
-      border-radius: 999px;
-      opacity: .95;
-    }
+    .hamburger,
     .hamburger::before,
     .hamburger::after{
-      content:"";
-      position:absolute;
-      left:0;
-      width: 22px;
-      height: 2px;
-      background:#fff;
-      border-radius: 999px;
-    }
-    .hamburger::before{ top: -7px; }
-    .hamburger::after{ top: 7px; }
-
-    .sidebar-items{
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      padding: 8px;
+      background: var(--sb-text);
     }
 
+    /* 아이콘 버튼 */
     .nav-item{
       width: 100%;
       height: 46px;
       border-radius: 14px;
       border: 0;
       background: transparent;
-      color: #fff;
+      color: var(--sb-text);
+
       display: flex;
       justify-content: center;
       align-items: center;
       gap: 10px;
       padding: 0;
       cursor: pointer;
-      box-shadow: none;
     }
 
     .nav-item:hover{
-      background: rgba(255,255,255,0.12);
-      transform: none;
+      background: var(--sb-hover);
     }
 
     .nav-item.active{
-      background: rgba(0,0,0,0.16);
-      outline: 1px solid rgba(255,255,255,0.35);
+      background: var(--sb-active);
+      outline: 1px solid rgba(148,163,184,0.28);
     }
 
-    .nav-item .ico{
-      width: 36px;
-      height: 36px;
-      display: grid;
-      place-items: center;  
-      font-size: 20px;
-    }
-
-    .nav-item .label{
-      display: none;
-    }
-
-    .sidebar.open .nav-item{
-      justify-content: flex-start;   /* 펼쳤을 때만 왼쪽 정렬 */
-      padding-left: 14px;
-      gap: 10px;
-    }
-
+    /* 라벨이 보일 때(열렸을 때) 가독성 강화 */
     .sidebar.open .nav-item .label{
       display: inline;
+      color: var(--sb-text);
+      font-weight: 650;
+      letter-spacing: 0.01em;
+      text-shadow: 0 1px 0 rgba(0,0,0,0.22); /* ✅ 다크에서 더 또렷 */
+    }
+
+    /* 라이트 모드에선 text-shadow 과하면 탁해질 수 있어서 제거 */
+    .theme-light .sidebar.open .nav-item .label{
+      text-shadow: none;
     }
 
     /* ✅ 오버레이(모바일에서 메뉴 열렸을 때 바깥 눌러 닫기) */
@@ -1050,7 +1042,7 @@
 
     /* ✅ 작은 화면은 “오버레이 + 펼침” 느낌이 잘 나게 */
     @media (max-width: 780px){
-      .app{ padding-left: 64px; }
+      .app{ padding-left: 80px; }
       .sidebar{ top: 10px; left: 10px; bottom: 10px; }
     }
 
@@ -1515,8 +1507,8 @@
             </div>
 
             <div class="hint" style="margin-top:8px;">
-              · 백업: 이 브라우저의 데이터를 통째로 Firestore에 저장<br>
-              · 불러오기: Firestore 데이터를 불러와 이 기기에 덮어쓴 후 새로고침
+              · 백업: 이 브라우저의 데이터를 통째로 계정에 저장<br>
+              · 불러오기: 계정 데이터를 불러와 이 기기에 덮어쓴 후 새로고침
             </div>
           </div>
           
@@ -1531,7 +1523,6 @@
             <div class="hint" style="margin-top:6px;">
               · 상단의 버튼으로 테마를 전환할 수 있어요.<br />
               · 타이머(포모도로/공부)가 돌아가는 동안에는 일부 브라우저에서 화면 꺼짐을 막도록 요청해요.<br />
-              · iPad Safari에서는 이 기능이 제한적일 수 있어요.
             </div>
           </div>
 
@@ -1587,8 +1578,7 @@
             </button>
 
             <div class="hint" style="margin-top:8px;">
-              ※ 캐시/서비스워커가 즉시 삭제되어 새로운 코드가 자동 적용됩니다.  
-              (개발 시 매우 유용) <br />
+              ※ 캐시/서비스워커가 즉시 삭제되어 새로운 코드가 자동 적용됩니다.  <br />
               ※ 업데이트는 기본적으로 자동이지만 가끔 업데이트가 되어 있지 않을 수 있어 업데이트시 눌러주세요.
             </div>
           </div>
@@ -1692,16 +1682,8 @@
 
             <div style="margin-bottom: 14px;">
               <b>• 네트워크 연결 필요 조건</b><br>
-              알림은 Cloudflare Worker → FCM 서버를 통해 전송되므로,<br>
               <b>푸시가 보내지는 순간</b> 기기가 와이파이 또는 모바일 데이터에 연결되어 있어야 합니다.<br>
               <span style="color:#ffd54f;"><b>단, 앱 자체 기능(포모도로·D-Day 계산·공부 시작 시간 계산)은 오프라인에서도 정상 작동합니다.</b></span>
-            </div>
-
-            <div>
-              <b>• 앱(탭) 종료 주의</b><br>
-              홈 화면에 추가해 사용하는 경우, 앱 전환 화면에서 My Study OS를 위로 스와이프하여 종료하지 않는 한<br>
-              백그라운드에서도 알림 계산 기능은 계속 작동합니다.<br>
-              그러나 앱을 완전히 종료하면 알림 계산이 중단되어 푸시가 발송되지 않습니다.
             </div>
           </div>
 
