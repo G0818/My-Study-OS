@@ -85,8 +85,8 @@
       position: relative;
       overflow: hidden;
       transition: background 0.25s ease, box-shadow 0.25s ease, border 0.25s ease;
-      --sb-collapsed: 64px;  /* 닫힘 폭 */
-      --sb-expanded: 240px;  /* 열림 폭 */
+      --sb-collapsed: 56px;  /* 닫힘 폭 */
+      --sb-expanded: 210px;  /* 열림 폭 */
       padding-left: calc(var(--sb-collapsed) + 18px); /* 닫힘일 때도 내용 안 가려지게 */
       transition: padding-left .18s ease;
     }
@@ -1058,9 +1058,56 @@
       pointer-events: auto;
     }
 
+    /* 사이드바 버튼들이 세로로만 쌓이게 */
+    .sidebar-items{
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      padding: 6px 8px 10px;
+    }
+
+    /* nav-item을 ‘한 줄짜리 버튼’로 고정 */
+    .nav-item{
+      width: 100%;
+      height: 44px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border: 0;
+      background: transparent;
+      border-radius: 14px;
+      cursor: pointer;
+
+      /* 닫힘 상태 기본: 가운데 정렬 */
+      justify-content: center;
+    }
+
+    /* 아이콘 크기 줄이기 */
+    .nav-item .ico{
+      font-size: 20px;     /* 기존보다 작게 */
+      line-height: 1;
+    }
+
+    /* 활성/호버 배경 */
+    .nav-item:hover{ background: var(--sb-hover); }
+    .nav-item.active{ background: var(--sb-active); }
+
+    /* 라벨은 닫힘 상태에서 숨김 유지 */
+    .nav-item .label{ display:none; white-space:nowrap; }
+
+    /* 열렸을 때만 왼쪽 정렬 + 라벨 표시 */
+    .sidebar.open .nav-item{
+      justify-content: flex-start;
+      padding-left: 14px;
+    }
+    .sidebar.open .nav-item .label{
+      display: inline;
+      font-size: 0.92rem;
+    }
+
     /* ✅ 작은 화면은 “오버레이 + 펼침” 느낌이 잘 나게 */
     @media (max-width: 780px){
-      .app{ padding-left: 64px; }
+      .app{ padding-left: var(--sb-collapsed); }
       .sidebar{ top: 10px; left: 10px; bottom: 10px; }
     }
 
