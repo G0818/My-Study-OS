@@ -85,6 +85,14 @@
       position: relative;
       overflow: hidden;
       transition: background 0.25s ease, box-shadow 0.25s ease, border 0.25s ease;
+      --sb-collapsed: 64px;  /* 닫힘 폭 */
+      --sb-expanded: 240px;  /* 열림 폭 */
+      padding-left: calc(var(--sb-collapsed) + 18px); /* 닫힘일 때도 내용 안 가려지게 */
+      transition: padding-left .18s ease;
+    }
+
+    .app.sidebar-open{
+      padding-left: calc(var(--sb-expanded) + 18px);
     }
 
     .theme-light .app {
@@ -938,10 +946,12 @@
     /* ===== Sidebar (icon rail + expand) ===== */
     .sidebar{
       position: absolute;
-      top: 12px;
-      left: 12px;
-      bottom: 12px;
-      width: 68px;
+      top: 0px;
+      left: 0px;
+      bottom: 0px;
+      width: var(--sb-collapsed);
+      border-radius: 16px 0 0 16px; /* app 라운드에 맞추려면 */
+      margin: 0;
       border-radius: 16px;
 
       /* ✅ 테마 변수 사용 */
@@ -966,7 +976,9 @@
       color: var(--sb-text);
     }
 
-    .sidebar.open{ width: 240px; }
+    .sidebar.open{
+      width: var(--sb-expanded);
+    }
 
     .sidebar-toggle{
       height: 52px;
@@ -1005,39 +1017,25 @@
       top: 6px;
     }
 
-    /* 아이콘 버튼 */
+    /* 기본: 아이콘만 */
     .nav-item{
-      width: 100%;
-      height: 46px;
-      border-radius: 14px;
-      border: 0;
-      background: transparent;
-      color: var(--sb-text);
-
-      display: flex;
       justify-content: center;
-      align-items: center;
-      gap: 10px;
       padding: 0;
-      cursor: pointer;
     }
 
-    .nav-item:hover{
-      background: var(--sb-hover);
+    /* 라벨 숨김 */
+    .nav-item .label{
+      display: none;
+      white-space: nowrap;
     }
 
-    .nav-item.active{
-      background: var(--sb-active);
-      outline: 1px solid rgba(148,163,184,0.28);
+    /* 열렸을 때만 라벨 표시 + 왼쪽 정렬 */
+    .sidebar.open .nav-item{
+      justify-content: flex-start;
+      padding-left: 18px;
     }
-
-    /* 라벨이 보일 때(열렸을 때) 가독성 강화 */
     .sidebar.open .nav-item .label{
       display: inline;
-      color: var(--sb-text);
-      font-weight: 650;
-      letter-spacing: 0.01em;
-      text-shadow: 0 1px 0 rgba(0,0,0,0.22); /* ✅ 다크에서 더 또렷 */
     }
 
     /* 라이트 모드에선 text-shadow 과하면 탁해질 수 있어서 제거 */
