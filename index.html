@@ -820,6 +820,9 @@
       width: 100%;
     }
 
+    .tt-event-title{ font-weight:700; margin-bottom:4px; }
+    .tt-event-time{ opacity:.85; font-size:0.72rem; }
+
     /* 커스텀 아이콘 */
     .date-input-wrapper::after {
       content: "📅";
@@ -2922,8 +2925,8 @@
         box.style.pointerEvents = "auto"; // 삭제 버튼 클릭되게
 
         box.innerHTML = `
-          <div style="font-weight:700; margin-bottom:4px;">${escapeHtml(ev.title || "")}</div>
-          <div style="opacity:.85; font-size:12px;">${minToHHMM(startMin)} ~ ${minToHHMM(endMin)}</div>
+          <div class="tt-event-title">${escapeHtml(ev.title || "")}</div>
+          <div class="tt-event-time">${minToHHMM(startMin)} ~ ${minToHHMM(endMin)}</div>
           <button class="tiny secondary" data-id="${ev.id}" style="margin-top:6px;">삭제</button>
         `;
 
@@ -4231,5 +4234,3 @@
   </script>
 </body>
 </html>
-
-
