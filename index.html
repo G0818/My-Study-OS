@@ -845,12 +845,36 @@
       color: #111827;
     }
 
-    /* WEEKLY TIMETABLE - 시간표 (왼쪽 시간줄 제거 버전) */
-    .timetable-grid{
+    /* WEEKLY TIMETABLE - 시간표 */
+    #timetable-wrap {
+      position: relative;
+      width: 100%;
+      overflow-x: auto;
+      overflow-y: hidden;
+      -webkit-overflow-scrolling: touch;
+      padding-bottom: 8px;
+    }
+
+    /* grid와 event layer를 같이 움직이게 하는 내부 판 */
+    #timetable-stage {
+      position: relative;
+      width: 100%;
+      min-width: 860px;
+    }
+
+    /* 월~일 7칸 */
+    .timetable-grid {
       display: grid;
-      grid-template-columns: repeat(7, minmax(0, 1fr)); /* 월~일만 7칸 */
-      gap: 4px; /* ✅ JS에서도 gap 계산에 씀 */
+      grid-template-columns: repeat(7, minmax(120px, 1fr));
+      gap: 4px;
       grid-auto-rows: var(--tt-row-h);
+    }
+
+    /* 일정 레이어도 시간표 전체 폭을 따라가게 */
+    #timetable-events-layer {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
     }
 
     .timetable-header {
@@ -873,16 +897,41 @@
 
     .timetable-cell[contenteditable="true"] { outline: none; }
 
-    /* 시간표: 모바일에서 1시간 칸 높이 키우기 */
-    :root { --tt-row-h: 32px; }
-    @media (max-width: 520px){
-      .tt-event{
-        font-size:0.4rem
-      }
-        :root { --tt-row-h: 52px; } /* 폰에서 더 큼 */
+    /* 시간표: 기본 1시간 칸 높이 */
+    :root { 
+      --tt-row-h: 32px; 
     }
-    .timetable-grid{
-        grid-auto-rows: var(--tt-row-h);  /* 1시간 = 1행 높이 */
+
+    /* 모바일에서는 세로 높이만 키우고, 폭은 줄이지 않음 */
+    @media (max-width: 520px) {
+      :root { 
+        --tt-row-h: 52px; 
+      }
+
+      #timetable-stage {
+        min-width: 860px;
+      }
+
+      .tt-event {
+        font-size: 0.72rem;
+        padding: 6px 7px;
+        word-break: keep-all;
+      }
+
+      .tt-event-title {
+        white-space: normal;
+        word-break: keep-all;
+        line-height: 1.25;
+      }
+
+      .tt-event-time {
+        font-size: 0.68rem;
+        white-space: nowrap;
+      }
+    }
+
+    .timetable-grid {
+      grid-auto-rows: var(--tt-row-h);
     }
 
     /*일정블록 */
@@ -1346,9 +1395,11 @@
                 <button id="timetable-clear-btn" class="secondary">초기화</button>
           </div>
         </div>
-        <div id="timetable-wrap" style="position:relative;">
+        <div id="timetable-wrap">
+          <div id="timetable-stage">
             <div id="timetable-grid" class="timetable-grid"></div>
-            <div id="timetable-events-layer" style="position:absolute; inset:0; pointer-events:none;"></div>
+            <div id="timetable-events-layer"></div>
+          </div>
         </div>
           <div class="hint">
             · 왼쪽은 시간(00:00 ~ 23:00), 위쪽은 월~일입니다.<br />
@@ -2706,6 +2757,7 @@
     // === (추가) 블록형 일정 저장 ===
     const TIMETABLE_EVENTS_KEY = "study_os_timetable_events_v1";
     const timetableWrapEl = document.getElementById("timetable-wrap");
+    const timetableStageEl = document.getElementById("timetable-stage");
     const eventsLayerEl = document.getElementById("timetable-events-layer");
     const addEventBtn = document.getElementById("timetable-add-event-btn");
     const clearBtn = document.getElementById("timetable-clear-btn");
@@ -2880,10 +2932,10 @@
     }
     
     function renderTimetableEvents(){
-      if (!timetableGridEl || !eventsLayerEl || !timetableWrapEl) return;
+      if (!timetableGridEl || !eventsLayerEl || !timetableWrapEl || !timetableStageEl) return;
       eventsLayerEl.innerHTML = "";
 
-      const wrapRect = timetableWrapEl.getBoundingClientRect();
+      const wrapRect = timetableStageEl.getBoundingClientRect();
 
       // ✅ 인덱스(children[7] 같은거) 쓰지 말고, 정확한 셀을 찾아서 기준잡기
       const headerMon = timetableGridEl.querySelector('.timetable-header[data-day="0"]');
