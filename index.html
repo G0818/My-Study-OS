@@ -2420,14 +2420,28 @@
       }
     }
 
-    function showLocalNotification(title, body) {
+    async function showLocalNotification(title, body) {
       if (!("Notification" in window)) return;
       if (Notification.permission !== "granted") return;
 
       try {
+        if ("serviceWorker" in navigator) {
+          const reg = await navigator.serviceWorker.getRegistration("/My-Study-OS/");
+          if (reg) {
+            await reg.showNotification(title, {
+              body,
+              icon: "/My-Study-OS/icon-192.png",
+              badge: "/My-Study-OS/icon-192.png",
+              tag: "my-study-os-reminder",
+              renotify: true
+            });
+            return;
+          }
+        }
+
         new Notification(title, {
           body,
-          icon: "/My-Study-OS/icon-192.png", // manifest에서 쓰는 아이콘 경로에 맞게 수정 가능
+          icon: "/My-Study-OS/icon-192.png"
         });
       } catch (e) {
         console.error("알림 표시 중 오류", e);
@@ -4540,53 +4554,44 @@
     function checkStudyStartReminder(now) {
       if (!studyReminderTime) return;
 
+      const todayStr = formatDate(now);
+
+      // ✅ 하루 한 번만 알림
+      if (lastStudyNotifyDateStr === todayStr) return;
+
       const [hh, mm] = studyReminderTime.split(":");
       const targetH = Number(hh);
       const targetM = Number(mm);
 
-      const hour = now.getHours();
-      const minute = now.getMinutes();
-      const second = now.getSeconds();
+      if (!Number.isFinite(targetH) || !Number.isFinite(targetM)) return;
 
-      function checkStudyStartReminder(now) {
-        if (!studyReminderTime) return;
+      const targetTime = new Date(
+        now.getFullYear(),
+        now.getMonth(),
+        now.getDate(),
+        targetH,
+        targetM,
+        0,
+        0
+      );
 
-        const todayStr = formatDate(now);
+      const diffMs = now.getTime() - targetTime.getTime();
 
-        // ✅ 하루 한 번만
-        if (lastStudyNotifyDateStr === todayStr) return;
+      // ✅ 설정 시간 이후 5분 안이면 알림 허용
+      // 예: 09:00 설정 → 09:00:00 ~ 09:05:00 사이에 감지되면 알림
+      if (diffMs < 0 || diffMs > 5 * 60 * 1000) return;
 
-        const [hh, mm] = studyReminderTime.split(":");
-        const targetH = Number(hh);
-        const targetM = Number(mm);
+      const title = "My Study OS - 공부 시작";
+      const body  = "정해둔 공부 시작 시간이예요. 오늘도 한 번 달려볼까요?";
 
-        const targetTime = new Date(
-          now.getFullYear(),
-          now.getMonth(),
-          now.getDate(),
-          targetH,
-          targetM,
-          0,
-          0
-        );
+      showLocalNotification(title, body);
 
-        const diffMs = now.getTime() - targetTime.getTime();
-
-        // ✅ 정확히 0초가 아니어도, 설정 시간 이후 5분 안이면 알림
-        if (diffMs < 0 || diffMs > 5 * 60 * 1000) return;
-
-        const title = "My Study OS - 공부 시작";
-        const body  = "정해둔 공부 시작 시간이예요. 오늘도 한 번 달려볼까요?";
-
-        showLocalNotification(title, body);
-
-        if (typeof window.sendPushViaWorker === "function") {
-          window.sendPushViaWorker(title, body);
-        }
-
-        lastStudyNotifyDateStr = todayStr;
-        localStorage.setItem(LAST_STUDY_NOTIFY_KEY, todayStr);
+      if (typeof window.sendPushViaWorker === "function") {
+        window.sendPushViaWorker(title, body);
       }
+
+      lastStudyNotifyDateStr = todayStr;
+      localStorage.setItem(LAST_STUDY_NOTIFY_KEY, todayStr);
     }
 
     function checkScheduledNotifications() {
