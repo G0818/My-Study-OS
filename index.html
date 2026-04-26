@@ -4626,7 +4626,7 @@
     }
 
     // 1초마다 알림 조건 체크 (부하 거의 없음)
-    setInterval(checkScheduledNotifications, 1000);
+    // setInterval(checkScheduledNotifications, 1000);
 
     // ===== To-do 스타일 라디오 적용 =====
     const todoStyleRadios = document.querySelectorAll('input[name="todo-style"]');
@@ -4702,6 +4702,19 @@
     // ★ 현재 브라우저의 FCM 토큰을 저장해 둘 변수
     let currentFcmToken = localStorage.getItem("study_os_fcm_token") || null;
     let currentUser = null;
+
+    const DEVICE_ID_KEY = "study_os_device_id";
+
+    function getOrCreateDeviceId() {
+      let id = localStorage.getItem(DEVICE_ID_KEY);
+
+      if (!id) {
+        id = "device_" + Math.random().toString(36).slice(2) + "_" + Date.now();
+        localStorage.setItem(DEVICE_ID_KEY, id);
+      }
+
+      return id;
+    }
 
     // FCM 토큰 생성 + Firestore 저장
     async function initFcmForUser(user) {
@@ -4841,6 +4854,7 @@
 
       const payload = {
         userId: currentUser.uid,
+        deviceId: getOrCreateDeviceId(),
         token: currentFcmToken,
         studyReminderTime: localStorage.getItem("study_os_study_reminder_time") || "",
         ddayReminderTime: localStorage.getItem("study_os_dday_reminder_time") || "",
@@ -4883,20 +4897,6 @@
 
       alert("FCM 토큰을 초기화했습니다. 페이지를 새로고침한 뒤 다시 로그인/알림 권한을 확인하세요.");
     };
-
-    // 앱이 켜져 있을 때 오는 푸시(포그라운드) 처리
-    onMessage(messaging, (payload) => {
-      console.log("[FCM] 포그라운드 메시지:", payload);
-      const title = payload.notification?.title || "My Study OS";
-      const body = payload.notification?.body || "";
-
-      if ("Notification" in window && Notification.permission === "granted") {
-        new Notification(title, {
-          body,
-          icon: "/My-Study-OS/icon-192.png"
-        });
-      }
-    });
 
     const loginBtn   = document.getElementById("google-login-btn");
     const logoutBtn  = document.getElementById("google-logout-btn");
