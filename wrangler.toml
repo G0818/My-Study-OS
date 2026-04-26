@@ -5,4 +5,8 @@ compatibility_date = "2026-04-26"
 [assets]
 directory = "."
 binding = "ASSETS"
-run_worker_first = ["/send"]
+run_worker_first = ["/send", "/schedule"]
+
+[[kv_namespaces]]
+binding = "ALARMS"
+id = "dd321e04a43b455eaf4e42972f48d888"
