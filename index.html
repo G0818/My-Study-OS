@@ -4571,6 +4571,7 @@
     import {
       getMessaging,
       getToken,
+      deleteToken,
       onMessage
     } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-messaging.js";
 
@@ -4592,7 +4593,7 @@
     const provider = new GoogleAuthProvider();
 
     // ★ 현재 브라우저의 FCM 토큰을 저장해 둘 변수
-    let currentFcmToken = null;
+    let currentFcmToken = localStorage.getItem("study_os_fcm_token") || null;
 
     // FCM 토큰 생성 + Firestore 저장
     async function initFcmForUser(user) {
@@ -4657,7 +4658,11 @@
     // === Cloudflare Worker를 통해 푸시 보내는 함수 ===
     async function sendPushViaWorker(title, body) {
       if (!currentFcmToken) {
-        console.warn("[Push] FCM 토큰이 아직 없습니다.");
+        currentFcmToken = localStorage.getItem("study_os_fcm_token") || null;
+      }
+
+      if (!currentFcmToken) {
+        console.warn("[Push] FCM 토큰이 아직 없습니다. Google 로그인, 알림 권한, FCM 토큰 발급을 확인하세요.");
         return;
       }
 
@@ -4674,6 +4679,23 @@
 
         const data = await res.json();
         console.log("[Push] Worker 응답:", data);
+
+        const responseText = JSON.stringify(data);
+
+        if (responseText.includes("UNREGISTERED")) {
+          console.warn("[Push] 만료된 FCM 토큰을 삭제합니다. 새로고침 후 새 토큰을 발급받아야 합니다.");
+          localStorage.removeItem("study_os_fcm_token");
+          currentFcmToken = null;
+
+          try {
+            await deleteToken(messaging);
+            console.log("[FCM] Firebase Messaging 토큰 삭제 완료");
+          } catch (e) {
+            console.warn("[FCM] deleteToken 실패. localStorage 토큰만 삭제됨", e);
+          }
+
+          alert("알림 토큰이 만료되어 초기화했습니다. 페이지를 새로고침한 뒤 다시 테스트해 주세요.");
+        }
       } catch (err) {
         console.error("[Push] Worker 호출 오류:", err);
       }
@@ -4681,6 +4703,19 @@
 
     // 콘솔에서 테스트할 수 있게 전역으로 꺼내두기
     window.sendPushViaWorker = sendPushViaWorker;
+
+    window.resetFcmToken = async function () {
+      try {
+        await deleteToken(messaging);
+      } catch (e) {
+        console.warn("[FCM] deleteToken 실패", e);
+      }
+
+      localStorage.removeItem("study_os_fcm_token");
+      currentFcmToken = null;
+
+      alert("FCM 토큰을 초기화했습니다. 페이지를 새로고침한 뒤 다시 로그인/알림 권한을 확인하세요.");
+    };
 
     // 앱이 켜져 있을 때 오는 푸시(포그라운드) 처리
     onMessage(messaging, (payload) => {
