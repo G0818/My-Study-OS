@@ -150,7 +150,7 @@ async function sendFcmMessage(env, token, title, body) {
           notification: {
             title,
             body,
-            icon: "/My-Study-OS/icon-192.png",
+            icon: "https://g0818.github.io/My-Study-OS/icon-192.png",
           },
         },
       },
