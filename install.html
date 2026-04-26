@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>My Study OS 앱 설치 방법</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <link rel="manifest" href="/My-Study-OS/manifest.json">
+  <meta name="theme-color" content="#020617">
+
+  <style>
+    :root {
+      --bg: #020617;
+      --bg-soft: #02081b;
+      --card: #020617;
+      --border: rgba(148,163,184,0.35);
+      --text: #e5e7eb;
+      --muted: #9ca3af;
+      --accent: #6366f1;
+      --accent-soft: rgba(99,102,241,0.16);
+      --accent-border: rgba(99,102,241,0.55);
+      --warning: #facc15;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    body {
+      min-height: 100vh;
+      background: radial-gradient(circle at top, #0b1120 0, var(--bg) 55%);
+      color: var(--text);
+      padding: 16px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .page {
+      width: 100%;
+      max-width: 760px;
+    }
+
+    .top {
+      margin-bottom: 14px;
+    }
+
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 0.86rem;
+      margin-bottom: 14px;
+    }
+
+    .back-link:hover {
+      color: var(--text);
+    }
+
+    .logo {
+      display: inline-flex;
+      align-items: baseline;
+      gap: 0.35rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      margin-bottom: 12px;
+    }
+
+    .logo-main {
+      font-size: 1rem;
+    }
+
+    .logo-pill {
+      font-size: 0.7rem;
+      padding: 2px 8px;
+      border-radius: 999px;
+      border: 1px solid var(--accent);
+      text-transform: uppercase;
+    }
+
+    h1 {
+      font-size: 1.45rem;
+      margin-bottom: 8px;
+      line-height: 1.3;
+    }
+
+    .subtitle {
+      color: var(--muted);
+      font-size: 0.92rem;
+      line-height: 1.6;
+    }
+
+    .card {
+      background: linear-gradient(135deg, var(--bg-soft), var(--card));
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 16px;
+      margin-top: 12px;
+      box-shadow: 0 14px 30px rgba(0,0,0,0.35);
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    h2 {
+      font-size: 1.08rem;
+    }
+
+    .pill {
+      font-size: 0.72rem;
+      padding: 3px 9px;
+      border-radius: 999px;
+      border: 1px solid rgba(148,163,184,0.66);
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    ol {
+      padding-left: 20px;
+      line-height: 1.75;
+      color: var(--text);
+      font-size: 0.92rem;
+    }
+
+    li + li {
+      margin-top: 4px;
+    }
+
+    strong {
+      color: #ffffff;
+    }
+
+    .tip {
+      margin-top: 12px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      background: var(--accent-soft);
+      border: 1px solid var(--accent-border);
+      color: var(--muted);
+      font-size: 0.84rem;
+      line-height: 1.55;
+    }
+
+    .warning {
+      margin-top: 12px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      background: rgba(250,204,21,0.12);
+      border: 1px solid rgba(250,204,21,0.45);
+      color: var(--text);
+      font-size: 0.84rem;
+      line-height: 1.55;
+    }
+
+    .warning b {
+      color: var(--warning);
+    }
+
+    .step-label {
+      display: inline-flex;
+      margin-bottom: 8px;
+      padding: 3px 8px;
+      border-radius: 999px;
+      border: 1px solid var(--accent-border);
+      color: #c7d2fe;
+      font-size: 0.72rem;
+      font-weight: 700;
+    }
+
+    .quick-box {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .quick-item {
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 12px;
+      background: rgba(15,23,42,0.55);
+    }
+
+    .quick-item-title {
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .quick-item-text {
+      color: var(--muted);
+      font-size: 0.84rem;
+      line-height: 1.5;
+    }
+
+    @media (max-width: 640px) {
+      body {
+        padding: 12px;
+      }
+
+      h1 {
+        font-size: 1.28rem;
+      }
+
+      .card {
+        padding: 14px;
+        border-radius: 16px;
+      }
+
+      .quick-box {
+        grid-template-columns: 1fr;
+      }
+
+      ol {
+        font-size: 0.88rem;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="page">
+    <div class="top">
+      <a class="back-link" href="/My-Study-OS/">← My Study OS로 돌아가기</a>
+
+      <div class="logo">
+        <span class="logo-main">My Study</span>
+        <span class="logo-pill">OS</span>
+      </div>
+
+      <h1>앱 설치 방법</h1>
+      <p class="subtitle">
+        My Study OS는 휴대폰 홈 화면에 추가하면 일반 앱처럼 빠르게 실행할 수 있습니다.
+        아래에서 사용하는 기기에 맞는 방법을 따라 해 주세요.
+      </p>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <h2>빠른 안내</h2>
+        <span class="pill">Summary</span>
+      </div>
+
+      <div class="quick-box">
+        <div class="quick-item">
+          <div class="quick-item-title">안드로이드</div>
+          <div class="quick-item-text">
+            Chrome에서 접속한 뒤 오른쪽 위 ⋮ 메뉴에서
+            <strong>앱 설치</strong> 또는 <strong>홈 화면에 추가</strong>를 누릅니다.
+          </div>
+        </div>
+
+        <div class="quick-item">
+          <div class="quick-item-title">아이폰 / 아이패드</div>
+          <div class="quick-item-text">
+            Safari에서 접속한 뒤 공유 버튼을 누르고
+            <strong>홈 화면에 추가</strong>를 선택합니다.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <span class="step-label">Android</span>
+
+      <div class="card-header">
+        <h2>안드로이드에서 설치하기</h2>
+        <span class="pill">Chrome</span>
+      </div>
+
+      <ol>
+        <li>안드로이드 휴대폰에서 <strong>Chrome</strong>을 엽니다.</li>
+        <li><strong>My Study OS</strong> 사이트에 접속합니다.</li>
+        <li>오른쪽 위의 <strong>⋮ 메뉴</strong>를 누릅니다.</li>
+        <li><strong>앱 설치</strong>, <strong>홈 화면에 추가</strong>, 또는 <strong>바로가기 추가</strong>를 선택합니다.</li>
+        <li>이름이 <strong>My Study OS</strong>로 되어 있는지 확인합니다.</li>
+        <li><strong>설치</strong> 또는 <strong>추가</strong>를 누릅니다.</li>
+        <li>홈 화면에 생긴 <strong>My Study OS</strong> 아이콘으로 실행합니다.</li>
+      </ol>
+
+      <div class="tip">
+        기기나 Chrome 버전에 따라 메뉴 이름이 조금 다를 수 있어요.
+        “앱 설치”가 보이면 그걸 선택하고, 없으면 “홈 화면에 추가”를 선택하면 됩니다.
+      </div>
+    </div>
+
+    <div class="card">
+      <span class="step-label">iOS</span>
+
+      <div class="card-header">
+        <h2>아이폰 / 아이패드에서 설치하기</h2>
+        <span class="pill">Safari</span>
+      </div>
+
+      <ol>
+        <li>아이폰 또는 아이패드에서 <strong>Safari</strong>를 엽니다.</li>
+        <li><strong>My Study OS</strong> 사이트에 접속합니다.</li>
+        <li>화면 아래쪽 또는 위쪽의 <strong>공유 버튼</strong>을 누릅니다.</li>
+        <li>목록에서 <strong>홈 화면에 추가</strong>를 선택합니다.</li>
+        <li>이름이 <strong>My Study OS</strong>로 되어 있는지 확인합니다.</li>
+        <li>오른쪽 위의 <strong>추가</strong>를 누릅니다.</li>
+        <li>홈 화면에 생긴 <strong>My Study OS</strong> 아이콘으로 실행합니다.</li>
+      </ol>
+
+      <div class="tip">
+        iOS에서는 Chrome보다 <strong>Safari</strong>에서 홈 화면에 추가하는 것이 가장 안정적입니다.
+      </div>
+    </div>
+
+    <div class="card">
+      <span class="step-label">알림</span>
+
+      <div class="card-header">
+        <h2>알림을 사용하려면</h2>
+        <span class="pill">Notification</span>
+      </div>
+
+      <ol>
+        <li>My Study OS에서 <strong>Google 계정으로 로그인</strong>합니다.</li>
+        <li>설정 페이지에서 <strong>알림 권한 요청</strong>을 누릅니다.</li>
+        <li>브라우저 또는 기기 설정에서 알림을 <strong>허용</strong>합니다.</li>
+        <li>D-Day 알림 시간과 공부 시작 알림 시간을 설정합니다.</li>
+      </ol>
+
+      <div class="warning">
+        <b>주의:</b> 푸시 알림은 네트워크 연결이 필요합니다.
+        또한 안드로이드 절전 모드나 iOS의 백그라운드 제한 때문에 알림이 늦거나 오지 않을 수 있습니다.
+      </div>
+    </div>
+
+    <div class="card">
+      <span class="step-label">문제 해결</span>
+
+      <div class="card-header">
+        <h2>설치 버튼이 안 보일 때</h2>
+        <span class="pill">Help</span>
+      </div>
+
+      <ol>
+        <li>브라우저를 새로고침한 뒤 다시 확인합니다.</li>
+        <li>안드로이드는 Chrome에서 접속했는지 확인합니다.</li>
+        <li>iOS는 Safari에서 접속했는지 확인합니다.</li>
+        <li>이미 설치되어 있으면 설치 버튼이 다시 보이지 않을 수 있습니다.</li>
+        <li>그래도 안 보이면 브라우저 메뉴에서 <strong>홈 화면에 추가</strong>를 직접 찾아 선택합니다.</li>
+      </ol>
+
+      <div class="tip">
+        설치하지 않아도 웹사이트로 사용할 수 있지만, 홈 화면에 추가하면 앱처럼 더 빠르게 열 수 있습니다.
+      </div>
+    </div>
+  </div>
+</body>
+</html>
