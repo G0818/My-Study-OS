@@ -1397,30 +1397,58 @@
       }
     }
 
-    /* ✅ 시간표 높이 최종 보정: PC / 태블릿 / 모바일 공통 */
+    /* ✅ 시간표 최종 보정: 하루 칸 폭 줄이고 시간은 2줄 표시 */
     :root {
-      --tt-row-h: 26px;
+      --tt-row-h: 24px;
     }
 
-    /* 노트북/태블릿 */
+    /* PC / 노트북 */
+    #timetable-stage {
+      min-width: 760px !important;
+    }
+
+    .timetable-grid {
+      grid-template-columns: repeat(7, minmax(100px, 1fr)) !important;
+      gap: 3px !important;
+    }
+
+    .timetable-header {
+      font-size: 0.82rem !important;
+      padding: 7px 2px !important;
+    }
+
+    .tt-event {
+      padding: 4px 5px !important;
+      font-size: 0.62rem !important;
+      line-height: 1.12 !important;
+    }
+
+    .tt-event-title {
+      font-size: 0.66rem !important;
+      line-height: 1.12 !important;
+      margin-bottom: 2px !important;
+      word-break: keep-all !important;
+    }
+
+    .tt-event-time {
+      font-size: 0.52rem !important;
+      line-height: 1.12 !important;
+      white-space: normal !important;
+      opacity: 0.78 !important;
+    }
+
+    /* 태블릿 */
     @media (max-width: 1024px) {
       :root {
-        --tt-row-h: 24px;
-      }
-    }
-
-    /* 모바일 */
-    @media (max-width: 520px) {
-      :root {
-        --tt-row-h: 22px;
+        --tt-row-h: 23px;
       }
 
       #timetable-stage {
-        min-width: 480px !important;
+        min-width: 620px !important;
       }
 
       .timetable-grid {
-        grid-template-columns: repeat(7, minmax(64px, 1fr)) !important;
+        grid-template-columns: repeat(7, minmax(82px, 1fr)) !important;
         gap: 2px !important;
       }
 
@@ -1431,19 +1459,68 @@
 
       .tt-event {
         padding: 3px 4px !important;
-        font-size: 0.54rem !important;
-        line-height: 1.1 !important;
+        font-size: 0.58rem !important;
       }
 
       .tt-event-title {
-        font-size: 0.58rem !important;
-        line-height: 1.1 !important;
-        margin-bottom: 1px !important;
+        font-size: 0.62rem !important;
       }
 
       .tt-event-time {
-        font-size: 0.48rem !important;
+        font-size: 0.5rem !important;
+      }
+    }
+
+    /* 모바일 */
+    @media (max-width: 520px) {
+      :root {
+        --tt-row-h: 22px;
+      }
+
+      #timetable .card {
+        padding: 10px 4px 12px !important;
+      }
+
+      #timetable-wrap {
+        margin-left: -4px !important;
+        margin-right: -4px !important;
+        width: calc(100% + 8px) !important;
+        overflow-x: auto !important;
+      }
+
+      #timetable-stage {
+        min-width: 430px !important;
+      }
+
+      .timetable-grid {
+        grid-template-columns: repeat(7, minmax(58px, 1fr)) !important;
+        gap: 2px !important;
+      }
+
+      .timetable-header {
+        font-size: 0.72rem !important;
+        padding: 5px 1px !important;
+        border-radius: 6px !important;
+      }
+
+      .tt-event {
+        border-radius: 7px !important;
+        padding: 3px 3px !important;
+        font-size: 0.52rem !important;
+        line-height: 1.08 !important;
+      }
+
+      .tt-event-title {
+        font-size: 0.56rem !important;
+        line-height: 1.08 !important;
+        margin-bottom: 1px !important;
+        word-break: keep-all !important;
+      }
+
+      .tt-event-time {
+        font-size: 0.46rem !important;
         line-height: 1.05 !important;
+        white-space: normal !important;
       }
 
       .tt-event .tiny {
@@ -3097,8 +3174,8 @@
         return `${String(hh).padStart(2,"0")}:${String(mm).padStart(2,"0")}`;
     }
 
-    function minToHHMM(min){
-      return fmtHHMM(min);
+    function formatTtTimeRangeHTML(startMin, endMin) {
+      return `${minToHHMM(startMin)}~<br>${minToHHMM(endMin)}`;
     }
 
     function escapeHtml(str){
@@ -3294,8 +3371,8 @@
 
         box.innerHTML = `
           <div class="tt-event-title">${escapeHtml(ev.title || "")}</div>
-          <div class="tt-event-time">${minToHHMM(startMin)} ~ ${minToHHMM(endMin)}</div>
-          <button class="tiny secondary" data-id="${ev.id}" style="margin-top:6px;">삭제</button>
+          <div class="tt-event-time">${formatTtTimeRangeHTML(startMin, endMin)}</div>
+          <button class="tiny secondary" data-id="${ev.id}" style="margin-top:5px;">삭제</button>
         `;
 
         eventsLayerEl.appendChild(box);
