@@ -2589,9 +2589,10 @@
 
     function addDDay() {
       const title = ddayTitleInput.value.trim();
-      const dateStr = ddayDateInput.value;
-      if (!title || !dateStr) {
-        alert("제목과 날짜를 모두 입력해 주세요.");
+      const dateStr = ddayDateInput.value || formatDate(new Date());
+
+      if (!title) {
+        alert("제목을 입력해 주세요.");
         return;
       }
       ddayItems.push({
@@ -2600,7 +2601,10 @@
         date: dateStr
       });
       ddayTitleInput.value = "";
-      ddayDateInput.value = "";
+
+      // ✅ D-Day 추가 후에도 날짜를 오늘로 다시 세팅
+      ddayDateInput.value = formatDate(new Date());
+
       saveDDays();
       renderDDays();
       renderCalendar(); // 달력 점 갱신
@@ -2875,6 +2879,11 @@
 
     loadGoals();
     loadDDays();
+
+    if (ddayDateInput && !ddayDateInput.value) {
+      ddayDateInput.value = formatDate(new Date());
+    }
+
     renderDDays();
     renderGoals();
     setupSearch("dday-search", "dday-list");
@@ -2941,8 +2950,10 @@
         todoMonthWrapper.style.display = "none";
         todoWeekWrapper.style.display = "none";
         todoDayWrapper.style.display = "flex";
+
+        // ✅ 하루 계획 탭은 기본 날짜를 항상 오늘로 세팅
         if (!todoDateInput.value) {
-          todoDateInput.value = formatDate(today);
+          todoDateInput.value = getTodoTodayKey4am(new Date());
         }
       }
     }
@@ -3056,6 +3067,14 @@
     function isTodoVisibleForScope(scope, item, now = new Date()) {
       if (!item.date) return true;
 
+      // ✅ 하루 계획은 오늘 것만 보여줌
+      // 예전 것도 숨김, 미래 것도 숨김
+      // 데이터는 삭제하지 않으므로 달력에는 그대로 남음
+      if (scope === "day") {
+        const todayKey = getTodoTodayKey4am(now);
+        return item.date === todayKey;
+      }
+
       const today0 = new Date(
         now.getFullYear(),
         now.getMonth(),
@@ -3071,6 +3090,7 @@
         endDate.getDate()
       ).getTime();
 
+      // ✅ 연/월/주 계획은 기간이 끝나기 전까지만 보임
       return end0 >= today0;
     }
 
@@ -3164,7 +3184,13 @@
         delBtn.className = "tiny";
         delBtn.textContent = "삭제";
         delBtn.addEventListener("click", () => {
-          todoData[currentScope].splice(idx, 1);
+          const originalList = todoData[currentScope] || [];
+          const originalIndex = originalList.indexOf(item);
+
+          if (originalIndex >= 0) {
+            originalList.splice(originalIndex, 1);
+          }
+
           saveTodos();
           renderTodoList();
         });
@@ -3197,13 +3223,15 @@
         const baseDate = new Date(y, mIndex, 1 + (w - 1) * 7);
         dateStr = formatDate(baseDate);
       } else if (currentScope === "day") {
-        dateStr = todoDateInput.value || null;
+        dateStr = todoDateInput.value || getTodoTodayKey4am(new Date());
       }
 
       todoData[currentScope].push({ text, status: "", date: dateStr });
       todoInput.value = "";
+
+      // ✅ 하루 계획은 추가 후에도 날짜를 오늘로 다시 세팅
       if (currentScope === "day") {
-        todoDateInput.value = "";
+        todoDateInput.value = getTodoTodayKey4am(new Date());
       }
 
       saveTodos();
