@@ -166,6 +166,30 @@ async function sendFcmMessage(env, token, title, body) {
   return data;
 }
 
+async function sendFcmToTokens(env, tokens, title, body) {
+  const uniqueTokens = [...new Set(tokens || [])].filter(Boolean);
+  const results = [];
+
+  for (const token of uniqueTokens) {
+    try {
+      const result = await sendFcmMessage(env, token, title, body);
+      results.push({
+        ok: true,
+        tokenEnd: token.slice(-8),
+        result
+      });
+    } catch (err) {
+      results.push({
+        ok: false,
+        tokenEnd: token.slice(-8),
+        error: String(err)
+      });
+    }
+  }
+
+  return results;
+}
+
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
@@ -279,20 +303,26 @@ export default {
         const data = await request.json();
 
         const userId = data.userId;
-        const token = data.token;
+
+        // ✅ 지금 V8.html은 token 1개를 보내고 있음.
+        // ✅ 나중에 tokens 배열을 보내도 받을 수 있게 둘 다 지원.
+        const incomingTokens = Array.isArray(data.tokens)
+          ? data.tokens.filter(Boolean)
+          : (data.token ? [data.token] : []);
+        
         const studyReminderTime = data.studyReminderTime || "";
         const ddayReminderTime = data.ddayReminderTime || "";
         const ddayItems = Array.isArray(data.ddayItems) ? data.ddayItems : [];
         const timezone = data.timezone || "Asia/Seoul";
-
-        if (!userId || !token) {
+        
+        if (!userId || incomingTokens.length === 0) {
           return json(
-            { ok: false, error: "userId and token are required" },
+            { ok: false, error: "userId and token/tokens are required" },
             400,
             corsHeaders
           );
         }
-
+        
         if (!env.ALARMS) {
           return json(
             { ok: false, error: "ALARMS KV binding is missing" },
@@ -300,9 +330,9 @@ export default {
             corsHeaders
           );
         }
-
+        
         const alarmKey = `alarm:${userId}`;
-
+        
         let previous = {};
         try {
           const oldRaw = await env.ALARMS.get(alarmKey);
@@ -311,25 +341,44 @@ export default {
           previous = {};
         }
         
+        // ✅ 기존에 저장되어 있던 토큰들 가져오기
+        // 예전 구조의 previous.token도 같이 살림
+        const previousTokens = Array.isArray(previous.tokens)
+          ? previous.tokens
+          : (previous.token ? [previous.token] : []);
+        
+        // ✅ 기존 토큰 + 이번에 접속한 기기 토큰 합치기
+        const mergedTokens = [...new Set([
+          ...previousTokens,
+          ...incomingTokens
+        ])].filter(Boolean);
+        
         await env.ALARMS.put(
           alarmKey,
           JSON.stringify({
             userId,
-            token,
+        
+            // ✅ 이제부터는 여러 기기용 tokens 배열로 저장
+            tokens: mergedTokens,
+        
             studyReminderTime,
             ddayReminderTime,
             ddayItems,
             timezone,
             updatedAt: Date.now(),
         
-            // 기존 발송 기록 유지
+            // ✅ 기존 발송 기록 유지
             lastStudySentKey: previous.lastStudySentKey || "",
             lastDdaySentKey: previous.lastDdaySentKey || ""
           })
         );
-
+        
         return json(
-          { ok: true, message: "Alarm schedule saved" },
+          {
+            ok: true,
+            message: "Alarm schedule saved",
+            tokenCount: mergedTokens.length
+          },
           200,
           corsHeaders
         );
@@ -415,9 +464,9 @@ async function runAlarmCron(env) {
       alarm.lastStudySentKey !== studySentKey
     ) {
       try {
-        await sendFcmMessage(
+        await sendFcmToTokens(
           env,
-          alarm.token,
+          alarm.tokens || (alarm.token ? [alarm.token] : []),
           "My Study OS - 공부 시작",
           "정해둔 공부 시작 시간이예요. 오늘도 한 번 달려볼까요?"
         );
@@ -445,9 +494,9 @@ async function runAlarmCron(env) {
         const titles = tomorrowDdays.map(x => x.title).join(", ");
 
         try {
-          await sendFcmMessage(
+          await sendFcmToTokens(
             env,
-            alarm.token,
+            alarm.tokens || (alarm.token ? [alarm.token] : []),
             "My Study OS - D-Day",
             `내일은 "${titles}" D-Day 입니다!`
           );
