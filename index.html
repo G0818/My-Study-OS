@@ -1397,18 +1397,23 @@
       }
     }
 
-    /* ✅ 시간표 최종 보정: 하루 칸 폭 줄이고 시간은 2줄 표시 */
+    /* ✅ 시간표 최종 보정: 모바일에서 월~일 7칸 한 화면에 모두 표시 */
     :root {
       --tt-row-h: 24px;
     }
 
     /* PC / 노트북 */
+    #timetable-wrap {
+      overflow-x: auto !important;
+    }
+
     #timetable-stage {
-      min-width: 760px !important;
+      width: 100% !important;
+      min-width: 0 !important;
     }
 
     .timetable-grid {
-      grid-template-columns: repeat(7, minmax(100px, 1fr)) !important;
+      grid-template-columns: repeat(7, minmax(0, 1fr)) !important;
       gap: 3px !important;
     }
 
@@ -1444,30 +1449,31 @@
       }
 
       #timetable-stage {
-        min-width: 620px !important;
+        width: 100% !important;
+        min-width: 0 !important;
       }
 
       .timetable-grid {
-        grid-template-columns: repeat(7, minmax(82px, 1fr)) !important;
+        grid-template-columns: repeat(7, minmax(0, 1fr)) !important;
         gap: 2px !important;
       }
 
       .timetable-header {
-        font-size: 0.78rem !important;
-        padding: 6px 2px !important;
+        font-size: 0.76rem !important;
+        padding: 6px 1px !important;
       }
 
       .tt-event {
-        padding: 3px 4px !important;
-        font-size: 0.58rem !important;
+        padding: 3px 3px !important;
+        font-size: 0.54rem !important;
       }
 
       .tt-event-title {
-        font-size: 0.62rem !important;
+        font-size: 0.58rem !important;
       }
 
       .tt-event-time {
-        font-size: 0.5rem !important;
+        font-size: 0.48rem !important;
       }
     }
 
@@ -1478,53 +1484,73 @@
       }
 
       #timetable .card {
-        padding: 10px 4px 12px !important;
+        padding: 10px 3px 12px !important;
+      }
+
+      #timetable .card-header {
+        padding: 0 2px !important;
+        margin-bottom: 8px !important;
       }
 
       #timetable-wrap {
-        margin-left: -4px !important;
-        margin-right: -4px !important;
-        width: calc(100% + 8px) !important;
-        overflow-x: auto !important;
+        margin-left: -3px !important;
+        margin-right: -3px !important;
+        width: calc(100% + 6px) !important;
+        overflow-x: hidden !important;
+        padding-bottom: 6px !important;
       }
 
       #timetable-stage {
-        min-width: 430px !important;
+        width: 100% !important;
+        min-width: 0 !important;
       }
 
       .timetable-grid {
-        grid-template-columns: repeat(7, minmax(58px, 1fr)) !important;
-        gap: 2px !important;
+        grid-template-columns: repeat(7, minmax(0, 1fr)) !important;
+        gap: 1px !important;
       }
 
       .timetable-header {
-        font-size: 0.72rem !important;
-        padding: 5px 1px !important;
-        border-radius: 6px !important;
+        font-size: 0.68rem !important;
+        padding: 5px 0 !important;
+        border-radius: 5px !important;
       }
 
       .tt-event {
-        border-radius: 7px !important;
-        padding: 3px 3px !important;
-        font-size: 0.52rem !important;
-        line-height: 1.08 !important;
+        border-radius: 6px !important;
+        padding: 3px 2px !important;
+        font-size: 0.48rem !important;
+        line-height: 1.05 !important;
       }
 
       .tt-event-title {
-        font-size: 0.56rem !important;
-        line-height: 1.08 !important;
+        font-size: 0.5rem !important;
+        line-height: 1.05 !important;
         margin-bottom: 1px !important;
         word-break: keep-all !important;
+        overflow-wrap: normal !important;
       }
 
       .tt-event-time {
-        font-size: 0.46rem !important;
+        font-size: 0.42rem !important;
         line-height: 1.05 !important;
         white-space: normal !important;
       }
 
       .tt-event .tiny {
         display: none !important;
+      }
+
+      #timetable-add-event-btn,
+      #timetable-clear-btn {
+        font-size: 0.62rem !important;
+        padding: 5px 6px !important;
+      }
+
+      #timetable .hint {
+        font-size: 0.62rem !important;
+        line-height: 1.35 !important;
+        padding: 0 3px !important;
       }
     }
 
@@ -3175,7 +3201,7 @@
     }
 
     function formatTtTimeRangeHTML(startMin, endMin) {
-      return `${minToHHMM(startMin)}~<br>${minToHHMM(endMin)}`;
+      return `${fmtHHMM(startMin)}~<br>${fmtHHMM(endMin)}`;
     }
 
     function escapeHtml(str){
