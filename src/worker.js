@@ -242,6 +242,181 @@ export default {
       }
     }
 
+    async scheduled(event, env, ctx) {
+      ctx.waitUntil(runAlarmCron(env));
+    }
+
+    if (url.pathname === "/schedule") {
+      if (request.method === "OPTIONS") {
+        return new Response(null, {
+          status: 204,
+          headers: corsHeaders,
+        });
+      }
+    
+      if (request.method !== "POST") {
+        return json(
+          { ok: false, error: "POST only" },
+          405,
+          corsHeaders
+        );
+      }
+    
+      try {
+        const data = await request.json();
+    
+        const userId = data.userId;
+        const token = data.token;
+        const studyReminderTime = data.studyReminderTime || "";
+        const ddayReminderTime = data.ddayReminderTime || "";
+        const ddayItems = Array.isArray(data.ddayItems) ? data.ddayItems : [];
+        const timezone = data.timezone || "Asia/Seoul";
+    
+        if (!userId || !token) {
+          return json(
+            { ok: false, error: "userId and token are required" },
+            400,
+            corsHeaders
+          );
+        }
+    
+        await env.ALARMS.put(
+          `alarm:${userId}`,
+          JSON.stringify({
+            userId,
+            token,
+            studyReminderTime,
+            ddayReminderTime,
+            ddayItems,
+            timezone,
+            updatedAt: Date.now(),
+            lastStudySentDate: "",
+            lastDdaySentDate: ""
+          })
+        );
+    
+        return json(
+          { ok: true, message: "Alarm schedule saved" },
+          200,
+          corsHeaders
+        );
+      } catch (err) {
+        return json(
+          { ok: false, error: String(err) },
+          500,
+          corsHeaders
+        );
+      }
+    }
+
     return env.ASSETS.fetch(request);
   },
 };
+
+function getKoreaNowParts() {
+  const now = new Date();
+
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Seoul",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false
+  }).formatToParts(now);
+
+  const obj = {};
+  parts.forEach(p => {
+    if (p.type !== "literal") obj[p.type] = p.value;
+  });
+
+  return {
+    date: `${obj.year}-${obj.month}-${obj.day}`,
+    time: `${obj.hour}:${obj.minute}`
+  };
+}
+
+function getTomorrowKoreaDateStr() {
+  const now = new Date();
+  const koreaNow = new Date(now.toLocaleString("en-US", { timeZone: "Asia/Seoul" }));
+  koreaNow.setDate(koreaNow.getDate() + 1);
+
+  const y = koreaNow.getFullYear();
+  const m = String(koreaNow.getMonth() + 1).padStart(2, "0");
+  const d = String(koreaNow.getDate()).padStart(2, "0");
+
+  return `${y}-${m}-${d}`;
+}
+
+async function runAlarmCron(env) {
+  const list = await env.ALARMS.list({ prefix: "alarm:" });
+  const { date: todayStr, time: nowHHMM } = getKoreaNowParts();
+  const tomorrowStr = getTomorrowKoreaDateStr();
+
+  for (const key of list.keys) {
+    const raw = await env.ALARMS.get(key.name);
+    if (!raw) continue;
+
+    let alarm;
+    try {
+      alarm = JSON.parse(raw);
+    } catch {
+      continue;
+    }
+
+    let changed = false;
+
+    // 공부 시작 알림
+    if (
+      alarm.studyReminderTime &&
+      alarm.studyReminderTime === nowHHMM &&
+      alarm.lastStudySentDate !== todayStr
+    ) {
+      try {
+        await sendFcmMessage(
+          env,
+          alarm.token,
+          "My Study OS - 공부 시작",
+          "정해둔 공부 시작 시간이예요. 오늘도 한 번 달려볼까요?"
+        );
+
+        alarm.lastStudySentDate = todayStr;
+        changed = true;
+      } catch (err) {
+        console.log("study alarm send failed", key.name, String(err));
+      }
+    }
+
+    // D-Day 하루 전 알림
+    if (
+      alarm.ddayReminderTime &&
+      alarm.ddayReminderTime === nowHHMM &&
+      alarm.lastDdaySentDate !== todayStr
+    ) {
+      const tomorrowDdays = (alarm.ddayItems || []).filter(item => item.date === tomorrowStr);
+
+      if (tomorrowDdays.length > 0) {
+        const titles = tomorrowDdays.map(x => x.title).join(", ");
+
+        try {
+          await sendFcmMessage(
+            env,
+            alarm.token,
+            "My Study OS - D-Day",
+            `내일은 "${titles}" D-Day 입니다!`
+          );
+
+          alarm.lastDdaySentDate = todayStr;
+          changed = true;
+        } catch (err) {
+          console.log("dday alarm send failed", key.name, String(err));
+        }
+      }
+    }
+
+    if (changed) {
+      await env.ALARMS.put(key.name, JSON.stringify(alarm));
+    }
+  }
+}
