@@ -4667,14 +4667,28 @@
     const LOCAL_KEYS = [
       "study_os_ddays_v1",
       "study_os_dday",          // 구버전 단일 D-Day
+      "study_os_pinned_dday_id",
+
       "study_os_goals",
       "study_os_todos_v1",
+
       "study_os_pomo_config_v1",
       "study_os_study_log_v1",
       "study_os_current_session",
+
       "study_os_theme",
-      "study_os_timetable_v1",
-      "study_os_todo_style"
+      "study_os_todo_style",
+
+      // ✅ 시간표 백업용
+      "study_os_timetable_v1",          // 예전 시간표 데이터용
+      "study_os_timetable_events_v1",   // 현재 시간표 일정 블록 데이터
+      "study_os_tt_color",              // 시간표 색상 설정
+
+      // ✅ 알림 설정도 같이 백업하려면 추가
+      "study_os_dday_reminder_time",
+      "study_os_study_reminder_time",
+      "study_os_last_dday_notify",
+      "study_os_last_study_notify"
     ];
 
     function getLocalData() {
