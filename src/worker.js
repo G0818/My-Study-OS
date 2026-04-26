@@ -128,7 +128,7 @@ async function getAccessToken(env) {
   return data.access_token;
 }
 
-async function sendFcmMessage(env, token, title, body) {
+async function sendFcmMessage(env, token, title, body, tag = "my-study-os") {
   const accessToken = await getAccessToken(env);
 
   const url = `https://fcm.googleapis.com/v1/projects/${env.FIREBASE_PROJECT_ID}/messages:send`;
@@ -151,6 +151,10 @@ async function sendFcmMessage(env, token, title, body) {
             title,
             body,
             icon: "https://g0818.github.io/My-Study-OS/icon-192.png",
+
+            // 알림 종류를 구분해서 같은 알림이 겹치지 않게 함
+            tag,
+            renotify: true
           },
         },
       },
@@ -166,13 +170,13 @@ async function sendFcmMessage(env, token, title, body) {
   return data;
 }
 
-async function sendFcmToTokens(env, tokens, title, body) {
+async function sendFcmToTokens(env, tokens, title, body, tag = "my-study-os") {
   const uniqueTokens = [...new Set(tokens || [])].filter(Boolean);
   const results = [];
 
   for (const token of uniqueTokens) {
     try {
-      const result = await sendFcmMessage(env, token, title, body);
+      const result = await sendFcmMessage(env, token, title, body, tag);
       results.push({
         ok: true,
         tokenEnd: token.slice(-8),
