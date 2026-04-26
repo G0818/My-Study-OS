@@ -171,6 +171,22 @@ export default {
     const url = new URL(request.url);
     const corsHeaders = getCorsHeaders(request);
 
+    // ✅ Worker 작동 확인용
+    if (url.pathname === "/__debug") {
+      return json(
+        {
+          ok: true,
+          message: "worker is running",
+          path: url.pathname,
+          hasAlarmsBinding: !!env.ALARMS,
+          hasAssetsBinding: !!env.ASSETS
+        },
+        200,
+        corsHeaders
+      );
+    }
+
+    // ✅ 즉시 푸시 발송
     if (url.pathname === "/send") {
       if (request.method === "OPTIONS") {
         return new Response(null, {
@@ -242,10 +258,7 @@ export default {
       }
     }
 
-    async scheduled(event, env, ctx) {
-      ctx.waitUntil(runAlarmCron(env));
-    }
-
+    // ✅ 알림 예약 저장
     if (url.pathname === "/schedule") {
       if (request.method === "OPTIONS") {
         return new Response(null, {
@@ -253,7 +266,7 @@ export default {
           headers: corsHeaders,
         });
       }
-    
+
       if (request.method !== "POST") {
         return json(
           { ok: false, error: "POST only" },
@@ -261,17 +274,17 @@ export default {
           corsHeaders
         );
       }
-    
+
       try {
         const data = await request.json();
-    
+
         const userId = data.userId;
         const token = data.token;
         const studyReminderTime = data.studyReminderTime || "";
         const ddayReminderTime = data.ddayReminderTime || "";
         const ddayItems = Array.isArray(data.ddayItems) ? data.ddayItems : [];
         const timezone = data.timezone || "Asia/Seoul";
-    
+
         if (!userId || !token) {
           return json(
             { ok: false, error: "userId and token are required" },
@@ -279,7 +292,15 @@ export default {
             corsHeaders
           );
         }
-    
+
+        if (!env.ALARMS) {
+          return json(
+            { ok: false, error: "ALARMS KV binding is missing" },
+            500,
+            corsHeaders
+          );
+        }
+
         await env.ALARMS.put(
           `alarm:${userId}`,
           JSON.stringify({
@@ -294,7 +315,7 @@ export default {
             lastDdaySentDate: ""
           })
         );
-    
+
         return json(
           { ok: true, message: "Alarm schedule saved" },
           200,
@@ -309,8 +330,14 @@ export default {
       }
     }
 
+    // ✅ 나머지는 정적 파일로 넘김
     return env.ASSETS.fetch(request);
   },
+
+  // ✅ Cron Trigger가 호출하는 함수
+  async scheduled(event, env, ctx) {
+    ctx.waitUntil(runAlarmCron(env));
+  }
 };
 
 function getKoreaNowParts() {
