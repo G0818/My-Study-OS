@@ -929,11 +929,11 @@
       }
 
       #timetable-stage {
-        min-width: 620px;
+        min-width: 480px !important;
       }
 
       .timetable-grid {
-        grid-template-columns: repeat(7, minmax(84px, 1fr));
+        grid-template-columns: repeat(7, minmax(64px, 1fr)) !important;
       }
 
       /* 요일 글씨를 위 사진처럼 조금 크게 */
@@ -2473,6 +2473,7 @@
       ).getTime();
 
       // 🔹 홈에서 보여줄 D-Day만 필터
+      // 지난 D-Day는 홈/목록에서는 숨기고, ddayItems 원본에는 남겨서 달력에는 계속 표시
       const visibleForHome = sorted.filter(item => {
         const d = new Date(item.date);
         const d0 = new Date(
@@ -2481,14 +2482,23 @@
           d.getDate()
         ).getTime();
 
-        return d0 >= today0; // 오늘 0시 이후만
+        return d0 >= today0; // 오늘 포함, 과거는 홈에서 숨김
       });
 
+      // 홈에 보여줄 D-Day가 하나도 없으면 홈 카드만 비움
+      if (!visibleForHome.length) {
+        ddayMainLabelEl.textContent = "예정된 D-Day가 없습니다.";
+        ddayMainValueEl.textContent = "-";
+        ddayMainTargetEl.textContent = "";
+        ddayListEl.innerHTML = "";
+        return;
+      }
+
       const todayOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-      let defaultMain = sorted[0];
+      let defaultMain = visibleForHome[0];
 
       // 가장 가까운 미래/오늘 D-Day 찾기
-      for (const item of sorted) {
+      for (const item of visibleForHome) {
         const d = new Date(item.date);
         const dOnly = new Date(d.getFullYear(), d.getMonth(), d.getDate());
         if (dOnly >= todayOnly) {
@@ -2498,7 +2508,7 @@
       }
 
       // 핀 되어 있으면 그걸 메인으로, 없으면 기존 로직
-      const pinnedMain = sorted.find((item) => item.id === pinnedId);
+      const pinnedMain = visibleForHome.find((item) => item.id === pinnedId);
       const main = pinnedMain || defaultMain;
 
       const targetDate = new Date(main.date);
