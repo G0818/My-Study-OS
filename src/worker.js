@@ -301,8 +301,18 @@ export default {
           );
         }
 
+        const alarmKey = `alarm:${userId}`;
+
+        let previous = {};
+        try {
+          const oldRaw = await env.ALARMS.get(alarmKey);
+          previous = oldRaw ? JSON.parse(oldRaw) : {};
+        } catch {
+          previous = {};
+        }
+        
         await env.ALARMS.put(
-          `alarm:${userId}`,
+          alarmKey,
           JSON.stringify({
             userId,
             token,
@@ -311,8 +321,10 @@ export default {
             ddayItems,
             timezone,
             updatedAt: Date.now(),
-            lastStudySentDate: "",
-            lastDdaySentDate: ""
+        
+            // 기존 발송 기록 유지
+            lastStudySentKey: previous.lastStudySentKey || "",
+            lastDdaySentKey: previous.lastDdaySentKey || ""
           })
         );
 
@@ -395,10 +407,12 @@ async function runAlarmCron(env) {
     let changed = false;
 
     // 공부 시작 알림
+    const studySentKey = `${todayStr}|${alarm.studyReminderTime}`;
+
     if (
       alarm.studyReminderTime &&
       alarm.studyReminderTime === nowHHMM &&
-      alarm.lastStudySentDate !== todayStr
+      alarm.lastStudySentKey !== studySentKey
     ) {
       try {
         await sendFcmMessage(
@@ -408,7 +422,7 @@ async function runAlarmCron(env) {
           "정해둔 공부 시작 시간이예요. 오늘도 한 번 달려볼까요?"
         );
 
-        alarm.lastStudySentDate = todayStr;
+        alarm.lastStudySentKey = studySentKey;
         changed = true;
       } catch (err) {
         console.log("study alarm send failed", key.name, String(err));
@@ -416,12 +430,16 @@ async function runAlarmCron(env) {
     }
 
     // D-Day 하루 전 알림
+    const ddaySentKey = `${todayStr}|${alarm.ddayReminderTime}`;
+
     if (
       alarm.ddayReminderTime &&
       alarm.ddayReminderTime === nowHHMM &&
-      alarm.lastDdaySentDate !== todayStr
+      alarm.lastDdaySentKey !== ddaySentKey
     ) {
-      const tomorrowDdays = (alarm.ddayItems || []).filter(item => item.date === tomorrowStr);
+      const tomorrowDdays = (alarm.ddayItems || []).filter(
+        item => item.date === tomorrowStr
+      );
 
       if (tomorrowDdays.length > 0) {
         const titles = tomorrowDdays.map(x => x.title).join(", ");
@@ -434,7 +452,7 @@ async function runAlarmCron(env) {
             `내일은 "${titles}" D-Day 입니다!`
           );
 
-          alarm.lastDdaySentDate = todayStr;
+          alarm.lastDdaySentKey = ddaySentKey;
           changed = true;
         } catch (err) {
           console.log("dday alarm send failed", key.name, String(err));
