@@ -307,21 +307,17 @@ export default {
         const data = await request.json();
 
         const userId = data.userId;
-
-        // ✅ 지금 V8.html은 token 1개를 보내고 있음.
-        // ✅ 나중에 tokens 배열을 보내도 받을 수 있게 둘 다 지원.
-        const incomingTokens = Array.isArray(data.tokens)
-          ? data.tokens.filter(Boolean)
-          : (data.token ? [data.token] : []);
+        const deviceId = data.deviceId || "unknown-device";
+        const token = data.token;
         
         const studyReminderTime = data.studyReminderTime || "";
         const ddayReminderTime = data.ddayReminderTime || "";
         const ddayItems = Array.isArray(data.ddayItems) ? data.ddayItems : [];
         const timezone = data.timezone || "Asia/Seoul";
         
-        if (!userId || incomingTokens.length === 0) {
+        if (!userId || !token) {
           return json(
-            { ok: false, error: "userId and token/tokens are required" },
+            { ok: false, error: "userId and token are required" },
             400,
             corsHeaders
           );
@@ -345,25 +341,39 @@ export default {
           previous = {};
         }
         
-        // ✅ 기존에 저장되어 있던 토큰들 가져오기
-        // 예전 구조의 previous.token도 같이 살림
-        const previousTokens = Array.isArray(previous.tokens)
-          ? previous.tokens
-          : (previous.token ? [previous.token] : []);
+        // ✅ 기기별 토큰 저장소
+        // 같은 기기는 최신 토큰으로 덮어쓰기
+        const tokensByDevice =
+          previous.tokensByDevice && typeof previous.tokensByDevice === "object"
+            ? previous.tokensByDevice
+            : {};
         
-        // ✅ 기존 토큰 + 이번에 접속한 기기 토큰 합치기
-        const mergedTokens = [...new Set([
-          ...previousTokens,
-          ...incomingTokens
-        ])].filter(Boolean);
+        // ✅ 예전 구조의 tokens 배열이 있으면 legacy로 하나만 살림
+        if (
+          Array.isArray(previous.tokens) &&
+          previous.tokens.length > 0 &&
+          !tokensByDevice["legacy-device"]
+        ) {
+          tokensByDevice["legacy-device"] = previous.tokens[0];
+        }
+        
+        // ✅ 예전 구조의 token 1개가 있으면 legacy로 살림
+        if (previous.token && !tokensByDevice["legacy-device"]) {
+          tokensByDevice["legacy-device"] = previous.token;
+        }
+        
+        // ✅ 현재 기기의 최신 토큰 저장
+        tokensByDevice[deviceId] = token;
+        
+        // ✅ 실제 발송용 토큰 배열
+        const tokens = [...new Set(Object.values(tokensByDevice))].filter(Boolean);
         
         await env.ALARMS.put(
           alarmKey,
           JSON.stringify({
             userId,
-        
-            // ✅ 이제부터는 여러 기기용 tokens 배열로 저장
-            tokens: mergedTokens,
+            tokensByDevice,
+            tokens,
         
             studyReminderTime,
             ddayReminderTime,
@@ -371,7 +381,7 @@ export default {
             timezone,
             updatedAt: Date.now(),
         
-            // ✅ 기존 발송 기록 유지
+            // 기존 발송 기록 유지
             lastStudySentKey: previous.lastStudySentKey || "",
             lastDdaySentKey: previous.lastDdaySentKey || ""
           })
@@ -381,7 +391,8 @@ export default {
           {
             ok: true,
             message: "Alarm schedule saved",
-            tokenCount: mergedTokens.length
+            tokenCount: tokens.length,
+            deviceCount: Object.keys(tokensByDevice).length
           },
           200,
           corsHeaders
