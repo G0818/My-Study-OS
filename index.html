@@ -859,7 +859,7 @@
     #timetable-stage {
       position: relative;
       width: 100%;
-      min-width: 860px;
+      min-width: 860px; /* PC/태블릿용 */
     }
 
     /* 월~일 7칸 */
@@ -902,31 +902,89 @@
       --tt-row-h: 32px; 
     }
 
-    /* 모바일에서는 세로 높이만 키우고, 폭은 줄이지 않음 */
+    /* 모바일 시간표: 캘린더 앱처럼 더 넓게 보이게 압축 */
     @media (max-width: 520px) {
       :root { 
-        --tt-row-h: 52px; 
+        --tt-row-h: 58px; 
+      }
+
+      /* 시간표 카드 안쪽 여백 줄이기 */
+      #timetable .card {
+        padding: 10px 6px 12px;
+      }
+
+      #timetable .card-header {
+        padding: 0 4px;
+        margin-bottom: 8px;
+      }
+
+      /* 시간표가 카드 양쪽 끝까지 쓰도록 */
+      #timetable-wrap {
+        margin-left: -6px;
+        margin-right: -6px;
+        width: calc(100% + 12px);
+        overflow-x: auto;
+        overflow-y: hidden;
+        padding-bottom: 10px;
       }
 
       #timetable-stage {
-        min-width: 860px;
+        min-width: 620px;
       }
 
+      .timetable-grid {
+        grid-template-columns: repeat(7, minmax(84px, 1fr));
+      }
+
+      /* 요일 글씨를 위 사진처럼 조금 크게 */
+      .timetable-header {
+        font-size: 0.92rem;
+        padding: 9px 2px;
+        border-radius: 6px;
+      }
+
+      /* 일정 블록 */
       .tt-event {
-        font-size: 0.72rem;
-        padding: 6px 7px;
+        border-radius: 8px;
+        padding: 5px 5px;
+        font-size: 0.62rem;
+        line-height: 1.18;
         word-break: keep-all;
       }
 
       .tt-event-title {
+        font-size: 0.66rem;
+        font-weight: 700;
+        line-height: 1.18;
         white-space: normal;
         word-break: keep-all;
-        line-height: 1.25;
+        margin-bottom: 2px;
       }
 
       .tt-event-time {
-        font-size: 0.68rem;
+        font-size: 0.56rem !important;
+        line-height: 1.15;
         white-space: nowrap;
+        opacity: 0.78;
+      }
+
+      /* 모바일에서는 삭제 버튼이 너무 공간을 먹으니 숨김 */
+      .tt-event .tiny {
+        display: none;
+      }
+
+      /* 아래 안내 문구도 작게 */
+      #timetable .hint {
+        font-size: 0.66rem;
+        line-height: 1.35;
+        padding: 0 4px;
+      }
+
+      #timetable-add-event-btn,
+      #timetable-clear-btn {
+        font-size: 0.68rem;
+        padding: 5px 7px;
+        border-radius: 8px;
       }
     }
 
