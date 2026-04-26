@@ -1270,8 +1270,35 @@
       }
 
       /* 버튼이 My Study 로고를 가리지 않게 */
-      header {
-        padding-left: 52px;
+      @media (max-width: 780px) {
+        .app {
+          padding-top: 68px;
+        }
+
+        header {
+          padding-left: 0;
+        }
+      }
+    }
+
+    /* ✅ 모바일 메뉴 버튼: 스크롤해도 화면 상단 고정 */
+    @media (max-width: 780px) {
+      .mobile-menu-btn {
+        position: fixed !important;
+        top: calc(env(safe-area-inset-top, 0px) + 12px) !important;
+        left: 14px !important;
+        width: 44px;
+        height: 44px;
+        z-index: 9999 !important;
+        display: grid;
+        place-items: center;
+        border-radius: 12px;
+        background: var(--sb-bg);
+        color: var(--sb-text);
+        border: 1px solid var(--sb-border);
+        box-shadow: var(--sb-shadow);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
       }
     }
 
