@@ -4417,10 +4417,20 @@
       const targetH = Number(hh);
       const targetM = Number(mm);
 
-      const hour = now.getHours();
-      const minute = now.getMinutes();
+      const targetTime = new Date(
+        now.getFullYear(),
+        now.getMonth(),
+        now.getDate(),
+        targetH,
+        targetM,
+        0,
+        0
+      );
 
-      if (hour !== targetH || minute !== targetM) return;
+      const diffMs = now.getTime() - targetTime.getTime();
+
+      // ✅ 설정 시간 이후 5분 안이면 알림 허용
+      if (diffMs < 0 || diffMs > 5 * 60 * 1000) return;
 
       let hasTomorrowDday = false;
 
@@ -4461,16 +4471,44 @@
       const minute = now.getMinutes();
       const second = now.getSeconds();
 
-      if (hour === targetH && minute === targetM && second === 0) {
+      function checkStudyStartReminder(now) {
+        if (!studyReminderTime) return;
+
+        const todayStr = formatDate(now);
+
+        // ✅ 하루 한 번만
+        if (lastStudyNotifyDateStr === todayStr) return;
+
+        const [hh, mm] = studyReminderTime.split(":");
+        const targetH = Number(hh);
+        const targetM = Number(mm);
+
+        const targetTime = new Date(
+          now.getFullYear(),
+          now.getMonth(),
+          now.getDate(),
+          targetH,
+          targetM,
+          0,
+          0
+        );
+
+        const diffMs = now.getTime() - targetTime.getTime();
+
+        // ✅ 정확히 0초가 아니어도, 설정 시간 이후 5분 안이면 알림
+        if (diffMs < 0 || diffMs > 5 * 60 * 1000) return;
+
         const title = "My Study OS - 공부 시작";
         const body  = "정해둔 공부 시작 시간이예요. 오늘도 한 번 달려볼까요?";
 
         showLocalNotification(title, body);
+
         if (typeof window.sendPushViaWorker === "function") {
           window.sendPushViaWorker(title, body);
         }
 
-        // 필요하면 하루 1회 제한용 로직도 여기서 같이 처리 가능
+        lastStudyNotifyDateStr = todayStr;
+        localStorage.setItem(LAST_STUDY_NOTIFY_KEY, todayStr);
       }
     }
 
@@ -4664,39 +4702,32 @@
     const backupBtn  = document.getElementById("cloud-backup-btn");
     const restoreBtn = document.getElementById("cloud-restore-btn");
 
-    const LOCAL_KEYS = [
-      "study_os_ddays_v1",
-      "study_os_dday",          // 구버전 단일 D-Day
-      "study_os_pinned_dday_id",
-
-      "study_os_goals",
-      "study_os_todos_v1",
-
-      "study_os_pomo_config_v1",
-      "study_os_study_log_v1",
-      "study_os_current_session",
-
-      "study_os_theme",
-      "study_os_todo_style",
-
-      // ✅ 시간표 백업용
-      "study_os_timetable_v1",          // 예전 시간표 데이터용
-      "study_os_timetable_events_v1",   // 현재 시간표 일정 블록 데이터
-      "study_os_tt_color",              // 시간표 색상 설정
-
-      // ✅ 알림 설정도 같이 백업하려면 추가
-      "study_os_dday_reminder_time",
-      "study_os_study_reminder_time",
-      "study_os_last_dday_notify",
-      "study_os_last_study_notify"
+    // ✅ My Study OS 관련 설정/데이터 자동 백업
+    // study_os_로 시작하는 localStorage는 전부 백업
+    // 단, FCM 토큰은 기기마다 달라서 백업/복원하지 않음
+    const BACKUP_EXCLUDE_KEYS = [
+      "study_os_fcm_token"
     ];
+
+    function shouldBackupKey(key) {
+      return key.startsWith("study_os_") && !BACKUP_EXCLUDE_KEYS.includes(key);
+    }
 
     function getLocalData() {
       const data = {};
-      LOCAL_KEYS.forEach(key => {
-        const val = localStorage.getItem(key);
-        if (val !== null) data[key] = val;
-      });
+
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (!key) continue;
+
+        if (shouldBackupKey(key)) {
+          const val = localStorage.getItem(key);
+          if (val !== null) {
+            data[key] = val;
+          }
+        }
+      }
+
       return data;
     }
 
@@ -4717,7 +4748,20 @@
       }
 
       const data = snap.data();
-      Object.keys(data).forEach(key => localStorage.setItem(key, data[key]));
+      // 기존 My Study OS 데이터 정리 후 클라우드 데이터로 덮어쓰기
+      for (let i = localStorage.length - 1; i >= 0; i--) {
+        const key = localStorage.key(i);
+        if (key && shouldBackupKey(key)) {
+          localStorage.removeItem(key);
+        }
+      }
+
+      Object.keys(data).forEach(key => {
+        if (shouldBackupKey(key)) {
+          localStorage.setItem(key, data[key]);
+        }
+      });
+
       alert("불러오기 완료! 페이지를 새로고침합니다.");
       location.reload();
     }
