@@ -1,0 +1,8 @@
+name = "my-study-os-push"
+main = "src/worker.js"
+compatibility_date = "2026-04-26"
+
+[assets]
+directory = "."
+binding = "ASSETS"
+run_worker_first = ["/send"]
