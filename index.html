@@ -197,7 +197,7 @@
       .grid-two { grid-template-columns: 1fr; }
       body { padding: 10px; }
       .app {
-        padding: 14px 12px 20px 80px;
+        padding: 14px 10px 20px 10px;
         border-radius: 18px;
       }
     }
@@ -1177,16 +1177,107 @@
       font-size: 0.92rem;
     }
 
-    @media (max-width: 780px){
-      /* 본문은 레일 폭만큼만 밀기 */
-      .app{ padding-left: calc(var(--sb-collapsed) + 8px); }
+    /* 모바일 상단 메뉴 버튼 */
+    .mobile-menu-btn {
+      display: none;
+    }
 
-      /* 사이드바는 화면 맨 왼쪽에 딱 붙이기(쓸데없는 여백 제거) */
-      .sidebar{ top: 0; left: 0; bottom: 0; }
+    @media (max-width: 780px) {
+      /* 모바일에서는 앱 본문이 전체 폭을 쓰게 함 */
+      body {
+        padding: 8px;
+      }
+
+      .app {
+        padding: 14px 10px 20px 10px;
+        border-radius: 18px;
+        max-width: 100%;
+      }
+
+      .app.sidebar-open {
+        padding-left: 10px;
+      }
+
+      /* 모바일에서는 사이드바를 평소 화면 밖으로 숨김 */
+      .sidebar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        width: 220px;
+        border-radius: 0 16px 16px 0;
+        transform: translateX(-100%);
+        transition: transform 0.22s ease;
+        z-index: 60;
+      }
+
+      .sidebar.open {
+        width: 220px;
+        transform: translateX(0);
+      }
+
+      /* 모바일 메뉴 안에서는 아이콘 + 글자 모두 보이게 */
+      .sidebar .nav-item {
+        justify-content: flex-start;
+        padding-left: 14px;
+      }
+
+      .sidebar .nav-item .label {
+        display: inline;
+        font-size: 0.92rem;
+      }
+
+      /* 모바일에서는 사이드바 안쪽 햄버거 버튼 숨김 */
+      .sidebar-toggle {
+        display: none;
+      }
+
+      /* 모바일 오버레이는 화면 전체 기준 */
+      .sidebar-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.35);
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.18s ease;
+        z-index: 50;
+      }
+
+      .sidebar-overlay.show {
+        opacity: 1;
+        pointer-events: auto;
+      }
+
+      /* 모바일용 상단 햄버거 버튼 */
+      .mobile-menu-btn {
+        display: grid;
+        place-items: center;
+        position: fixed;
+        top: 14px;
+        left: 14px;
+        width: 44px;
+        height: 44px;
+        border: 1px solid var(--sb-border);
+        border-radius: 12px;
+        background: var(--sb-bg);
+        color: var(--sb-text);
+        box-shadow: var(--sb-shadow);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        z-index: 70;
+        font-size: 22px;
+        line-height: 1;
+      }
+
+      /* 버튼이 My Study 로고를 가리지 않게 */
+      header {
+        padding-left: 52px;
+      }
     }
 
   </style>
 </head>
+
 <body class="theme-dark">
   <!-- 집중 모드 오버레이 -->
   <div id="focus-overlay">
@@ -1208,7 +1299,11 @@
     </div>
   </div>
 
-  <div class="app">
+  <button id="mobileMenuBtn" class="mobile-menu-btn" aria-label="메뉴 열기">
+    ☰
+  </button>
+
+  <div class="app" id="app">
     <header>
       <div>
         <div class="logo">
@@ -1982,27 +2077,38 @@
     const sidebar = document.getElementById("sidebar");
     const sidebarToggle = document.getElementById("sidebarToggle");
     const sidebarOverlay = document.getElementById("sidebarOverlay");
+    const mobileMenuBtn = document.getElementById("mobileMenuBtn");
+    const appEl = document.getElementById("app");
 
-    const navButtons = document.querySelectorAll(".nav-item"); // ✅ 변경
+    const navButtons = document.querySelectorAll(".nav-item");
     const sections = document.querySelectorAll(".section");
 
     function openSidebar() {
       sidebar.classList.add("open");
-      // 모바일 느낌으로 오버레이
+
+      if (appEl && !window.matchMedia("(max-width: 780px)").matches) {
+        appEl.classList.add("sidebar-open");
+      }
+
       if (window.matchMedia("(max-width: 780px)").matches) {
         sidebarOverlay.classList.add("show");
       }
     }
+
     function closeSidebar() {
       sidebar.classList.remove("open");
       sidebarOverlay.classList.remove("show");
+
+      if (appEl) {
+        appEl.classList.remove("sidebar-open");
+      }
     }
     function toggleSidebar() {
       if (sidebar.classList.contains("open")) closeSidebar();
       else openSidebar();
     }
 
-    sidebarToggle?.addEventListener("click", (e) => {
+    mobileMenuBtn?.addEventListener("click", (e) => {
       e.stopPropagation();
       toggleSidebar();
     });
