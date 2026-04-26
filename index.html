@@ -1281,24 +1281,70 @@
       }
     }
 
-    /* ✅ 모바일 메뉴 버튼: 스크롤해도 화면 상단 고정 */
+    /* ✅ 모바일: 메뉴 버튼을 My Study OS 왼쪽에 붙이고, 헤더 전체를 상단 고정 */
     @media (max-width: 780px) {
-      .mobile-menu-btn {
-        position: fixed !important;
-        top: calc(env(safe-area-inset-top, 0px) + 12px) !important;
-        left: 14px !important;
-        width: 44px;
-        height: 44px;
-        z-index: 9999 !important;
-        display: grid;
-        place-items: center;
-        border-radius: 12px;
+      .app {
+        overflow: visible !important;
+        padding-top: 10px !important;
+      }
+
+      header {
+        position: sticky !important;
+        top: calc(env(safe-area-inset-top, 0px) + 8px) !important;
+        z-index: 9998 !important;
+
+        display: flex !important;
+        align-items: center !important;
+        gap: 8px !important;
+
+        padding: 8px 8px !important;
+        margin: -2px -2px 14px -2px !important;
+
+        border-radius: 14px;
         background: var(--sb-bg);
-        color: var(--sb-text);
         border: 1px solid var(--sb-border);
         box-shadow: var(--sb-shadow);
         backdrop-filter: blur(12px);
         -webkit-backdrop-filter: blur(12px);
+      }
+
+      .mobile-menu-btn {
+        display: grid !important;
+        position: static !important;
+        top: auto !important;
+        left: auto !important;
+
+        flex: 0 0 40px;
+        width: 40px !important;
+        height: 40px !important;
+
+        place-items: center;
+        padding: 0 !important;
+        margin: 0 !important;
+
+        border-radius: 12px;
+        background: var(--sb-toggle-bg);
+        color: var(--sb-text);
+        border: 1px solid var(--sb-border);
+        box-shadow: none;
+        font-size: 22px;
+        line-height: 1;
+        z-index: auto !important;
+      }
+
+      .header-title-wrap {
+        flex: 1;
+        min-width: 0;
+      }
+
+      .logo {
+        white-space: nowrap;
+      }
+
+      #theme-toggle {
+        flex-shrink: 0;
+        padding: 6px 8px;
+        font-size: 0.72rem;
       }
     }
 
@@ -1326,24 +1372,25 @@
     </div>
   </div>
 
-  <button id="mobileMenuBtn" class="mobile-menu-btn" aria-label="메뉴 열기">
-    ☰
-  </button>
-
   <div class="app" id="app">
-    <header>
-      <div>
-        <div class="logo">
-          <span class="logo-main">My Study</span>
-          <span class="logo-pill">OS</span>
-        </div>
-        <div id="today-label"></div>
+  <header>
+    <button id="mobileMenuBtn" class="mobile-menu-btn" aria-label="메뉴 열기">
+      ☰
+    </button>
+
+    <div class="header-title-wrap">
+      <div class="logo">
+        <span class="logo-main">My Study</span>
+        <span class="logo-pill">OS</span>
       </div>
-      <button id="theme-toggle">
-        <span id="theme-icon">🌙</span>
-        <span id="theme-text">다크 모드</span>
-      </button>
-    </header>
+      <div id="today-label"></div>
+    </div>
+
+    <button id="theme-toggle">
+      <span id="theme-icon">🌙</span>
+      <span id="theme-text">다크 모드</span>
+    </button>
+  </header>
 
     <!-- ✅ 사이드바 (아이콘 레일 + 펼침 메뉴) -->
     <aside class="sidebar" id="sidebar">
