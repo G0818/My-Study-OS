@@ -1661,7 +1661,11 @@
 
             <div class="input-row" style="margin-top:10px;">
               <input type="text" id="dday-title-input" placeholder="" />
-              <input type="date" id="dday-date-input" />
+
+              <div class="date-input-wrapper" style="flex:1; min-width:130px;">
+                <input type="date" id="dday-date-input" />
+              </div>
+
               <button id="dday-add-btn">추가</button>
             </div>
             <button id="dday-clear-btn" class="secondary">모든 D-Day 초기화</button>
@@ -2719,6 +2723,40 @@
           renderCalendarSelectedTasks(selectedCalendarDateStr);
         });
 
+        const editBtn = document.createElement("button");
+        editBtn.className = "tiny";
+        editBtn.textContent = "수정";
+        editBtn.addEventListener("click", () => {
+          const newTitle = prompt("D-Day 제목을 수정하세요.", item.title || "");
+          if (newTitle === null) return;
+
+          const trimmedTitle = newTitle.trim();
+          if (!trimmedTitle) {
+            alert("제목은 비워둘 수 없습니다.");
+            return;
+          }
+
+          const newDate = prompt("D-Day 날짜를 수정하세요. 예: 2026-05-10", item.date || "");
+          if (newDate === null) return;
+
+          const trimmedDate = newDate.trim();
+          if (!/^\d{4}-\d{2}-\d{2}$/.test(trimmedDate)) {
+            alert("날짜는 YYYY-MM-DD 형식으로 입력해 주세요.");
+            return;
+          }
+
+          const target = ddayItems.find(d => d.id === item.id);
+          if (!target) return;
+
+          target.title = trimmedTitle;
+          target.date = trimmedDate;
+
+          saveDDays();
+          renderDDays();
+          renderCalendar();
+          renderCalendarSelectedTasks(selectedCalendarDateStr);
+        });
+
         const pinnedId = getPinnedDdayId();
 
         const pinBtn = document.createElement("button");
@@ -2737,6 +2775,7 @@
         btnWrap.style.flexDirection = "column";
         btnWrap.style.gap = "4px";
         btnWrap.appendChild(pinBtn);
+        btnWrap.appendChild(editBtn);
         btnWrap.appendChild(delBtn);
 
         li.appendChild(info);
@@ -2987,13 +3026,59 @@
       return dateStr;
     }
 
+    function getTodoPeriodEndDate(scope, dateStr) {
+      if (!dateStr) return null;
+
+      const d = new Date(dateStr);
+      if (Number.isNaN(d.getTime())) return null;
+
+      if (scope === "year") {
+        return new Date(d.getFullYear(), 11, 31);
+      }
+
+      if (scope === "month") {
+        return new Date(d.getFullYear(), d.getMonth() + 1, 0);
+      }
+
+      if (scope === "week") {
+        const end = new Date(d);
+        end.setDate(d.getDate() + 6);
+        return end;
+      }
+
+      if (scope === "day") {
+        return d;
+      }
+
+      return d;
+    }
+
+    function isTodoVisibleForScope(scope, item, now = new Date()) {
+      if (!item.date) return true;
+
+      const today0 = new Date(
+        now.getFullYear(),
+        now.getMonth(),
+        now.getDate()
+      ).getTime();
+
+      const endDate = getTodoPeriodEndDate(scope, item.date);
+      if (!endDate) return true;
+
+      const end0 = new Date(
+        endDate.getFullYear(),
+        endDate.getMonth(),
+        endDate.getDate()
+      ).getTime();
+
+      return end0 >= today0;
+    }
+
     function renderTodoList() {
       let list = todoData[currentScope] || [];
-      // ✅ 하루 계획(day)은 "새벽 4시 기준 오늘"만 홈/To-do 탭에서 보여주기
-      if (currentScope === "day") {
-        const todayKey = getTodoTodayKey4am(new Date());
-        list = (todoData.day || []).filter(item => item.date === todayKey);
-      }
+
+      // ✅ 1년/월/주/일 모두 기간이 지난 것은 To-do 화면에서 숨김
+      list = list.filter(item => isTodoVisibleForScope(currentScope, item));
       todoListEl.innerHTML = "";
       list.forEach((item, idx) => {
         const li = document.createElement("li");
@@ -4265,11 +4350,15 @@
 
     function countAllDoneTodos() {
       let count = 0;
+
       ["year", "month", "week", "day"].forEach((scope) => {
-        (todoData[scope] || []).forEach((item) => {
-          if (item.status === "success") count++;
-        });
+        (todoData[scope] || [])
+          .filter(item => isTodoVisibleForScope(scope, item))
+          .forEach((item) => {
+            if (item.status === "success") count++;
+          });
       });
+
       return count;
     }
 
