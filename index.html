@@ -2597,9 +2597,14 @@
       if (ddayReminderTime) {
         ddayReminderInput.value = ddayReminderTime;
       }
-      ddayReminderSaveBtn.addEventListener("click", () => {
+      ddayReminderSaveBtn.addEventListener("click", async () => {
         ddayReminderTime = ddayReminderInput.value;
         localStorage.setItem(DDAY_REMINDER_TIME_KEY, ddayReminderTime || "");
+
+        if (typeof window.scheduleAlarmsToWorker === "function") {
+          await window.scheduleAlarmsToWorker();
+        }
+
         alert("D-Day 알림 시간이 저장되었습니다.");
       });
     }
@@ -2608,11 +2613,15 @@
       if (studyReminderTime) {
         studyReminderInput.value = studyReminderTime;
       }
-      studyReminderSaveBtn.addEventListener("click", () => {
+      studyReminderSaveBtn.addEventListener("click", async () => {
         studyReminderTime = studyReminderInput.value;
         localStorage.setItem(STUDY_REMINDER_TIME_KEY, studyReminderTime || "");
 
         console.log("[DEBUG] 저장된 studyReminderTime =", studyReminderTime);
+
+        if (typeof window.scheduleAlarmsToWorker === "function") {
+          await window.scheduleAlarmsToWorker();
+        }
 
         alert("공부 시작 알림 시간이 저장되었습니다.");
       });
@@ -2700,6 +2709,10 @@
       renderDDays();
       renderCalendar(); // 달력 점 갱신
       renderCalendarSelectedTasks(selectedCalendarDateStr);
+
+      if (typeof window.scheduleAlarmsToWorker === "function") {
+        window.scheduleAlarmsToWorker();
+      }
     }
 
     function renderDDays() {
@@ -2816,6 +2829,10 @@
           renderDDays();
           renderCalendar();
           renderCalendarSelectedTasks(selectedCalendarDateStr);
+
+          if (typeof window.scheduleAlarmsToWorker === "function") {
+            window.scheduleAlarmsToWorker();
+          }
         });
 
         const editBtn = document.createElement("button");
@@ -2850,6 +2867,10 @@
           renderDDays();
           renderCalendar();
           renderCalendarSelectedTasks(selectedCalendarDateStr);
+
+          if (typeof window.scheduleAlarmsToWorker === "function") {
+            window.scheduleAlarmsToWorker();
+          }
         });
 
         const pinnedId = getPinnedDdayId();
@@ -2906,6 +2927,10 @@
       renderDDays();
       renderCalendar();
       renderCalendarSelectedTasks(selectedCalendarDateStr);
+
+      if (typeof window.scheduleAlarmsToWorker === "function") {
+        window.scheduleAlarmsToWorker();
+      }
     });
 
     // ===== Goals =====
@@ -4676,6 +4701,7 @@
 
     // ★ 현재 브라우저의 FCM 토큰을 저장해 둘 변수
     let currentFcmToken = localStorage.getItem("study_os_fcm_token") || null;
+    let currentUser = null;
 
     // FCM 토큰 생성 + Firestore 저장
     async function initFcmForUser(user) {
@@ -4783,8 +4809,59 @@
       }
     }
 
+    async function scheduleAlarmsToWorker() {
+      if (!currentUser) {
+        console.warn("[Alarm] 로그인 필요");
+        return;
+      }
+
+      if (!currentFcmToken) {
+        currentFcmToken = localStorage.getItem("study_os_fcm_token") || null;
+      }
+
+      if (!currentFcmToken) {
+        console.warn("[Alarm] FCM 토큰 없음");
+        return;
+      }
+
+      let ddayItemsForSchedule = [];
+      try {
+        ddayItemsForSchedule = JSON.parse(localStorage.getItem("study_os_ddays_v1") || "[]");
+      } catch {
+        ddayItemsForSchedule = [];
+      }
+
+      const payload = {
+        userId: currentUser.uid,
+        token: currentFcmToken,
+        studyReminderTime: localStorage.getItem("study_os_study_reminder_time") || "",
+        ddayReminderTime: localStorage.getItem("study_os_dday_reminder_time") || "",
+        ddayItems: ddayItemsForSchedule,
+        timezone: "Asia/Seoul"
+      };
+
+      try {
+        const res = await fetch("https://my-study-os-push.ganghealthy.workers.dev/schedule", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await res.json();
+        console.log("[Alarm] schedule 응답:", data);
+
+        if (!data.ok) {
+          alert("알림 예약 저장 실패: " + JSON.stringify(data));
+        }
+      } catch (err) {
+        console.error("[Alarm] schedule 호출 오류:", err);
+        alert("알림 예약 저장 중 오류가 발생했습니다.");
+      }
+    }
+
     // 콘솔에서 테스트할 수 있게 전역으로 꺼내두기
     window.sendPushViaWorker = sendPushViaWorker;
+    window.scheduleAlarmsToWorker = scheduleAlarmsToWorker;
 
     window.resetFcmToken = async function () {
       try {
@@ -4912,6 +4989,8 @@
 
     onAuthStateChanged(auth, async (user) => {
       if (user) {
+        currentUser = user;
+
         statusEl.textContent = `로그인됨: ${user.displayName || user.email}`;
         loginBtn.style.display = "none";
         logoutBtn.style.display = "inline-flex";
@@ -4920,7 +4999,14 @@
 
         // ✅ 로그인된 유저에 대해 FCM 토큰 등록
         await initFcmForUser(user);
+
+        // ✅ 로그인 후 저장된 알림 설정을 Cloudflare에도 동기화
+        if (typeof scheduleAlarmsToWorker === "function") {
+          await scheduleAlarmsToWorker();
+        }
       } else {
+        currentUser = null;
+
         statusEl.textContent = "로그인되어 있지 않습니다.";
         loginBtn.style.display = "inline-flex";
         logoutBtn.style.display = "none";
