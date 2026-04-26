@@ -470,20 +470,56 @@ async function runAlarmCron(env) {
 
     let changed = false;
 
-    // 공부 시작 알림
-    const studySentKey = `${todayStr}|${alarm.studyReminderTime}`;
+    const tokens = alarm.tokens || (alarm.token ? [alarm.token] : []);
 
-    if (
+    const studySentKey = `${todayStr}|${alarm.studyReminderTime}`;
+    const ddaySentKey = `${todayStr}|${alarm.ddayReminderTime}`;
+
+    const tomorrowDdays = (alarm.ddayItems || []).filter(
+      item => item.date === tomorrowStr
+    );
+
+    const shouldSendStudy =
       alarm.studyReminderTime &&
       alarm.studyReminderTime === nowHHMM &&
-      alarm.lastStudySentKey !== studySentKey
-    ) {
+      alarm.lastStudySentKey !== studySentKey;
+
+    const shouldSendDday =
+      alarm.ddayReminderTime &&
+      alarm.ddayReminderTime === nowHHMM &&
+      tomorrowDdays.length > 0 &&
+      alarm.lastDdaySentKey !== ddaySentKey;
+
+    // ✅ 공부 시작 + D-Day가 같은 시간에 걸리면 하나로 합쳐서 보냄
+    if (shouldSendStudy && shouldSendDday) {
+      const titles = tomorrowDdays.map(x => x.title).join(", ");
+
       try {
         await sendFcmToTokens(
           env,
-          alarm.tokens || (alarm.token ? [alarm.token] : []),
+          tokens,
+          "My Study OS - 오늘의 알림",
+          `공부 시작 시간이예요. 그리고 내일은 "${titles}" D-Day 입니다!`,
+          `study-dday-${todayStr}-${nowHHMM}`
+        );
+
+        alarm.lastStudySentKey = studySentKey;
+        alarm.lastDdaySentKey = ddaySentKey;
+        changed = true;
+      } catch (err) {
+        console.log("combined alarm send failed", key.name, String(err));
+      }
+    }
+
+    // ✅ 공부 시작 알림만 해당될 때
+    else if (shouldSendStudy) {
+      try {
+        await sendFcmToTokens(
+          env,
+          tokens,
           "My Study OS - 공부 시작",
-          "정해둔 공부 시작 시간이예요. 오늘도 한 번 달려볼까요?"
+          "정해둔 공부 시작 시간이예요. 오늘도 한 번 달려볼까요?",
+          `study-${todayStr}-${nowHHMM}`
         );
 
         alarm.lastStudySentKey = studySentKey;
@@ -493,34 +529,23 @@ async function runAlarmCron(env) {
       }
     }
 
-    // D-Day 하루 전 알림
-    const ddaySentKey = `${todayStr}|${alarm.ddayReminderTime}`;
+    // ✅ D-Day 알림만 해당될 때
+    else if (shouldSendDday) {
+      const titles = tomorrowDdays.map(x => x.title).join(", ");
 
-    if (
-      alarm.ddayReminderTime &&
-      alarm.ddayReminderTime === nowHHMM &&
-      alarm.lastDdaySentKey !== ddaySentKey
-    ) {
-      const tomorrowDdays = (alarm.ddayItems || []).filter(
-        item => item.date === tomorrowStr
-      );
+      try {
+        await sendFcmToTokens(
+          env,
+          tokens,
+          "My Study OS - D-Day",
+          `내일은 "${titles}" D-Day 입니다!`,
+          `dday-${todayStr}-${nowHHMM}`
+        );
 
-      if (tomorrowDdays.length > 0) {
-        const titles = tomorrowDdays.map(x => x.title).join(", ");
-
-        try {
-          await sendFcmToTokens(
-            env,
-            alarm.tokens || (alarm.token ? [alarm.token] : []),
-            "My Study OS - D-Day",
-            `내일은 "${titles}" D-Day 입니다!`
-          );
-
-          alarm.lastDdaySentKey = ddaySentKey;
-          changed = true;
-        } catch (err) {
-          console.log("dday alarm send failed", key.name, String(err));
-        }
+        alarm.lastDdaySentKey = ddaySentKey;
+        changed = true;
+      } catch (err) {
+        console.log("dday alarm send failed", key.name, String(err));
       }
     }
 
