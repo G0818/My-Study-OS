@@ -2130,6 +2130,7 @@
 
             <div class="input-row" style="margin-top:8px;">
               <button id="notify-permission-btn">알림 권한 요청</button>
+              <button id="alarm-off-btn" class="secondary" type="button">알람 끄기</button>
             </div>
 
             <div class="hint" style="margin-top:4px;">
@@ -2592,6 +2593,7 @@
     let studyReminderTime = localStorage.getItem(STUDY_REMINDER_TIME_KEY) || "";
 
     const notifyPermissionBtn = document.getElementById("notify-permission-btn");
+    const alarmOffBtn = document.getElementById("alarm-off-btn");
     const ddayReminderInput = document.getElementById("dday-reminder-time");
     const ddayReminderSaveBtn = document.getElementById("dday-reminder-save-btn");
     const studyReminderInput = document.getElementById("study-reminder-time");
@@ -2600,6 +2602,37 @@
     if (notifyPermissionBtn) {
       notifyPermissionBtn.addEventListener("click", () => {
         requestNotificationPermission();
+      });
+    }
+    if (alarmOffBtn) {
+      alarmOffBtn.addEventListener("click", async () => {
+        const ok = confirm("D-Day 알림과 공부 시작 알림을 모두 끌까요?");
+        if (!ok) return;
+
+        // 알림 시간 삭제
+        ddayReminderTime = "";
+        studyReminderTime = "";
+
+        localStorage.removeItem(DDAY_REMINDER_TIME_KEY);
+        localStorage.removeItem(STUDY_REMINDER_TIME_KEY);
+
+        // 마지막 알림 기록도 삭제
+        localStorage.removeItem(LAST_DDAY_NOTIFY_KEY);
+        localStorage.removeItem(LAST_STUDY_NOTIFY_KEY);
+
+        lastDdayNotifyDateStr = "";
+        lastStudyNotifyDateStr = "";
+
+        // 화면의 시간 입력칸 비우기
+        if (ddayReminderInput) ddayReminderInput.value = "";
+        if (studyReminderInput) studyReminderInput.value = "";
+
+        // Worker 예약도 빈 값으로 다시 저장
+        if (typeof window.scheduleAlarmsToWorker === "function") {
+          await window.scheduleAlarmsToWorker();
+        }
+
+        alert("알람이 꺼졌습니다.");
       });
     }
 
