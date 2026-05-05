@@ -1566,16 +1566,15 @@
 
 
 
-    /* ✅ iPad/태블릿 전용: 날짜 입력칸과 '추가' 버튼 겹침 방지
-       - V8의 달력 아이콘/버튼 모양 CSS는 그대로 둠
-       - iPad 가로폭에서만 배치만 grid로 안정화
+    /* ✅ iPad/태블릿 전용: 날짜 입력칸과 '추가' 버튼 위치 미세 조정
+       - 달력 아이콘/버튼 기본 모양은 V8 스타일 그대로 유지
        - 폰(780px 이하)과 노트북/PC는 영향 없음 */
     @media (min-width: 781px) and (max-width: 1180px) {
-      /* Home D-Day 입력 영역: 제목은 1줄 전체, 날짜칸과 추가 버튼은 충분한 간격으로 분리 */
+      /* Home - D-Day: 제목은 전체 줄, 날짜 + 추가는 같은 줄. 버튼만 살짝 오른쪽 */
       #home .card:first-child > .input-row[style*="margin-top:10px"] {
         display: grid !important;
-        grid-template-columns: minmax(260px, 1fr) auto !important;
-        column-gap: 16px !important;
+        grid-template-columns: minmax(260px, 1fr) max-content !important;
+        column-gap: 22px !important;
         row-gap: 8px !important;
         align-items: center !important;
       }
@@ -1594,20 +1593,15 @@
 
       #home .card:first-child > .input-row[style*="margin-top:10px"] > #dday-add-btn {
         grid-column: 2 !important;
-        width: auto !important;
-        height: auto !important;
-        padding: 6px 10px !important;
-        display: inline-flex !important;
-        align-items: center !important;
-        justify-content: center !important;
+        justify-self: start !important;
         align-self: center !important;
         margin: 0 !important;
+        transform: translateX(4px); /* 요청: 살짝 오른쪽 */
       }
 
-      /* To-do 날짜 영역: Date 입력칸과 추가 버튼 사이를 확실히 띄움 */
+      /* To-do 공통: scope별로 한 줄 배치를 다르게 잡음 */
       #todos .goal-date-row {
         display: grid !important;
-        grid-template-columns: minmax(220px, 300px) auto !important;
         column-gap: 16px !important;
         row-gap: 8px !important;
         align-items: end !important;
@@ -1618,27 +1612,76 @@
         min-width: 0 !important;
       }
 
-      #todo-day-wrapper {
-        grid-column: 1 !important;
-        width: 100% !important;
-        max-width: 300px !important;
-      }
+      #todo-year-wrapper { width: 300px !important; }
+      #todo-month-wrapper { width: 70px !important; }
+      #todo-week-wrapper { width: 220px !important; }
+      #todo-day-wrapper { width: 300px !important; }
 
-      #todo-day-wrapper .date-input-wrapper {
-        width: 100% !important;
+      /* 1년 계획: Year + 추가. 추가 버튼은 살짝 왼쪽 */
+      #todos .goal-date-row.scope-year {
+        grid-template-columns: 300px max-content !important;
       }
-
-      #todo-add-btn {
+      #todos .goal-date-row.scope-year #todo-year-wrapper { grid-column: 1 !important; }
+      #todos .goal-date-row.scope-year #todo-add-btn {
         grid-column: 2 !important;
-        width: auto !important;
-        height: auto !important;
-        padding: 6px 10px !important;
-        display: inline-flex !important;
-        align-items: center !important;
-        justify-content: center !important;
+        justify-self: start !important;
+        align-self: end !important;
         margin-left: 0 !important;
         margin-top: 0 !important;
+        transform: translateX(-4px); /* 요청: 살짝 왼쪽 */
+      }
+
+      /* 한 달 계획: Year / Month / 추가 버튼 모두 같은 줄 */
+      #todos .goal-date-row.scope-month {
+        grid-template-columns: 300px 70px max-content !important;
+      }
+      #todos .goal-date-row.scope-month #todo-year-wrapper { grid-column: 1 !important; }
+      #todos .goal-date-row.scope-month #todo-month-wrapper { grid-column: 2 !important; }
+      #todos .goal-date-row.scope-month #todo-add-btn {
+        grid-column: 3 !important;
+        justify-self: start !important;
         align-self: end !important;
+        margin-left: 0 !important;
+        margin-top: 0 !important;
+        transform: none !important;
+      }
+
+      /* 일주일 계획: Year / Month / Week / 추가 버튼 모두 같은 줄 */
+      #todos .goal-date-row.scope-week {
+        grid-template-columns: 300px 70px 220px max-content !important;
+      }
+      #todos .goal-date-row.scope-week #todo-year-wrapper { grid-column: 1 !important; }
+      #todos .goal-date-row.scope-week #todo-month-wrapper { grid-column: 2 !important; }
+      #todos .goal-date-row.scope-week #todo-week-wrapper { grid-column: 3 !important; }
+      #todos .goal-date-row.scope-week #todo-add-btn {
+        grid-column: 4 !important;
+        justify-self: start !important;
+        align-self: end !important;
+        margin-left: 0 !important;
+        margin-top: 0 !important;
+        transform: none !important;
+      }
+
+      /* 하루 계획: Date + 추가. 버튼은 살짝 오른쪽, 날짜칸 높이 중앙에 맞춤 */
+      #todos .goal-date-row.scope-day {
+        grid-template-columns: 300px max-content !important;
+        align-items: end !important;
+      }
+      #todos .goal-date-row.scope-day #todo-day-wrapper {
+        grid-column: 1 !important;
+        width: 300px !important;
+        max-width: 300px !important;
+      }
+      #todos .goal-date-row.scope-day #todo-day-wrapper .date-input-wrapper {
+        width: 100% !important;
+      }
+      #todos .goal-date-row.scope-day #todo-add-btn {
+        grid-column: 2 !important;
+        justify-self: start !important;
+        align-self: end !important;
+        margin-left: 0 !important;
+        margin-top: 0 !important;
+        transform: translateX(6px); /* 요청: 살짝 오른쪽 */
       }
     }
 
@@ -3173,6 +3216,12 @@
     todoMonthSelect.value = String(today.getMonth() + 1);
 
     function updateTodoDateInputs() {
+      const todoDateRow = document.querySelector("#todos .goal-date-row");
+      if (todoDateRow) {
+        todoDateRow.classList.remove("scope-year", "scope-month", "scope-week", "scope-day");
+        todoDateRow.classList.add(`scope-${currentScope}`);
+      }
+
       if (currentScope === "year") {
         todoYearWrapper.style.display = "flex";
         todoMonthWrapper.style.display = "none";
