@@ -1628,6 +1628,44 @@
       }
     }
 
+    /* ✅ 실행 중 타이머 안내 배너 */
+    #timer-running-banner {
+      position: fixed;
+      right: 14px;
+      bottom: 14px;
+      z-index: 80;
+      display: none;
+      align-items: center;
+      gap: 8px;
+      max-width: min(360px, calc(100vw - 28px));
+      padding: 10px 12px;
+      border-radius: 14px;
+      border: 1px solid rgba(148,163,184,0.55);
+      background: rgba(15,23,42,0.92);
+      color: #f9fafb;
+      box-shadow: 0 12px 26px rgba(0,0,0,0.35);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      font-size: 0.82rem;
+    }
+
+    #timer-running-banner button {
+      padding: 5px 8px;
+      border-radius: 999px;
+      font-size: 0.72rem;
+      background: rgba(99,102,241,0.95);
+    }
+
+    @media (max-width: 520px) {
+      #timer-running-banner {
+        left: 10px;
+        right: 10px;
+        bottom: 10px;
+        justify-content: space-between;
+      }
+    }
+
+
   </style>
 </head>
 
@@ -1650,6 +1688,12 @@
         이 창은 언제든지 닫을 수 있지만,<br />가능하면 공부 시간 동안 그대로 유지해 보자!
       </div>
     </div>
+  </div>
+
+  <!-- ✅ 실행 중인 타이머를 잊지 않게 보여주는 작은 배너 -->
+  <div id="timer-running-banner">
+    <span id="timer-running-banner-text">타이머 실행 중</span>
+    <button id="timer-running-banner-btn" type="button">화면 보기</button>
   </div>
 
   <div class="app" id="app">
@@ -2468,6 +2512,7 @@
 
     const navButtons = document.querySelectorAll(".nav-item");
     const sections = document.querySelectorAll(".section");
+    const ACTIVE_SECTION_KEY = "study_os_active_section";
 
     function openSidebar() {
       sidebar.classList.add("open");
@@ -2499,7 +2544,25 @@
       toggleSidebar();
     });
 
+    // ✅ iPad/태블릿/PC에서도 사이드바 안쪽 ☰ 버튼을 다시 누르면 닫히게 함
+    sidebarToggle?.addEventListener("click", (e) => {
+      e.stopPropagation();
+      toggleSidebar();
+    });
+
     sidebarOverlay?.addEventListener("click", closeSidebar);
+
+    // ✅ 터치 기기에서 메뉴 밖을 누르면 닫기
+    document.addEventListener("click", (e) => {
+      if (!sidebar?.classList.contains("open")) return;
+      if (sidebar.contains(e.target)) return;
+      if (mobileMenuBtn?.contains(e.target)) return;
+      closeSidebar();
+    });
+
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") closeSidebar();
+    });
 
     // PC: 왼쪽에 커서 두면 펼치기(마우스 올리면)
     sidebar?.addEventListener("mouseenter", () => {
@@ -2513,6 +2576,7 @@
     navButtons.forEach((btn) => {
       btn.addEventListener("click", () => {
         const target = btn.dataset.section;
+        localStorage.setItem(ACTIVE_SECTION_KEY, target);
 
         navButtons.forEach((b) => b.classList.remove("active"));
         btn.classList.add("active");
@@ -3945,8 +4009,81 @@
 
     renderCalendar();
 
+
+    // ===== 실행 중 타이머 안내 배너 + 반복 알림 =====
+    const TIMER_RUNNING_NOTIFY_KEY = "study_os_last_running_timer_notify";
+    const TIMER_RUNNING_NOTIFY_INTERVAL_MS = 10 * 60 * 1000; // 10분마다 1번
+    const timerRunningBanner = document.getElementById("timer-running-banner");
+    const timerRunningBannerText = document.getElementById("timer-running-banner-text");
+    const timerRunningBannerBtn = document.getElementById("timer-running-banner-btn");
+
+    function getRunningTimerText() {
+      try {
+        if (studyRunning && studySessionStart) {
+          const diffSec = Math.max(0, Math.floor((Date.now() - studySessionStart.getTime()) / 1000));
+          return `공부 타이머 실행 중 · 현재 세션 ${formatHMS(diffSec)}`;
+        }
+      } catch {}
+
+      try {
+        if (pomoRunning && pomoMode !== "idle") {
+          const phase =
+            pomoMode === "focus" ? "집중" :
+            pomoMode === "short" ? "짧은 휴식" :
+            pomoMode === "long" ? "긴 휴식" : "포모도로";
+          return `포모도로 실행 중 · ${phase} ${formatTime(pomoSecondsLeft)} 남음`;
+        }
+      } catch {}
+
+      return "";
+    }
+
+    function updateTimerRunningBanner() {
+      if (!timerRunningBanner || !timerRunningBannerText) return;
+
+      const msg = getRunningTimerText();
+      if (!msg) {
+        timerRunningBanner.style.display = "none";
+        return;
+      }
+
+      timerRunningBannerText.textContent = msg;
+      timerRunningBanner.style.display = "flex";
+    }
+
+    timerRunningBannerBtn?.addEventListener("click", () => {
+      if (studyRunning) {
+        document.querySelector('.nav-item[data-section="study"]')?.click();
+        openFocusOverlay("study");
+      } else if (pomoRunning) {
+        document.querySelector('.nav-item[data-section="pomodoro"]')?.click();
+        openFocusOverlay("pomo");
+      }
+    });
+
+    function checkRunningTimerReminder() {
+      if (!studyRunning && !pomoRunning) return;
+
+      const now = Date.now();
+      const last = Number(localStorage.getItem(TIMER_RUNNING_NOTIFY_KEY) || "0");
+      if (now - last < TIMER_RUNNING_NOTIFY_INTERVAL_MS) return;
+
+      const body = getRunningTimerText();
+      if (!body) return;
+
+      showLocalNotification("My Study OS - 타이머 실행 중", `${body}\n끄는 걸 잊지 않았는지 확인해 주세요.`);
+      localStorage.setItem(TIMER_RUNNING_NOTIFY_KEY, String(now));
+    }
+
+    setInterval(() => {
+      updateTimerRunningBanner();
+      checkRunningTimerReminder();
+    }, 60 * 1000);
+
+
     // ===== 포모도로 =====
     const POMO_CONFIG_KEY = "study_os_pomo_config_v1";
+    const POMO_RUNTIME_KEY = "study_os_pomo_runtime_v1";
 
     const pomoDisplay = document.getElementById("pomo-display");
     const pomoPhaseEl = document.getElementById("pomo-phase");
@@ -4024,6 +4161,7 @@
     let pomoSecondsLeft = pomoConfig.focus * 60;
     let pomoIntervalId = null;
     let pomoRunning = false;
+    let pomoDeadlineMs = null;
 
     function updatePomoDisplay() {
       pomoDisplay.textContent = formatTime(pomoSecondsLeft);
@@ -4034,28 +4172,99 @@
       else phaseText = "대기 중";
       pomoPhaseEl.textContent = phaseText;
       pomoProgressText.textContent = `${pomoCycleCount} / ${pomoConfig.cyclesBeforeLong} 사이클`;
+      updateTimerRunningBanner();
+    }
+
+    function savePomoRuntimeState() {
+      localStorage.setItem(POMO_RUNTIME_KEY, JSON.stringify({
+        running: pomoRunning,
+        mode: pomoMode,
+        cycleCount: pomoCycleCount,
+        secondsLeft: pomoSecondsLeft,
+        deadlineMs: pomoDeadlineMs,
+        savedAt: Date.now()
+      }));
+    }
+
+    function clearPomoRuntimeState() {
+      localStorage.removeItem(POMO_RUNTIME_KEY);
+      pomoDeadlineMs = null;
+    }
+
+    function syncPomoSecondsWithDeadline() {
+      if (!pomoRunning || !pomoDeadlineMs) return;
+      pomoSecondsLeft = Math.max(0, Math.ceil((pomoDeadlineMs - Date.now()) / 1000));
+    }
+
+    function loadPomoRuntimeState() {
+      try {
+        const saved = localStorage.getItem(POMO_RUNTIME_KEY);
+        if (!saved) return;
+
+        const state = JSON.parse(saved);
+        pomoMode = state.mode || "idle";
+        pomoCycleCount = Number(state.cycleCount || 0);
+        pomoSecondsLeft = Math.max(0, Number(state.secondsLeft || pomoConfig.focus * 60));
+        pomoDeadlineMs = state.deadlineMs || null;
+
+        if (state.running && pomoMode !== "idle") {
+          pomoRunning = true;
+          if (!pomoDeadlineMs) {
+            pomoDeadlineMs = Date.now() + pomoSecondsLeft * 1000;
+          }
+          syncPomoSecondsWithDeadline();
+
+          // 이미 시간이 지나 있었다면, 다음 tick에서 단계 전환되도록 0초로 둠
+          startPomoTicking();
+          setTimeout(() => openFocusOverlay("pomo"), 0);
+        } else {
+          pomoRunning = false;
+          pomoDeadlineMs = null;
+        }
+      } catch (e) {
+        console.warn("[POMO] 저장된 포모도로 상태 복원 실패", e);
+        clearPomoRuntimeState();
+      }
     }
 
     function startPomoTicking() {
       if (pomoIntervalId !== null) return;
       pomoRunning = true;
+      if (!pomoDeadlineMs) {
+        pomoDeadlineMs = Date.now() + pomoSecondsLeft * 1000;
+      }
       requestWakeLock();
+      savePomoRuntimeState();
+      updateTimerRunningBanner();
+
       pomoIntervalId = setInterval(() => {
-        pomoSecondsLeft--;
+        syncPomoSecondsWithDeadline();
+
         if (pomoSecondsLeft <= 0) {
           handlePomoPhaseEnd();
+          if (pomoRunning && pomoMode !== "idle") {
+            pomoDeadlineMs = Date.now() + pomoSecondsLeft * 1000;
+          }
         }
+
         updatePomoDisplay();
+        savePomoRuntimeState();
       }, 1000);
     }
 
     function stopPomoTicking() {
+      if (pomoRunning) syncPomoSecondsWithDeadline();
+
       if (pomoIntervalId !== null) {
         clearInterval(pomoIntervalId);
         pomoIntervalId = null;
       }
+
       pomoRunning = false;
+      pomoDeadlineMs = null;
+      savePomoRuntimeState();
       releaseWakeLockIfNeeded();
+      updateTimerRunningBanner();
     }
 
     function handlePomoPhaseEnd() {
@@ -4123,6 +4332,12 @@
         pomoSecondsLeft = pomoConfig.focus * 60;
         stopPomoTicking();
       }
+      if (pomoRunning && pomoMode !== "idle") {
+        pomoDeadlineMs = Date.now() + pomoSecondsLeft * 1000;
+        savePomoRuntimeState();
+      } else if (pomoMode === "idle") {
+        clearPomoRuntimeState();
+      }
       updatePomoDisplay();
     }
 
@@ -4133,14 +4348,17 @@
         pomoSecondsLeft = pomoConfig.focus * 60;
         updatePomoDisplay();
       }
+      pomoDeadlineMs = Date.now() + pomoSecondsLeft * 1000;
       startPomoTicking();
       openFocusOverlay("pomo");
+      updateTimerRunningBanner();
     });
 
     pomoPauseBtn.addEventListener("click", () => {
       if (!pomoRunning) return;
       stopPomoTicking();
       pomoPhaseEl.textContent += " (일시 정지)";
+      savePomoRuntimeState();
     });
 
     pomoResetBtn.addEventListener("click", () => {
@@ -4149,6 +4367,7 @@
       pomoMode = "idle";
       pomoCycleCount = 0;
       pomoSecondsLeft = pomoConfig.focus * 60;
+      clearPomoRuntimeState();
       updatePomoDisplay();
       if (focusMode === "pomo") {
         closeFocusOverlay();
@@ -4157,7 +4376,15 @@
 
     loadPomoConfig();
     pomoSecondsLeft = pomoConfig.focus * 60;
+    loadPomoRuntimeState();
     updatePomoDisplay();
+
+
+    // ===== Wake Lock 선행 선언 =====
+    // 저장된 공부 세션을 복원할 때도 화면 유지 함수를 바로 쓸 수 있게 위쪽에 둡니다.
+    var wakeLock = null;
+    var wakeLockRequested = false;
+
 
     // ===== 공부 타이머 =====
     const STUDY_KEY = "study_os_study_log_v1";
@@ -4194,6 +4421,8 @@
             startStudySessionTicking();
             studyStatusEl.textContent = "공부 중 (이전에 시작됨)";
             requestWakeLock();
+            setTimeout(() => openFocusOverlay("study"), 0);
+            updateTimerRunningBanner();
           }
         }
       } catch {
@@ -4291,6 +4520,7 @@
       saveStudySessionState();
       saveStudyLog();
       updateStudySessionTime();
+      updateTimerRunningBanner();
     }
 
     studyStartBtn.addEventListener("click", () => {
@@ -4301,6 +4531,7 @@
       saveStudySessionState();
       startStudySessionTicking();
       openFocusOverlay("study");
+      updateTimerRunningBanner();
     });
 
     studyStopBtn.addEventListener("click", () => {
@@ -4323,6 +4554,7 @@
       studyStatusEl.textContent = "대기 중";
       studySessionTimeEl.textContent = "00:00:00";
       studyLastSessionEl.textContent = "-";
+      updateTimerRunningBanner();
     });
 
     if (studyFocusBtn) {
@@ -4438,6 +4670,7 @@
         focusSubtitleEl.innerHTML = "이 시간만큼은 다른 앱/사이트 생각 말고,<br />눈앞의 공부에만 집중해봐요.";
       }
 
+      requestWakeLock();
       updateFocusTimer();
       if (focusIntervalId !== null) clearInterval(focusIntervalId);
       focusIntervalId = setInterval(updateFocusTimer, 1000);
@@ -4500,13 +4733,12 @@
       if (focusMode === "pomo" && pomoRunning) {
         stopPomoTicking();
         pomoPhaseEl.textContent += " (일시 정지)";
+        savePomoRuntimeState();
       }
       closeFocusOverlay();
     });
 
     // ===== Wake Lock =====
-    let wakeLock = null;
-    let wakeLockRequested = false;
 
     async function requestWakeLock() {
       if (!("wakeLock" in navigator)) return;
@@ -4530,6 +4762,37 @@
         wakeLockRequested = false;
       }
     }
+
+    function restoreRunningTimerUi() {
+      if (studyRunning) {
+        openFocusOverlay("study");
+      } else if (pomoRunning) {
+        syncPomoSecondsWithDeadline();
+        openFocusOverlay("pomo");
+      }
+      updateTimerRunningBanner();
+      requestWakeLock();
+    }
+
+    // ✅ 앱을 나갔다가 돌아왔을 때 화면/타이머/화면유지 요청을 다시 복원
+    document.addEventListener("visibilitychange", () => {
+      if (!document.hidden && (studyRunning || pomoRunning)) {
+        restoreRunningTimerUi();
+      }
+    });
+
+    window.addEventListener("pageshow", () => {
+      if (studyRunning || pomoRunning) {
+        restoreRunningTimerUi();
+      }
+    });
+
+    // Wake Lock은 화면이 꺼졌다 켜지거나 앱 전환 후 풀릴 수 있어서 재요청
+    document.addEventListener("visibilitychange", () => {
+      if (!document.hidden && (studyRunning || pomoRunning)) {
+        requestWakeLock();
+      }
+    });
 
     // ===== 홈 요약 =====
     const summaryStudyTimeEl = document.getElementById("summary-study-time");
@@ -4685,6 +4948,23 @@
         });
       });
     }
+
+
+    // ===== 마지막으로 보고 있던 탭 복원 =====
+    function restoreActiveSection() {
+      const saved = localStorage.getItem(ACTIVE_SECTION_KEY);
+      if (!saved) return;
+      const btn = document.querySelector(`.nav-item[data-section="${saved}"]`);
+      if (btn) btn.click();
+    }
+
+    setTimeout(() => {
+      restoreActiveSection();
+      if (studyRunning) openFocusOverlay("study");
+      else if (pomoRunning) openFocusOverlay("pomo");
+      updateTimerRunningBanner();
+    }, 0);
+
 
     // 서비스워커 등록
     if ("serviceWorker" in navigator) {
