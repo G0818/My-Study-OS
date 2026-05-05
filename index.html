@@ -1628,40 +1628,66 @@
       }
     }
 
-    /* ✅ 실행 중 타이머 안내 배너 */
-    #timer-running-banner {
-      position: fixed;
-      right: 14px;
-      bottom: 14px;
-      z-index: 80;
-      display: none;
+
+
+    /* ✅ 메뉴/아이콘 겹침 방지 보정 */
+    .nav-item {
+      overflow: hidden;
+    }
+
+    .nav-item .ico {
+      flex: 0 0 26px;
+      width: 26px;
+      min-width: 26px;
+      text-align: center;
+      display: inline-flex;
       align-items: center;
+      justify-content: center;
+      line-height: 1;
+    }
+
+    .sidebar.open .nav-item {
       gap: 8px;
-      max-width: min(360px, calc(100vw - 28px));
-      padding: 10px 12px;
-      border-radius: 14px;
-      border: 1px solid rgba(148,163,184,0.55);
-      background: rgba(15,23,42,0.92);
-      color: #f9fafb;
-      box-shadow: 0 12px 26px rgba(0,0,0,0.35);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      font-size: 0.82rem;
     }
 
-    #timer-running-banner button {
-      padding: 5px 8px;
-      border-radius: 999px;
-      font-size: 0.72rem;
-      background: rgba(99,102,241,0.95);
-    }
+    @media (max-width: 780px) {
+      .mobile-menu-btn {
+        flex: 0 0 36px !important;
+        min-width: 36px !important;
+        overflow: hidden !important;
+      }
 
-    @media (max-width: 520px) {
-      #timer-running-banner {
-        left: 10px;
-        right: 10px;
-        bottom: 10px;
-        justify-content: space-between;
+      .header-title-wrap {
+        min-width: 0 !important;
+        overflow: hidden !important;
+      }
+
+      .logo {
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      #theme-toggle {
+        flex: 0 0 auto;
+        max-width: 96px;
+        overflow: hidden;
+      }
+
+      .sidebar {
+        box-sizing: border-box;
+      }
+
+      .sidebar .nav-item {
+        justify-content: flex-start !important;
+        padding-left: 12px !important;
+        padding-right: 10px !important;
+      }
+
+      .sidebar .nav-item .label {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
       }
     }
 
@@ -1690,11 +1716,6 @@
     </div>
   </div>
 
-  <!-- ✅ 실행 중인 타이머를 잊지 않게 보여주는 작은 배너 -->
-  <div id="timer-running-banner">
-    <span id="timer-running-banner-text">타이머 실행 중</span>
-    <button id="timer-running-banner-btn" type="button">화면 보기</button>
-  </div>
 
   <div class="app" id="app">
   <header>
@@ -4010,12 +4031,13 @@
     renderCalendar();
 
 
-    // ===== 실행 중 타이머 안내 배너 + 반복 알림 =====
+    // ===== 실행 중 타이머 반복 알림 =====
+    function updateTimerRunningBanner() {
+      // 배너는 제거했고, 기존 호출부가 오류나지 않도록 빈 함수만 둡니다.
+    }
+
     const TIMER_RUNNING_NOTIFY_KEY = "study_os_last_running_timer_notify";
     const TIMER_RUNNING_NOTIFY_INTERVAL_MS = 10 * 60 * 1000; // 10분마다 1번
-    const timerRunningBanner = document.getElementById("timer-running-banner");
-    const timerRunningBannerText = document.getElementById("timer-running-banner-text");
-    const timerRunningBannerBtn = document.getElementById("timer-running-banner-btn");
 
     function getRunningTimerText() {
       try {
@@ -4038,29 +4060,6 @@
       return "";
     }
 
-    function updateTimerRunningBanner() {
-      if (!timerRunningBanner || !timerRunningBannerText) return;
-
-      const msg = getRunningTimerText();
-      if (!msg) {
-        timerRunningBanner.style.display = "none";
-        return;
-      }
-
-      timerRunningBannerText.textContent = msg;
-      timerRunningBanner.style.display = "flex";
-    }
-
-    timerRunningBannerBtn?.addEventListener("click", () => {
-      if (studyRunning) {
-        document.querySelector('.nav-item[data-section="study"]')?.click();
-        openFocusOverlay("study");
-      } else if (pomoRunning) {
-        document.querySelector('.nav-item[data-section="pomodoro"]')?.click();
-        openFocusOverlay("pomo");
-      }
-    });
-
     function checkRunningTimerReminder() {
       if (!studyRunning && !pomoRunning) return;
 
@@ -4071,14 +4070,12 @@
       const body = getRunningTimerText();
       if (!body) return;
 
-      showLocalNotification("My Study OS - 타이머 실행 중", `${body}\n끄는 걸 잊지 않았는지 확인해 주세요.`);
+      showLocalNotification("My Study OS - 타이머 실행 중", `${body}
+끄는 걸 잊지 않았는지 확인해 주세요.`);
       localStorage.setItem(TIMER_RUNNING_NOTIFY_KEY, String(now));
     }
 
-    setInterval(() => {
-      updateTimerRunningBanner();
-      checkRunningTimerReminder();
-    }, 60 * 1000);
+    setInterval(checkRunningTimerReminder, 60 * 1000);
 
 
     // ===== 포모도로 =====
