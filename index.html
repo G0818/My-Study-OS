@@ -184,6 +184,21 @@
       gap: 12px;
     }
 
+    /* 아이패드/태블릿에서 날짜 입력칸과 추가 버튼이 같은 줄에서 겹치지 않게 보정 */
+    @media (max-width: 1200px) {
+      #home .input-row[style*="margin-top:10px"] > input[type="text"] {
+        flex: 1 1 220px;
+      }
+
+      #home .input-row[style*="margin-top:10px"] > .date-input-wrapper {
+        flex: 1 1 180px !important;
+      }
+
+      .goal-date-row > .goal-date-group {
+        flex: 1 1 160px;
+      }
+    }
+
     @media (max-width: 780px) {
       /* 섹션 제목들 */
       .section-title,
@@ -238,13 +253,30 @@
       gap: 6px;
       margin-bottom: 8px;
       flex-wrap: wrap;
+      align-items: center;
+    }
+
+    /* 같은 줄의 입력칸/버튼이 서로 눌려 겹치지 않도록 기본 flex 규칙 고정 */
+    .input-row > input[type="text"],
+    .input-row > input[type="number"],
+    .input-row > input[type="date"],
+    .input-row > select,
+    .input-row > .date-input-wrapper {
+      flex: 1 1 180px;
+      min-width: 0;
+    }
+
+    .input-row > button {
+      flex: 0 0 auto;
+      position: relative;
+      z-index: 1;
     }
 
     .goal-date-row {
       display: flex;
       gap: 6px;
       flex-wrap: wrap;
-      align-items: center;
+      align-items: flex-end;
     }
 
     .goal-date-group {
@@ -252,6 +284,7 @@
       flex-direction: column;
       gap: 2px;
       min-width: 80px;
+      flex: 1 1 120px;
       font-size: 0.75rem;
     }
 
@@ -786,12 +819,19 @@
 
     #todo-add-btn {
       margin-left: auto;
-      margin-top: 20px;
+      margin-top: 0;
       padding: 0 14px;
+      min-width: 72px;
       height: 34px;
       display: flex;
       align-items: center;
       justify-content: center;
+      align-self: flex-end;
+    }
+
+    #dday-add-btn {
+      min-width: 72px;
+      align-self: center;
     }
 
     /* ✅ date만 달력 아이콘을 '전체 클릭'로 확장 (time에는 절대 적용 금지!) */
@@ -818,6 +858,11 @@
       position: relative;
       display: inline-block;
       width: 100%;
+      min-width: 0;
+    }
+
+    .date-input-wrapper input[type="date"] {
+      padding-right: 34px;
     }
 
     .tt-event-title{ font-weight:700; margin-bottom:4px; }
