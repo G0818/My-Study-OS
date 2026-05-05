@@ -1564,6 +1564,57 @@
       box-sizing: border-box !important;
     }
 
+
+
+    /* ✅ iPad/태블릿 전용 보정
+       - V8의 달력 아이콘 CSS는 그대로 두고, 배치만 조정
+       - 폰(780px 이하)과 노트북/PC는 영향 없음 */
+    @media (min-width: 781px) and (max-width: 1180px) {
+      /* D-Day: 제목은 한 줄 전체, 날짜와 추가 버튼은 다음 줄에서 분리 */
+      #home .card:first-child > .input-row[style*="margin-top:10px"] {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) 74px;
+        gap: 8px !important;
+        align-items: center !important;
+      }
+
+      #dday-title-input {
+        grid-column: 1 / -1;
+        min-width: 0 !important;
+      }
+
+      #home .card:first-child > .input-row[style*="margin-top:10px"] > .date-input-wrapper {
+        grid-column: 1;
+        width: 100% !important;
+        min-width: 0 !important;
+      }
+
+      #dday-add-btn {
+        grid-column: 2;
+        width: 74px;
+        height: 36px;
+        align-self: center;
+      }
+
+      /* To-do 하루 계획: 날짜칸과 추가 버튼이 겹치지 않게 태블릿에서만 폭 고정 */
+      #todos .goal-date-row {
+        align-items: flex-end !important;
+      }
+
+      #todo-day-wrapper {
+        flex: 0 0 170px !important;
+        max-width: 170px !important;
+      }
+
+      #todo-add-btn {
+        margin-left: 0 !important;
+        margin-top: 0 !important;
+        width: 74px;
+        height: 34px;
+        align-self: flex-end;
+      }
+    }
+
     .settings-bottom-row {
       grid-column: 1 / -1;
       display: grid;
