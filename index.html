@@ -1740,6 +1740,66 @@
       }
     }
 
+    /* ✅ 시간표 삭제 버튼: 아주 작은 X 버튼 */
+    .tt-delete-btn {
+      position: absolute !important;
+      top: 2px !important;
+      right: 2px !important;
+
+      width: 13px !important;
+      height: 13px !important;
+      min-width: 13px !important;
+      min-height: 13px !important;
+
+      padding: 0 !important;
+      margin: 0 !important;
+      border-radius: 999px !important;
+
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+
+      font-size: 9px !important;
+      line-height: 1 !important;
+      font-weight: 700 !important;
+
+      background: rgba(15, 23, 42, 0.55) !important;
+      color: rgba(255, 255, 255, 0.9) !important;
+      border: 1px solid rgba(255, 255, 255, 0.35) !important;
+      box-shadow: none !important;
+      transform: none !important;
+      z-index: 3 !important;
+    }
+
+    .tt-delete-btn:hover {
+      background: rgba(220, 38, 38, 0.85) !important;
+      color: white !important;
+      box-shadow: none !important;
+      transform: none !important;
+    }
+
+    /* 삭제 버튼이 오른쪽 위에 올라가므로 제목이 겹치지 않게 */
+    .tt-event-title {
+      padding-right: 14px !important;
+    }
+
+    /* 모바일에서는 더 작게 */
+    @media (max-width: 520px) {
+      .tt-delete-btn {
+        top: 1px !important;
+        right: 1px !important;
+        width: 11px !important;
+        height: 11px !important;
+        min-width: 11px !important;
+        min-height: 11px !important;
+        font-size: 8px !important;
+      }
+
+      .tt-event-title {
+        padding-right: 12px !important;
+      }
+    }
+
   </style>
 </head>
 
@@ -2645,7 +2705,6 @@
         // 탭 전환 직후 레이아웃 기반 화면은 재렌더(0폭/0높이 방지)
         setTimeout(() => {
           if (target === "timetable") {
-            renderTimetable();
             renderTimetableEvents();
           }
           if (target === "calendar") {
@@ -3746,6 +3805,12 @@
 
       const wrapRect = timetableStageEl.getBoundingClientRect();
 
+      // ✅ iPad/Safari에서 불러오기 직후 레이아웃 계산이 덜 끝난 경우 방지
+      if (wrapRect.width <= 0 || timetableStageEl.offsetWidth <= 0) {
+        requestAnimationFrame(renderTimetableEvents);
+        return;
+      }
+
       // ✅ 인덱스(children[7] 같은거) 쓰지 말고, 정확한 셀을 찾아서 기준잡기
       const headerMon = timetableGridEl.querySelector('.timetable-header[data-day="0"]');
       const firstCell = timetableGridEl.querySelector(`.timetable-cell[data-day="0"][data-hour="${TT_START_HOUR}"]`);
@@ -3776,11 +3841,11 @@
         const clippedStart = Math.max(startMin, TT_START_MIN);
         const clippedEnd = Math.min(endMin, TT_END_MIN);
 
-        const top = baseTop + ((clippedStart - TT_START_MIN) / 60) * unitH;
-        const height = Math.max(12, ((clippedEnd - clippedStart) / 60) * unitH - gapY);
+        const top = Math.round(baseTop + ((clippedStart - TT_START_MIN) / 60) * unitH);
+        const height = Math.max(14, Math.round(((clippedEnd - clippedStart) / 60) * unitH - gapY));
 
-        const left = baseLeft + ev.dayIndex * (dayW + gapX);
-        const width = dayW;
+        const left = Math.round(baseLeft + ev.dayIndex * (dayW + gapX));
+        const width = Math.max(1, Math.round(dayW));
 
         const box = document.createElement("div");
         box.className = "tt-event";
@@ -3792,9 +3857,9 @@
         box.style.pointerEvents = "auto"; // 삭제 버튼 클릭되게
 
         box.innerHTML = `
+          <button class="tt-delete-btn" data-id="${ev.id}" aria-label="삭제" title="삭제">×</button>
           <div class="tt-event-title">${escapeHtml(ev.title || "")}</div>
           <div class="tt-event-time">${formatTtTimeRangeHTML(startMin, endMin)}</div>
-          <button class="tiny secondary" data-id="${ev.id}" style="margin-top:5px;">삭제</button>
         `;
 
         eventsLayerEl.appendChild(box);
@@ -3817,7 +3882,18 @@
     loadTimetableEvents();
     renderTimetableEvents();
 
-    window.addEventListener("resize", renderTimetableEvents);
+    function refreshTimetableLayout() {
+      renderTimetable();
+      requestAnimationFrame(() => {
+        renderTimetableEvents();
+        setTimeout(renderTimetableEvents, 80);
+      });
+    }
+
+    window.addEventListener("resize", refreshTimetableLayout);
+    window.addEventListener("orientationchange", () => {
+      setTimeout(refreshTimetableLayout, 250);
+    });
 
     // ===== 캘린더 =====
     const calendarGrid = document.getElementById("calendar-grid");
